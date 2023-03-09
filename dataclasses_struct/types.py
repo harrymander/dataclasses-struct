@@ -27,8 +27,8 @@ Float64 = Annotated[float, field.DoubleField()]
 Double = Float64
 
 # String types
-FixedString = Annotated[bytes, field.FixedStringField()]
-PascalString = FixedString
+PascalString = Annotated[bytes, field.VariableLengthStringField()]
+VariableLengthString = PascalString
 
 
 def String(n: int):

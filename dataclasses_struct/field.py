@@ -116,7 +116,7 @@ class StringField(Field[bytes]):
             raise ValueError(f'string cannot be longer than {self.n} bytes')
 
 
-class FixedStringField(Field[bytes]):
+class VariableLengthStringField(Field[bytes]):
     def validate(self, val: bytes) -> None:
         if len(val) > 0xff:
             raise ValueError(f'string cannot be longer than {0xff} bytes')
