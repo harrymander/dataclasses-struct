@@ -7,6 +7,7 @@ T = TypeVar('T')
 
 class Field(abc.ABC, Generic[T]):
     native_only: bool = False
+    type_: type[T]
 
     @abc.abstractmethod
     def format(self) -> str:
@@ -15,8 +16,13 @@ class Field(abc.ABC, Generic[T]):
     def validate(self, val: T) -> None:
         pass
 
+    def __repr__(self) -> str:
+        return f'{type(self).__name__}'
+
 
 class BoolField(Field[bool]):
+    type_ = bool
+
     def format(self) -> str:
         return '?'
 
@@ -33,6 +39,7 @@ class CharField(Field[bytes]):
 class IntField(Field[int]):
     signed: bool
     size: int
+    type_ = int
 
     _formats = {
         1: 'b',
@@ -77,22 +84,32 @@ class IntField(Field[int]):
         if not min_ <= val <= max_:
             sign = 'signed' if self.signed else 'unsigned'
             raise ValueError(
-                f'value out of range for {self.size}-bit {sign} integer'
+                f'value out of range for {self.size * 8}-bit {sign} integer'
             )
+
+    def __repr__(self) -> str:
+        sign = 'signed' if self.signed else 'unsigned'
+        bits = self.size + 8
+        return f'{super().__repr__()}({sign}, {bits}-bit)'
 
 
 class FloatField(Field[float]):
+    type_ = float
+
     def format(self) -> str:
         return 'f'
 
 
 class DoubleField(Field[float]):
+    type_ = float
+
     def format(self) -> str:
         return 'd'
 
 
 class SizeField(Field[int]):
     native_only = True
+    type_ = int
 
     def __init__(self, signed: bool):
         self.signed = signed
@@ -102,6 +119,8 @@ class SizeField(Field[int]):
 
 
 class StringField(Field[bytes]):
+    type_ = bytes
+
     def __init__(self, n: int):
         if n < 1:
             raise ValueError('n must be positive non-zero integer')
@@ -115,11 +134,24 @@ class StringField(Field[bytes]):
         if len(val) > self.n:
             raise ValueError(f'string cannot be longer than {self.n} bytes')
 
+    def __repr__(self) -> str:
+        return f'{super().__repr__()}({self.n})'
+
 
 class VariableLengthStringField(Field[bytes]):
+    type_ = bytes
+
     def validate(self, val: bytes) -> None:
         if len(val) > 0xff:
             raise ValueError(f'string cannot be longer than {0xff} bytes')
 
     def format(self) -> str:
         return 'p'
+
+
+primitive_fields = {
+    int: IntField(True, 8),
+    float: DoubleField(),
+    bool: BoolField(),
+    bytes: CharField(),
+}
