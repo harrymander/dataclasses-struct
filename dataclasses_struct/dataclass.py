@@ -1,6 +1,7 @@
 from collections.abc import Callable
-# import dataclasses  # TODO
+import dataclasses
 import inspect
+import struct
 from typing import Annotated, Any, get_args, get_origin
 
 from .field import primitive_fields, Field
@@ -32,7 +33,7 @@ def _validate_and_parse_field(
     else:
         field = primitive_fields.get(f)
         if field is None:
-            raise TypeError('type not supported: {f}')
+            raise TypeError(f'type not supported: {f}')
         type_ = f
 
     if not isinstance(field, Field):
@@ -45,12 +46,18 @@ def _validate_and_parse_field(
         raise TypeError(f'field {field} only supported for native alignment')
 
     if hasattr(cls, name):
-        field.validate(getattr(cls, name))
+        val = getattr(cls, name)
+        if not isinstance(val, field.type_):
+            raise TypeError(
+                'invalid type for field: expected '
+                f'{field.type_} got {type(val)}'
+            )
+        field.validate(val)
 
     return field.format()
 
 
-def _make_class(cls, allow_native: bool) -> type:
+def _make_class(cls, endian: str, allow_native: bool) -> type:
     cls_annotations = inspect.get_annotations(cls)
     struct_format = ''.join(
         _validate_and_parse_field(cls, name, field, allow_native)
@@ -58,24 +65,33 @@ def _make_class(cls, allow_native: bool) -> type:
     )
     names = list(cls_annotations.keys())
 
-    # TODO: configure dataclass
-    setattr(cls, "__dataclass_struct_format__", struct_format)
+    setattr(cls, "__dataclass_struct__", struct.Struct(endian + struct_format))
     setattr(cls, "__dataclass_struct_fieldnames__", names)
 
-    # return dataclasses.dataclass(cls)
-    return cls
+    def pack(self) -> bytes:
+        return self.__dataclass_struct__.pack(*(
+            getattr(self, n) for n in self.__dataclass_struct_fieldnames__
+        ))
+
+    def unpack(cls, data: bytes) -> cls:
+        return cls(*(cls.__dataclass_struct__.unpack(data)))
+
+    setattr(cls, 'pack', pack)
+    setattr(cls, 'from_packed', classmethod(unpack))
+
+    return dataclasses.dataclass(cls)
 
 
 def dataclass(endian: str = NATIVE_ENDIAN_ALIGNED) -> Callable[[type], type]:
     if endian not in _allowed_endians:
         raise ValueError(
-            'invalid endianness: {endian}. '
+            f'invalid endianness: {endian}. '
             '(Did you forget to add parentheses: @dataclass()?)'
         )
 
     allow_native = endian in (NATIVE_ENDIAN, NATIVE_ENDIAN_ALIGNED)
 
     def decorator(cls) -> type:
-        return _make_class(cls, allow_native)
+        return _make_class(cls, endian, allow_native)
 
     return decorator

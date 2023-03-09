@@ -28,6 +28,8 @@ class BoolField(Field[bool]):
 
 
 class CharField(Field[bytes]):
+    type_ = bytes
+
     def format(self) -> str:
         return 'c'
 
