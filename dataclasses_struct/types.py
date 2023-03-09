@@ -1,31 +1,35 @@
 from typing import Annotated
 
+from . import field
 
-Pad = Annotated[None, 'x']
-Char = Annotated[bytes, 'c']
-Int8 = Annotated[int, 'b']
-Uint8 = Annotated[int, 'B']
-Bool = Annotated[bool, '?']
-Int16 = Annotated[int, 'h']
-Uint16 = Annotated[int, 'H']
-Int32 = Annotated[int, 'i']
-Uint32 = Annotated[int, 'I']
-Int64 = Annotated[int, 'q']
-Uint64 = Annotated[int, 'Q']
+# Single char type
+Char = Annotated[bytes, field.CharField()]
 
-# size_t = 'n' (native only)
-# ssize_t = 'N' (native only)
+# Integer types
+Int8 = Annotated[int, field.IntField(True, 1)]
+Uint8 = Annotated[int, field.IntField(False, 1)]
+Bool = Annotated[bool, field.BoolField()]
+Int16 = Annotated[int, field.IntField(True, 2)]
+Uint16 = Annotated[int, field.IntField(False, 2)]
+Int32 = Annotated[int, field.IntField(True, 4)]
+Uint32 = Annotated[int, field.IntField(False, 4)]
+Int64 = Annotated[int, field.IntField(True, 8)]
+Uint64 = Annotated[int, field.IntField(False, 8)]
 
-Float32 = Annotated[float, 'f']
+# Native size types
+Size = Annotated[int, field.SizeField(False)]
+SSize = Annotated[int, field.SizeField(True)]
+
+# Floating point types
+Float32 = Annotated[float, field.FloatField()]
 Float = Float32
-Float64 = Annotated[float, 'd']
+Float64 = Annotated[float, field.DoubleField()]
 Double = Float64
 
+# String types
+FixedString = Annotated[bytes, field.FixedStringField()]
+PascalString = FixedString
 
-class String:
-    def __init__(self, n: int):
-        self.n = n
 
-
-PascalString = bytes
-FixedString = bytes
+def String(n: int):
+    return Annotated[bytes, field.StringField(n)]

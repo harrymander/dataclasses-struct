@@ -21,7 +21,7 @@ _allowed_endians = frozenset((
 
 
 def _parse_field(cls: type, name: str, f: type[Any]) -> tuple[type, str]:
-    pass
+    return int, ''
 
 
 def _make_class(cls) -> type:
