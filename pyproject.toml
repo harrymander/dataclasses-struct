@@ -8,6 +8,7 @@ packages = [{include = "dataclasses_struct"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
+typing-extensions = "^4.5.0"
 
 [tool.poetry.group.dev.dependencies]
 flake8 = "^6.0.0"

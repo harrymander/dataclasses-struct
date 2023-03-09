@@ -2,7 +2,8 @@ from collections.abc import Callable
 import dataclasses
 import inspect
 import struct
-from typing import Annotated, Any, get_args, get_origin
+from typing import Annotated, Any, Protocol, TypeVar, get_args, get_origin
+from typing_extensions import Self, dataclass_transform
 
 from .field import primitive_fields, Field
 
@@ -20,6 +21,18 @@ _allowed_endians = frozenset((
     BIG_ENDIAN,
     NETWORK_ENDIAN,
 ))
+
+
+T = TypeVar('T', covariant=True)
+
+
+class DataclassStructPackable(Protocol):
+    def pack(self) -> bytes:
+        ...
+
+    @classmethod
+    def from_packed(cls, data: bytes) -> Self:
+        ...
 
 
 def _validate_and_parse_field(
@@ -57,7 +70,35 @@ def _validate_and_parse_field(
     return field.format()
 
 
-def _make_class(cls, endian: str, allow_native: bool) -> type:
+def _make_pack_method(fieldnames: list[str]) -> Callable:
+    func = f"""
+def pack(self) -> bytes:
+    '''Pack to bytes using struct.pack.'''
+    return self.__dataclass_struct__.pack(
+    {','.join(f'self.{name}' for name in fieldnames)}
+    )
+"""
+
+    scope: dict[str, Any] = {}
+    exec(func, {}, scope)
+    return scope['pack']
+
+
+def _make_unpack_method(cls: type) -> classmethod:
+    func = """
+def from_packed(cls, data: bytes) -> cls_type:
+    '''Unpack from bytes.'''
+    return cls(*cls.__dataclass_struct__.unpack(data))
+"""
+
+    scope: dict[str, Any] = {'cls_type': cls}
+    exec(func, {}, scope)
+    return classmethod(scope['from_packed'])
+
+
+def _make_class(
+    cls: type, endian: str, allow_native: bool
+) -> type[DataclassStructPackable]:
     cls_annotations = inspect.get_annotations(cls)
     struct_format = ''.join(
         _validate_and_parse_field(cls, name, field, allow_native)
@@ -65,24 +106,18 @@ def _make_class(cls, endian: str, allow_native: bool) -> type:
     )
     names = list(cls_annotations.keys())
 
-    setattr(cls, "__dataclass_struct__", struct.Struct(endian + struct_format))
-    setattr(cls, "__dataclass_struct_fieldnames__", names)
-
-    def pack(self) -> bytes:
-        return self.__dataclass_struct__.pack(*(
-            getattr(self, n) for n in self.__dataclass_struct_fieldnames__
-        ))
-
-    def unpack(cls, data: bytes) -> cls:
-        return cls(*(cls.__dataclass_struct__.unpack(data)))
-
-    setattr(cls, 'pack', pack)
-    setattr(cls, 'from_packed', classmethod(unpack))
+    setattr(cls, '__dataclass_struct__', struct.Struct(endian + struct_format))
+    setattr(cls, '__dataclass_struct_fieldnames__', names)
+    setattr(cls, 'pack', _make_pack_method(names))
+    setattr(cls, 'from_packed', _make_unpack_method(cls))
 
     return dataclasses.dataclass(cls)
 
 
-def dataclass(endian: str = NATIVE_ENDIAN_ALIGNED) -> Callable[[type], type]:
+@dataclass_transform()
+def dataclass(endian: str = NATIVE_ENDIAN_ALIGNED) -> Callable[
+    [type], type[DataclassStructPackable]
+]:
     if endian not in _allowed_endians:
         raise ValueError(
             f'invalid endianness: {endian}. '
@@ -91,7 +126,7 @@ def dataclass(endian: str = NATIVE_ENDIAN_ALIGNED) -> Callable[[type], type]:
 
     allow_native = endian in (NATIVE_ENDIAN, NATIVE_ENDIAN_ALIGNED)
 
-    def decorator(cls) -> type:
+    def decorator(cls: type) -> type[DataclassStructPackable]:
         return _make_class(cls, endian, allow_native)
 
     return decorator
