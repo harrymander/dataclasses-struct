@@ -2,8 +2,8 @@ from collections.abc import Callable
 import dataclasses
 import inspect
 import struct
-from typing import Annotated, Any, Protocol, TypeVar, get_args, get_origin
-from typing_extensions import Self, dataclass_transform
+from typing import Annotated, Any, get_args, get_origin
+from typing_extensions import dataclass_transform
 
 from .field import primitive_fields, Field
 
@@ -21,18 +21,6 @@ _allowed_endians = frozenset((
     BIG_ENDIAN,
     NETWORK_ENDIAN,
 ))
-
-
-T = TypeVar('T', covariant=True)
-
-
-class DataclassStructPackable(Protocol):
-    def pack(self) -> bytes:
-        ...
-
-    @classmethod
-    def from_packed(cls, data: bytes) -> Self:
-        ...
 
 
 def _validate_and_parse_field(
@@ -98,7 +86,7 @@ def from_packed(cls, data: bytes) -> cls_type:
 
 def _make_class(
     cls: type, endian: str, allow_native: bool
-) -> type[DataclassStructPackable]:
+) -> type:
     cls_annotations = inspect.get_annotations(cls)
     struct_format = ''.join(
         _validate_and_parse_field(cls, name, field, allow_native)
@@ -107,7 +95,6 @@ def _make_class(
     names = list(cls_annotations.keys())
 
     setattr(cls, '__dataclass_struct__', struct.Struct(endian + struct_format))
-    setattr(cls, '__dataclass_struct_fieldnames__', names)
     setattr(cls, 'pack', _make_pack_method(names))
     setattr(cls, 'from_packed', _make_unpack_method(cls))
 
@@ -115,9 +102,7 @@ def _make_class(
 
 
 @dataclass_transform()
-def dataclass(endian: str = NATIVE_ENDIAN_ALIGNED) -> Callable[
-    [type], type[DataclassStructPackable]
-]:
+def dataclass(endian: str = NATIVE_ENDIAN_ALIGNED) -> Callable[[type], type]:
     if endian not in _allowed_endians:
         raise ValueError(
             f'invalid endianness: {endian}. '
@@ -126,7 +111,7 @@ def dataclass(endian: str = NATIVE_ENDIAN_ALIGNED) -> Callable[
 
     allow_native = endian in (NATIVE_ENDIAN, NATIVE_ENDIAN_ALIGNED)
 
-    def decorator(cls: type) -> type[DataclassStructPackable]:
+    def decorator(cls: type) -> type:
         return _make_class(cls, endian, allow_native)
 
     return decorator
