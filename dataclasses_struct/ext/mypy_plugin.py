@@ -3,6 +3,7 @@ from collections.abc import Callable
 from mypy.nodes import Argument, ArgKind, Var
 from mypy.plugin import ClassDefContext, Plugin as BasePlugin
 from mypy.plugins.common import add_attribute_to_class, add_method_to_class
+from mypy.plugins.dataclasses import dataclass_class_maker_callback
 from mypy.types import TypeVarType
 
 
@@ -36,6 +37,11 @@ def transform_dataclass_struct(ctx: ClassDefContext) -> bool:
         ctx.api.named_type('struct.Struct'),
         is_classvar=True,
     )
+
+    # Not sure if this is the right thing to do here... needed because
+    # @dataclass_transform doesn't seem to work with mypy when using this
+    # custom plugin.
+    dataclass_class_maker_callback(ctx)
 
     return True
 
