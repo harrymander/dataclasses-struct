@@ -23,7 +23,7 @@ if sys.platform.startswith('win'):
         args = [
             'cl.exe',
             'test\\struct.c',
-            f'/Fo"{dir}"',
+            f'/Fo:{dir}',
             '/WX',
         ]
         if packed:
