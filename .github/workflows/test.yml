@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         pyversion: ["3.8", "3.9", "3.10", "3.11"]
-        image: ["ubuntu-22.04"]
+        image: ["ubuntu-22.04", "windows-2022"]
     name: ${{ matrix.image }} / ${{ matrix.pyversion }}
     runs-on: ${{ matrix.image }}
     defaults:
@@ -38,6 +38,10 @@ jobs:
 
       - name: Install
         run: poetry install -vvv --with dev --no-interaction --no-ansi
+
+      - name: Configure MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        if: matrix.os == 'windows-2022'
 
       - name: Lint
         run: poetry run flake8 --exclude .venv .
