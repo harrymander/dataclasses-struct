@@ -3,15 +3,21 @@
 #include <stdio.h>
 #include <string.h>
 
-
+#if defined(TEST_PACKED_STRUCT) && defined(_MSC_VER)
+#pragma pack(push, 1)
+#endif
 struct test {
     char str_test[13];
     uint32_t u32_test;
     double double_test;
 }
 #ifdef TEST_PACKED_STRUCT
+#ifdef _MSC_VER
+#pragma pack(pop)
+#else
 __attribute__((packed))
-#endif
+#endif // _MSC_VER
+#endif // TEST_PACKED_STRUCT
 ;
 
 int main(const int argc, const char *argv[])
