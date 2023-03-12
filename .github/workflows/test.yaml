@@ -1,0 +1,52 @@
+name: Tests
+
+on:
+  push:
+    branches: ["master"]
+
+jobs:
+  tests:
+    name: ${{ matrix.os } / ${{ matrix.pyversion }}
+    runs-on: ${{ matrix.image }}
+    strategy:
+      matrix:
+        os: [Ubuntu, Windows]
+        pyversion: ["3.10"]
+        include:
+          - os: Ubuntu
+            image: ubuntu-22.04
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.pyversion }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.pyversion }}
+
+      - name: Install Poetry
+        run: pip install poetry==1.4.0
+
+      - name: Configure Poetry
+        run: poetry config virtualenvs.in-project true
+
+      - name: Cache the virtualenv
+        uses: actions/cache@v2
+        with:
+          path: ./.venv
+          key: ${{ matrix.image }}-py${{ matrix.pyversion }}-venv-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install
+        run: poetry install -vvv --with dev --no-interaction
+
+      - name: Lint
+        run: poetry run flake8 --exclude .venv .
+
+      - name: Python type checking
+        run: poetry run mypy
+
+      - name: Run tests
+        run: poetry run pytest
