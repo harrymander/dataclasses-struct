@@ -37,7 +37,7 @@ jobs:
           key: ${{ matrix.image }}-py${{ matrix.pyversion }}-venv-${{ hashFiles('**/poetry.lock') }}
 
       - name: Install
-        run: poetry install -vvv --with dev --no-interaction
+        run: poetry install -vvv --with dev --no-interaction --no-ansi
 
       - name: Lint
         run: poetry run flake8 --exclude .venv .
