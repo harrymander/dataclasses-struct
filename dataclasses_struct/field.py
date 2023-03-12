@@ -1,6 +1,6 @@
 import abc
 from ctypes import c_size_t, c_ssize_t, c_void_p, sizeof
-from typing import Generic, Literal, TypeVar
+from typing import Generic, Literal, Type, TypeVar
 
 
 T = TypeVar('T')
@@ -8,7 +8,7 @@ T = TypeVar('T')
 
 class Field(abc.ABC, Generic[T]):
     native_only: bool = False
-    type_: type[T]
+    type_: Type[T]
 
     @abc.abstractmethod
     def format(self) -> str:

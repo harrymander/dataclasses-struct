@@ -1,4 +1,4 @@
-from collections.abc import Callable
+from typing import Callable, Optional, Type
 
 from mypy.nodes import Argument, ArgKind, Var
 from mypy.plugin import ClassDefContext, Plugin as BasePlugin
@@ -49,11 +49,11 @@ def transform_dataclass_struct(ctx: ClassDefContext) -> bool:
 class Plugin(BasePlugin):
     def get_class_decorator_hook_2(
         self, fullname: str
-    ) -> Callable[[ClassDefContext], bool] | None:
+    ) -> Optional[Callable[[ClassDefContext], bool]]:
         if fullname == DATACLASS_STRUCT_DECORATOR:
             return transform_dataclass_struct
         return None
 
 
-def plugin(version: str) -> type[Plugin]:
+def plugin(version: str) -> Type[Plugin]:
     return Plugin

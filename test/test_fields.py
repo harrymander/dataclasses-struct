@@ -1,5 +1,5 @@
 from ctypes import c_size_t, c_ssize_t, c_void_p, sizeof
-from typing import Annotated
+from typing_extensions import Annotated
 
 import pytest
 

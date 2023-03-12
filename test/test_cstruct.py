@@ -1,7 +1,7 @@
 from pathlib import Path
 import subprocess
 import sys
-from typing import Annotated
+from typing_extensions import Annotated
 
 import pytest
 

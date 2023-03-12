@@ -1,11 +1,21 @@
-from collections.abc import Callable
 import dataclasses
-import inspect
 import struct
-from typing import Annotated, Any, get_args, get_origin
-from typing_extensions import dataclass_transform
+from typing import Any, Callable, Dict, List, Type
+from typing_extensions import (
+    Annotated,
+    dataclass_transform,
+    get_args,
+    get_origin,
+)
 
 from .field import primitive_fields, Field, BytesField
+
+try:
+    from inspect import get_annotations  # type: ignore
+except ImportError:
+    def get_annotations(t):  # type: ignore
+        return t.__annotations__
+
 
 NATIVE_ENDIAN_ALIGNED = '@'
 NATIVE_ENDIAN = '='
@@ -26,7 +36,7 @@ _allowed_endians = frozenset((
 def _validate_and_parse_field(
     cls: type,
     name: str,
-    f: type[Any],
+    f: Type[Any],
     allow_native: bool,
     validate: bool,
 ) -> str:
@@ -61,7 +71,7 @@ def _validate_and_parse_field(
     return field.format()
 
 
-def _make_pack_method(fieldnames: list[str]) -> Callable:
+def _make_pack_method(fieldnames: List[str]) -> Callable:
     func = f"""
 def pack(self) -> bytes:
     '''Pack to bytes using struct.pack.'''
@@ -70,7 +80,7 @@ def pack(self) -> bytes:
     )
 """
 
-    scope: dict[str, Any] = {}
+    scope: Dict[str, Any] = {}
     exec(func, {}, scope)
     return scope['pack']
 
@@ -82,7 +92,7 @@ def from_packed(cls, data: bytes) -> cls_type:
     return cls(*cls.__dataclass_struct__.unpack(data))
 """
 
-    scope: dict[str, Any] = {'cls_type': cls}
+    scope: Dict[str, Any] = {'cls_type': cls}
     exec(func, {}, scope)
     return classmethod(scope['from_packed'])
 
@@ -90,7 +100,7 @@ def from_packed(cls, data: bytes) -> cls_type:
 def _make_class(
     cls: type, endian: str, allow_native: bool, validate: bool
 ) -> type:
-    cls_annotations = inspect.get_annotations(cls)
+    cls_annotations = get_annotations(cls)
     struct_format = ''.join(
         _validate_and_parse_field(cls, name, field, allow_native, validate)
         for name, field in cls_annotations.items()
