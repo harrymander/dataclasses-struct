@@ -95,6 +95,16 @@ class IntField(Field[int]):
         return f'{super().__repr__()}({sign}, {bits}-bit)'
 
 
+class SignedIntField(IntField):
+    def __init__(self, size: Literal[1, 2, 4, 8]):
+        super().__init__(True, size)
+
+
+class UnsignedIntField(IntField):
+    def __init__(self, size: Literal[1, 2, 4, 8]):
+        super().__init__(False, size)
+
+
 class FloatField(Field[float]):
     type_ = float
 
@@ -127,6 +137,16 @@ class SizeField(Field[int]):
             self.signed_field.validate(val)
         else:
             self.unsigned_field.validate(val)
+
+
+class UnsignedSizeField(SizeField):
+    def __init__(self):
+        super().__init__(False)
+
+
+class SignedSizeField(SizeField):
+    def __init__(self):
+        super().__init__(True)
 
 
 class PointerField(Field[int]):

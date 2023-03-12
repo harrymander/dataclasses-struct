@@ -31,9 +31,13 @@ from .field import (
     BoolField,
     CharField,
     IntField,
+    SignedIntField,
+    UnsignedIntField,
     FloatField,
     DoubleField,
     SizeField,
+    SignedSizeField,
+    UnsignedSizeField,
     PointerField,
     BytesField,
 )

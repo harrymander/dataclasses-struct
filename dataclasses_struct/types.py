@@ -9,18 +9,18 @@ Char = Annotated[bytes, field.CharField()]
 Bool = Annotated[bool, field.BoolField()]
 
 # Integer types
-Int8 = Annotated[int, field.IntField(True, 1)]
-Uint8 = Annotated[int, field.IntField(False, 1)]
-Int16 = Annotated[int, field.IntField(True, 2)]
-Uint16 = Annotated[int, field.IntField(False, 2)]
-Int32 = Annotated[int, field.IntField(True, 4)]
-Uint32 = Annotated[int, field.IntField(False, 4)]
-Int64 = Annotated[int, field.IntField(True, 8)]
-Uint64 = Annotated[int, field.IntField(False, 8)]
+Int8 = Annotated[int, field.SignedIntField(1)]
+Uint8 = Annotated[int, field.UnsignedIntField(1)]
+Int16 = Annotated[int, field.SignedIntField(2)]
+Uint16 = Annotated[int, field.UnsignedIntField(2)]
+Int32 = Annotated[int, field.SignedIntField(4)]
+Uint32 = Annotated[int, field.UnsignedIntField(4)]
+Int64 = Annotated[int, field.SignedIntField(8)]
+Uint64 = Annotated[int, field.UnsignedIntField(8)]
 
 # Native size types
-Size = Annotated[int, field.SizeField(False)]
-SSize = Annotated[int, field.SizeField(True)]
+Size = Annotated[int, field.UnsignedSizeField()]
+SSize = Annotated[int, field.SignedSizeField()]
 Pointer = Annotated[int, field.PointerField()]
 
 # Floating point types
