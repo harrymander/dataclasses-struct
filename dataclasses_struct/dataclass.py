@@ -27,7 +27,8 @@ def _validate_and_parse_field(
     cls: type,
     name: str,
     f: type[Any],
-    allow_native: bool
+    allow_native: bool,
+    validate: bool,
 ) -> str:
     if get_origin(f) == Annotated:
         type_, field = get_args(f)
@@ -48,7 +49,7 @@ def _validate_and_parse_field(
     if field.native_only and not allow_native:
         raise TypeError(f'field {field} only supported for native alignment')
 
-    if hasattr(cls, name):
+    if validate and hasattr(cls, name):
         val = getattr(cls, name)
         if not isinstance(val, field.type_):
             raise TypeError(
@@ -87,11 +88,11 @@ def from_packed(cls, data: bytes) -> cls_type:
 
 
 def _make_class(
-    cls: type, endian: str, allow_native: bool
+    cls: type, endian: str, allow_native: bool, validate: bool
 ) -> type:
     cls_annotations = inspect.get_annotations(cls)
     struct_format = ''.join(
-        _validate_and_parse_field(cls, name, field, allow_native)
+        _validate_and_parse_field(cls, name, field, allow_native, validate)
         for name, field in cls_annotations.items()
     )
     names = list(cls_annotations.keys())
@@ -104,7 +105,10 @@ def _make_class(
 
 
 @dataclass_transform()
-def dataclass(endian: str = NATIVE_ENDIAN_ALIGNED) -> Callable[[type], type]:
+def dataclass(
+    endian: str = NATIVE_ENDIAN_ALIGNED,
+    validate: bool = True,
+) -> Callable[[type], type]:
     if endian not in _allowed_endians:
         raise ValueError(
             f'invalid endianness: {endian}. '
@@ -112,6 +116,11 @@ def dataclass(endian: str = NATIVE_ENDIAN_ALIGNED) -> Callable[[type], type]:
         )
 
     def decorator(cls: type) -> type:
-        return _make_class(cls, endian, endian == NATIVE_ENDIAN_ALIGNED)
+        return _make_class(
+            cls,
+            endian,
+            endian == NATIVE_ENDIAN_ALIGNED,
+            validate
+        )
 
     return decorator

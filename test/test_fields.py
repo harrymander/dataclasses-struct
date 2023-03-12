@@ -303,3 +303,49 @@ def test_bool_default_wrong_type(default) -> None:
         @dcs.dataclass()
         class _:
             x: bool = default
+
+
+def test_unvalidated() -> None:
+    @dcs.dataclass(validate=False)
+    class _:
+        a: dcs.Size = -1
+        b: dcs.Size = SIZE_MAX + 1
+        c: dcs.SSize = SSIZE_MIN - 1
+        d: dcs.SSize = SSIZE_MAX + 1
+
+        e: dcs.Pointer = -1
+        f: dcs.Pointer = POINTER_MAX
+
+        g: dcs.Int8 = -0x80 - 1
+        h: dcs.Int8 = 0x7f + 1
+        i: dcs.Uint8 = -1
+        j: dcs.Uint8 = 0xff + 1
+
+        k: dcs.Int16 = -0x8000 - 1
+        l: dcs.Int16 = 0x7fff + 1
+        m: dcs.Uint16 = -1
+        n: dcs.Uint16 = 0xffff + 1
+
+        o: dcs.Int32 = -0x8000_0000 - 1
+        p: dcs.Int32 = 0x7fff_ffff + 1
+        q: dcs.Uint32 = -1
+        r: dcs.Uint32 = 0xffff_ffff + 1
+
+        s: dcs.Int64 = -0x8000_0000_0000_0000 - 1
+        t: dcs.Int64 = 0x7fff_ffff_ffff_ffff + 1
+        u: dcs.Uint64 = -1
+        v: dcs.Uint64 = 0xffff_ffff_ffff_ffff + 1
+
+        w: int = -0x8000_0000_0000_0000 - 1
+        x: int = 0x7fff_ffff_ffff_ffff + 1
+
+        y: int = 'wrong'  # type: ignore
+        z: float = 1
+        aa: bytes = 'a'  # type: ignore
+        ab: bool = 'False'  # type: ignore
+
+        ac: dcs.Char = 'a'  # type: ignore
+        ad: dcs.Char = b''
+        ae: dcs.Char = b'aa'
+
+        af: Annotated[bytes, 3] = b'1234'
