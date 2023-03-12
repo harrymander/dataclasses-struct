@@ -5,7 +5,7 @@ import struct
 from typing import Annotated, Any, get_args, get_origin
 from typing_extensions import dataclass_transform
 
-from .field import primitive_fields, Field
+from .field import primitive_fields, Field, BytesField
 
 NATIVE_ENDIAN_ALIGNED = '@'
 NATIVE_ENDIAN = '='
@@ -37,7 +37,9 @@ def _validate_and_parse_field(
             raise TypeError(f'type not supported: {f}')
         type_ = f
 
-    if not isinstance(field, Field):
+    if issubclass(type_, bytes) and isinstance(field, int):
+        field = BytesField(field)
+    elif not isinstance(field, Field):
         raise TypeError(f'invalid field annotation: {field}')
 
     if not issubclass(type_, field.type_):
