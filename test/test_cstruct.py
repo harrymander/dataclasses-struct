@@ -7,36 +7,45 @@ import pytest
 
 import dataclasses_struct as dcs
 
-
-if sys.platform.startswith('win'):
-    pytest.skip(
-        'skipping tests not supported on Windows',
-        allow_module_level=True
-    )
+pytestmark = pytest.mark.cc
 
 
 def run(*args: str) -> None:
     subprocess.run(args, check=True)
 
 
-def _struct_tester(dir: Path, packed: bool = False) -> Path:
-    """
-    Compiles struct.c and returns path to executable
-    """
+if sys.platform.startswith('win'):
+    def _struct_tester(dir: Path, packed: bool = False) -> Path:
+        """
+        Compiles struct.c and returns path to executable
+        """
+        exe_path = dir / 'struct-test.exe'
+        args = [
+            'cl.exe',
+            'test\\struct.c',
+            '/WX',
+        ]
+        if packed:
+            args.append('/DTEST_PACKED_STRUCT')
+        args.extend(('/link', f'/out:{exe_path}'))
 
-    exe_path = dir / 'struct-test'
-    args = [
-        'gcc',
-        '-o', str(exe_path),
-        'test/struct.c',
-        '-Wall',
-        '-Werror',
-    ]
-    if packed:
-        args.append('-DTEST_PACKED_STRUCT')
+        run(*args)
+        return exe_path
+else:
+    def _struct_tester(dir: Path, packed: bool = False) -> Path:
+        exe_path = dir / 'struct-test'
+        args = [
+            'gcc',
+            '-o', str(exe_path),
+            'test/struct.c',
+            '-Wall',
+            '-Werror',
+        ]
+        if packed:
+            args.append('-DTEST_PACKED_STRUCT')
 
-    run(*args)
-    return exe_path
+        run(*args)
+        return exe_path
 
 
 @pytest.fixture
