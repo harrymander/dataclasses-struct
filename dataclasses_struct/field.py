@@ -79,7 +79,7 @@ class IntField(Field[int]):
 
     def format(self) -> str:
         f = self._formats[self.size]
-        return f.upper() if self.signed else f
+        return f if self.signed else f.upper()
 
     def validate(self, val: int) -> None:
         sizes = self._signed_sizes if self.signed else self._unsigned_sizes
