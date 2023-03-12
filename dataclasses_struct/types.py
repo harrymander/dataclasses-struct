@@ -5,10 +5,12 @@ from . import field
 # Single char type
 Char = Annotated[bytes, field.CharField()]
 
+# Boolean type
+Bool = Annotated[bool, field.BoolField()]
+
 # Integer types
 Int8 = Annotated[int, field.IntField(True, 1)]
 Uint8 = Annotated[int, field.IntField(False, 1)]
-Bool = Annotated[bool, field.BoolField()]
 Int16 = Annotated[int, field.IntField(True, 2)]
 Uint16 = Annotated[int, field.IntField(False, 2)]
 Int32 = Annotated[int, field.IntField(True, 4)]
@@ -25,11 +27,3 @@ Float32 = Annotated[float, field.FloatField()]
 Float = Float32
 Float64 = Annotated[float, field.DoubleField()]
 Double = Float64
-
-# String types
-PascalString = Annotated[bytes, field.VariableLengthStringField()]
-VariableLengthString = PascalString
-
-
-def String(n: int):
-    return Annotated[bytes, field.StringField(n)]

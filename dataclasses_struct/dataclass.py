@@ -109,9 +109,7 @@ def dataclass(endian: str = NATIVE_ENDIAN_ALIGNED) -> Callable[[type], type]:
             '(Did you forget to add parentheses: @dataclass()?)'
         )
 
-    allow_native = endian in (NATIVE_ENDIAN, NATIVE_ENDIAN_ALIGNED)
-
     def decorator(cls: type) -> type:
-        return _make_class(cls, endian, allow_native)
+        return _make_class(cls, endian, endian == NATIVE_ENDIAN_ALIGNED)
 
     return decorator

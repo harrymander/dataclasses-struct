@@ -1,4 +1,5 @@
 import abc
+from ctypes import c_size_t, c_ssize_t, sizeof
 from typing import Generic, Literal, TypeVar
 
 
@@ -85,13 +86,12 @@ class IntField(Field[int]):
         min_, max_ = sizes[self.size]
         if not min_ <= val <= max_:
             sign = 'signed' if self.signed else 'unsigned'
-            raise ValueError(
-                f'value out of range for {self.size * 8}-bit {sign} integer'
-            )
+            n = self.size * 8
+            raise ValueError(f'value out of range for {n}-bit {sign} integer')
 
     def __repr__(self) -> str:
         sign = 'signed' if self.signed else 'unsigned'
-        bits = self.size + 8
+        bits = self.size * 8
         return f'{super().__repr__()}({sign}, {bits}-bit)'
 
 
@@ -113,14 +113,23 @@ class SizeField(Field[int]):
     native_only = True
     type_ = int
 
+    signed_field = IntField(True, sizeof(c_ssize_t))  # type: ignore
+    unsigned_field = IntField(False, sizeof(c_size_t))  # type: ignore
+
     def __init__(self, signed: bool):
         self.signed = signed
 
     def format(self) -> str:
         return 'n' if self.signed else 'N'
 
+    def validate(self, val: int) -> None:
+        if self.signed:
+            self.signed_field.validate(val)
+        else:
+            self.unsigned_field.validate(val)
 
-class StringField(Field[bytes]):
+
+class BytesField(Field[bytes]):
     type_ = bytes
 
     def __init__(self, n: int):
@@ -134,21 +143,10 @@ class StringField(Field[bytes]):
 
     def validate(self, val: bytes) -> None:
         if len(val) > self.n:
-            raise ValueError(f'string cannot be longer than {self.n} bytes')
+            raise ValueError(f'bytes cannot be longer than {self.n} bytes')
 
     def __repr__(self) -> str:
         return f'{super().__repr__()}({self.n})'
-
-
-class VariableLengthStringField(Field[bytes]):
-    type_ = bytes
-
-    def validate(self, val: bytes) -> None:
-        if len(val) > 0xff:
-            raise ValueError(f'string cannot be longer than {0xff} bytes')
-
-    def format(self) -> str:
-        return 'p'
 
 
 primitive_fields = {

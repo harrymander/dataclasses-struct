@@ -25,9 +25,6 @@ from .types import (
     Float,
     Float64,
     Double,
-    PascalString,
-    VariableLengthString,
-    String,
 )
 from .field import (
     BoolField,
@@ -36,6 +33,5 @@ from .field import (
     FloatField,
     DoubleField,
     SizeField,
-    StringField,
-    VariableLengthStringField,
+    BytesField,
 )
