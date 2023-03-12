@@ -1,10 +1,18 @@
 from pathlib import Path
 import subprocess
+import sys
 from typing import Annotated
 
 import pytest
 
 import dataclasses_struct as dcs
+
+
+if sys.platform.startswith('win'):
+    pytest.skip(
+        'skipping tests not supported on Windows',
+        allow_module_level=True
+    )
 
 
 def run(*args: str) -> None:
