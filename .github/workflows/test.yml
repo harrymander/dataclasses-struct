@@ -6,7 +6,7 @@ on:
 
 jobs:
   tests:
-    name: ${{ matrix.os } / ${{ matrix.pyversion }}
+    name: ${{ matrix.os }} / ${{ matrix.pyversion }}
     runs-on: ${{ matrix.image }}
     strategy:
       matrix:
