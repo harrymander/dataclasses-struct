@@ -1,4 +1,4 @@
-from ctypes import c_size_t, c_ssize_t, sizeof
+from ctypes import c_size_t, c_ssize_t, c_void_p, sizeof
 from typing import Annotated
 
 import pytest
@@ -94,6 +94,7 @@ def test_invalid_field_type() -> None:
     (
         dcs.Size,
         dcs.SSize,
+        dcs.Pointer,
     )
 )
 def test_invalid_non_native_size_fields(
@@ -108,8 +109,9 @@ def test_invalid_non_native_size_fields(
 def test_valid_native_size_fields() -> None:
     @dcs.dataclass(dcs.NATIVE_ENDIAN_ALIGNED)
     class _:
-        k: dcs.Size
-        l: dcs.SSize
+        a: dcs.Size
+        b: dcs.SSize
+        c: dcs.Pointer
 
 
 @pytest.mark.parametrize(
@@ -149,17 +151,19 @@ def test_invalid_bytes_size(size: int) -> None:
             x: Annotated[bytes, dcs.BytesField(size)]
 
 
-size_t_size = sizeof(c_size_t)
-ssize_t_size = sizeof(c_ssize_t)
+ssize_t_min = -2**(sizeof(c_ssize_t) * 8 - 1)
 
 
 @pytest.mark.parametrize(
     'type_,default',
     (
         (dcs.Size, -1),
-        (dcs.Size, 2**(size_t_size * 8)),
-        (dcs.SSize, -2**(ssize_t_size * 8 - 1) - 1),
-        (dcs.SSize, 2**(ssize_t_size * 8 - 1)),
+        (dcs.Size, 2**(sizeof(c_size_t) * 8)),
+        (dcs.SSize, ssize_t_min - 1),
+        (dcs.SSize, -ssize_t_min),
+
+        (dcs.Pointer, -1),
+        (dcs.Pointer, 2**sizeof(c_void_p)),
 
         (dcs.Int8, -0x80 - 1),
         (dcs.Int8, 0x7f + 1),
@@ -194,6 +198,7 @@ def test_int_default_out_of_range(type_: type, default: int) -> None:
     (
         dcs.Size,
         dcs.SSize,
+        dcs.Pointer,
         dcs.Uint8,
         dcs.Uint16,
         dcs.Uint32,

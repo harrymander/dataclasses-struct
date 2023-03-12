@@ -1,5 +1,5 @@
 import abc
-from ctypes import c_size_t, c_ssize_t, sizeof
+from ctypes import c_size_t, c_ssize_t, c_void_p, sizeof
 from typing import Generic, Literal, TypeVar
 
 
@@ -127,6 +127,19 @@ class SizeField(Field[int]):
             self.signed_field.validate(val)
         else:
             self.unsigned_field.validate(val)
+
+
+class PointerField(Field[int]):
+    native_only = True
+    type_ = int
+    max_ = 2**(sizeof(c_void_p) - 1)
+
+    def format(self) -> str:
+        return 'P'
+
+    def validate(self, val: int) -> None:
+        if not (0 <= val <= self.max_):
+            raise ValueError('value out of range for system pointer')
 
 
 class BytesField(Field[bytes]):

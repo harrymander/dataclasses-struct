@@ -21,6 +21,7 @@ Uint64 = Annotated[int, field.IntField(False, 8)]
 # Native size types
 Size = Annotated[int, field.SizeField(False)]
 SSize = Annotated[int, field.SizeField(True)]
+Pointer = Annotated[int, field.PointerField()]
 
 # Floating point types
 Float32 = Annotated[float, field.FloatField()]

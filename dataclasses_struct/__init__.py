@@ -21,6 +21,7 @@ from .types import (
     Uint64,
     Size,
     SSize,
+    Pointer,
     Float32,
     Float,
     Float64,
@@ -33,5 +34,6 @@ from .field import (
     FloatField,
     DoubleField,
     SizeField,
+    PointerField,
     BytesField,
 )
