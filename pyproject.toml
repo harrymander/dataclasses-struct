@@ -3,7 +3,7 @@ name = "dataclasses-struct"
 version = "0.1.0"
 description = ""
 authors = ["Harry Mander <harrymander96@gmail.com>"]
-# readme = "README.md"
+readme = "README.md"
 packages = [{include = "dataclasses_struct"}]
 
 [tool.poetry.dependencies]
