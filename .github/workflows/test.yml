@@ -41,7 +41,7 @@ jobs:
 
       - name: Configure MSVC
         uses: ilammy/msvc-dev-cmd@v1
-        if: matrix.os == 'windows-2022'
+        if: matrix.image == 'windows-2022'
 
       - name: Lint
         run: poetry run flake8 --exclude .venv .
