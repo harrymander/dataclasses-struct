@@ -84,7 +84,7 @@ class IntField(Field[int]):
     def validate(self, val: int) -> None:
         sizes = self._signed_sizes if self.signed else self._unsigned_sizes
         min_, max_ = sizes[self.size]
-        if not min_ <= val <= max_:
+        if not (min_ <= val <= max_):
             sign = 'signed' if self.signed else 'unsigned'
             n = self.size * 8
             raise ValueError(f'value out of range for {n}-bit {sign} integer')
@@ -132,7 +132,7 @@ class SizeField(Field[int]):
 class PointerField(Field[int]):
     native_only = True
     type_ = int
-    max_ = 2**(sizeof(c_void_p) - 1)
+    max_ = 2**(sizeof(c_void_p) * 8) - 1
 
     def format(self) -> str:
         return 'P'

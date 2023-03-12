@@ -6,6 +6,12 @@ import pytest
 import dataclasses_struct as dcs
 
 
+SSIZE_MIN = -2**(sizeof(c_ssize_t) * 8 - 1)
+SSIZE_MAX = -SSIZE_MIN - 1
+SIZE_MAX = 2**(sizeof(c_size_t) * 8) - 1
+POINTER_MAX = 2**(sizeof(c_void_p) * 8) - 1
+
+
 def assert_same_format(t1: type, t2: type) -> None:
     assert (
         t1.__dataclass_struct__.format  # type: ignore
@@ -151,19 +157,16 @@ def test_invalid_bytes_size(size: int) -> None:
             x: Annotated[bytes, dcs.BytesField(size)]
 
 
-ssize_t_min = -2**(sizeof(c_ssize_t) * 8 - 1)
-
-
 @pytest.mark.parametrize(
     'type_,default',
     (
         (dcs.Size, -1),
-        (dcs.Size, 2**(sizeof(c_size_t) * 8)),
-        (dcs.SSize, ssize_t_min - 1),
-        (dcs.SSize, -ssize_t_min),
+        (dcs.Size, SIZE_MAX + 1),
+        (dcs.SSize, SSIZE_MIN - 1),
+        (dcs.SSize, SSIZE_MAX + 1),
 
         (dcs.Pointer, -1),
-        (dcs.Pointer, 2**sizeof(c_void_p)),
+        (dcs.Pointer, POINTER_MAX + 1),
 
         (dcs.Int8, -0x80 - 1),
         (dcs.Int8, 0x7f + 1),
@@ -191,6 +194,41 @@ def test_int_default_out_of_range(type_: type, default: int) -> None:
         @dcs.dataclass()
         class _:
             x: type_ = default  # type: ignore
+
+
+def test_int_default_range_boundary() -> None:
+    @dcs.dataclass()
+    class _:
+        a: dcs.Size = 0
+        b: dcs.Size = SIZE_MAX
+        c: dcs.SSize = SSIZE_MIN
+        d: dcs.SSize = SSIZE_MAX
+
+        e: dcs.Pointer = 0
+        f: dcs.Pointer = POINTER_MAX
+
+        g: dcs.Int8 = -0x80
+        h: dcs.Int8 = 0x7f
+        i: dcs.Uint8 = 0
+        j: dcs.Uint8 = 0xff
+
+        k: dcs.Int16 = -0x8000
+        l: dcs.Int16 = 0x7fff
+        m: dcs.Uint16 = 0
+        n: dcs.Uint16 = 0xffff
+
+        o: dcs.Int32 = -0x8000_0000
+        p: dcs.Int32 = 0x7fff_ffff
+        q: dcs.Uint32 = 0
+        r: dcs.Uint32 = 0xffff_ffff
+
+        s: dcs.Int64 = -0x8000_0000_0000_0000
+        t: dcs.Int64 = 0x7fff_ffff_ffff_ffff
+        u: dcs.Uint64 = 0
+        v: dcs.Uint64 = 0xffff_ffff_ffff_ffff
+
+        w: int = -0x8000_0000_0000_0000
+        x: int = 0x7fff_ffff_ffff_ffff
 
 
 @pytest.mark.parametrize(
