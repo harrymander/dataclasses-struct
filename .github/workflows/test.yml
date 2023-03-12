@@ -8,8 +8,8 @@ jobs:
   tests:
     strategy:
       matrix:
-        pyversion: ["3.8", "3.9", "3.10", "3.11"]
-        image: ["ubuntu-22.04"]
+        pyversion: ["3.10"]
+        image: ["windows-2022"]
     name: ${{ matrix.image }} / ${{ matrix.pyversion }}
     runs-on: ${{ matrix.image }}
     defaults:
@@ -31,7 +31,7 @@ jobs:
         run: poetry config virtualenvs.in-project true
 
       - name: Cache the virtualenv
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ./.venv
           key: ${{ matrix.image }}-py${{ matrix.pyversion }}-venv-${{ hashFiles('**/poetry.lock') }}
