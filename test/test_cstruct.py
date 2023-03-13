@@ -33,10 +33,15 @@ if sys.platform.startswith('win'):
         run(*args)
         return exe_path
 else:
+    if sys.platform == 'darwin':
+        CC = 'clang'
+    else:
+        CC = 'gcc'
+
     def _struct_tester(dir: Path, packed: bool = False) -> Path:
         exe_path = dir / 'struct-test'
         args = [
-            'gcc',
+            CC,
             '-o', str(exe_path),
             'test/struct.c',
             '-Wall',
