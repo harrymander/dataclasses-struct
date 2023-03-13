@@ -1,5 +1,10 @@
 # dataclasses-struct
 
+[![PyPI version](https://badge.fury.io/py/dataclasses-struct.svg)](https://badge.fury.io/py/dataclasses-struct)
+[![Python versions](https://img.shields.io/pypi/pyversions/dataclasses-struct)](https://pypi.org/project/dataclasses-struct/)
+[![Tests status](https://github.com/harrymander/dataclasses-struct/actions/workflows/test.yml/badge.svg?event=push)]()
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/harrymander/dataclasses-struct/blob/main/LICENSE)
+
 A simple Python package that combines
 [`dataclasses`](https://docs.python.org/3/library/dataclasses.html) with
 [`struct`](https://docs.python.org/3/library/struct.html) for packing and
