@@ -1,0 +1,51 @@
+- case: test_is_dataclass
+  mypy_config: 'plugins = dataclasses_struct.ext.mypy_plugin'
+  main: |
+    import dataclasses_struct as dcs
+
+    @dcs.dataclass()
+    class Test:
+        x: int
+
+    t = Test(x=1)  # should work
+    t = Test(1)  # should work
+    reveal_type(t.x)  # N: Revealed type is "builtins.int"
+
+
+- case: test_pack_returns_bytes
+  mypy_config: 'plugins = dataclasses_struct.ext.mypy_plugin'
+  main: |
+    import dataclasses_struct as dcs
+
+    @dcs.dataclass()
+    class Test:
+        x: int
+
+    t = Test(2)
+    reveal_type(t.pack())  # N: Revealed type is "builtins.bytes"
+
+
+- case: test_has_struct_attribute
+  mypy_config: 'plugins = dataclasses_struct.ext.mypy_plugin'
+  main: |
+    import dataclasses_struct as dcs
+
+    @dcs.dataclass()
+    class Test:
+        x: int
+
+    reveal_type(Test.__dataclass_struct__)  # N: Revealed type is "struct.Struct"
+
+
+- case: test_from_packed_returns_instance
+  mypy_config: 'plugins = dataclasses_struct.ext.mypy_plugin'
+  expect_fail: True
+  main: |
+    import dataclasses_struct as dcs
+
+    @dcs.dataclass()
+    class Test:
+        x: int
+
+    t = Test.from_packed(Test(1).pack())
+    reveal_type(t)  # N: Revealed type is "__main__.Test"
