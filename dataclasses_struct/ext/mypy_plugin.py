@@ -4,7 +4,7 @@ from mypy.nodes import Argument, ArgKind, Var
 from mypy.plugin import ClassDefContext, Plugin as BasePlugin
 from mypy.plugins.common import add_attribute_to_class, add_method_to_class
 from mypy.plugins.dataclasses import dataclass_class_maker_callback
-from mypy.types import TypeVarType
+from mypy.types import TypeType, TypeVarType
 
 
 DATACLASS_STRUCT_DECORATOR = 'dataclasses_struct.dataclass.dataclass'
@@ -26,7 +26,7 @@ def transform_dataclass_struct(ctx: ClassDefContext) -> bool:
         'from_packed',
         [Argument(Var('data', bytes_type), bytes_type, None, ArgKind.ARG_POS)],
         tvd,
-        self_type=tvd,
+        self_type=TypeType(tvd),
         tvar_def=tvd,
         is_classmethod=True,
     )

@@ -39,7 +39,6 @@
 
 - case: test_from_packed_returns_instance
   mypy_config: 'plugins = dataclasses_struct.ext.mypy_plugin'
-  expect_fail: True
   main: |
     import dataclasses_struct as dcs
 
@@ -48,4 +47,4 @@
         x: int
 
     t = Test.from_packed(Test(1).pack())
-    reveal_type(t)  # N: Revealed type is "__main__.Test"
+    reveal_type(t)  # N: Revealed type is "main.Test"
