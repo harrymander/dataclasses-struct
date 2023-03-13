@@ -9,12 +9,14 @@ jobs:
     strategy:
       matrix:
         pyversion: ["3.8", "3.9", "3.10", "3.11"]
-        os: ["Ubuntu", "Windows"]
+        os: ["Ubuntu", "Windows", "macOS"]
         include:
           - os: Windows
             image: windows-2022
           - os: Ubuntu
             image: ubuntu-22.04
+          - os: macOS
+            image: macos-12
     name: ${{ matrix.os }} / ${{ matrix.pyversion }}
     runs-on: ${{ matrix.image }}
     defaults:
