@@ -101,11 +101,11 @@ class Test:
 ```
 
 Decorated classes are transformed to a standard Python
-[dataclasses](https://docs.python.org/3/library/dataclasses.html) with
-boilerplate `__init__`, `__repr__`, `__eq__` etc. auto-generated. Additionally,
-two methods are added to the class: `pack`, a method for packing an instance of
-the class to `bytes`, and `from_packed`, a class method that returns a new
-instance of the class from its packed `bytes` representation.
+[dataclass](https://docs.python.org/3/library/dataclasses.html) with boilerplate
+`__init__`, `__repr__`, `__eq__` etc. auto-generated. Additionally, two methods
+are added to the class: `pack`, a method for packing an instance of the class to
+`bytes`, and `from_packed`, a class method that returns a new instance of the
+class from its packed `bytes` representation.
 
 Default attribute values will be validated against their expected type and
 allowable value range. For example,
