@@ -18,12 +18,17 @@ typing-extensions = "^4.5.0"
 flake8 = "^6.0.0"
 mypy = "^1.1.1"
 pytest = "^7.2.2"
+pytest-cov = "^4.0.0"
 
 [tool.pytest.ini_options]
 testpaths = ["test"]
 markers = [
 	"cc: marks a test as requiring a C compiler"
 ]
+
+[tool.coverage.run]
+source = ["dataclasses_struct/"]
+omit = ["dataclasses_struct/ext/**/*.py", "dataclasses_struct/sizes.py"]
 
 [build-system]
 requires = ["poetry-core"]
