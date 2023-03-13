@@ -6,15 +6,10 @@ from typing_extensions import (
     dataclass_transform,
     get_args,
     get_origin,
+    get_type_hints,
 )
 
 from .field import primitive_fields, Field, BytesField
-
-try:
-    from inspect import get_annotations  # type: ignore
-except ImportError:
-    def get_annotations(t):  # type: ignore
-        return t.__annotations__
 
 
 NATIVE_ENDIAN_ALIGNED = '@'
@@ -100,7 +95,7 @@ def from_packed(cls, data: bytes) -> cls_type:
 def _make_class(
     cls: type, endian: str, allow_native: bool, validate: bool
 ) -> type:
-    cls_annotations = get_annotations(cls)
+    cls_annotations = get_type_hints(cls, include_extras=True)
     struct_format = ''.join(
         _validate_and_parse_field(cls, name, field, allow_native, validate)
         for name, field in cls_annotations.items()
