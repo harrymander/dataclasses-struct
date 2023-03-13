@@ -5,6 +5,9 @@ description = ""
 authors = ["Harry Mander <harrymander96@gmail.com>"]
 license = "MIT"
 readme = "README.md"
+homepage = "https://github.com/harrymander/dataclasses-struct"
+repository = "https://github.com/harrymander/dataclasses-struct"
+documentation = "https://github.com/harrymander/dataclasses-struct/blob/main/README.md#usage"
 packages = [{include = "dataclasses_struct"}]
 
 [tool.poetry.dependencies]
