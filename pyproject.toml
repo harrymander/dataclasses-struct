@@ -3,6 +3,7 @@ name = "dataclasses-struct"
 version = "0.1.0"
 description = ""
 authors = ["Harry Mander <harrymander96@gmail.com>"]
+license = "MIT"
 readme = "README.md"
 packages = [{include = "dataclasses_struct"}]
 
