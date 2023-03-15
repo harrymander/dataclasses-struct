@@ -68,8 +68,8 @@ endians = (
 class Test:
 
     # Single char type (must be bytes)
-    single_char_1: dcs.Char
-    single_char_2: bytes  # alias for Char
+    single_char: dcs.Char
+    single_char_alias: bytes  # alias for Char
 
     # Boolean
     bool_1: dcs.Bool
@@ -83,8 +83,8 @@ class Test:
     int32: dcs.Int32
     uint32: dcs.Uint32
     uint64: dcs.Uint64
-    int64_1: dcs.Int64
-    int64_2: int  # alias for Int64
+    int64: dcs.Int64
+    int64_alias: int  # alias for Int64
 
     # Only supported with NATIVE_ENDIAN_ALIGNED
     unsigned_size: dcs.Size
@@ -93,11 +93,11 @@ class Test:
 
     # Floating point types
     single_precision: dcs.Float  # or Float32
-    double_precision_1: dcs.Double  # or Float64
-    double_precision_2: float  # alias for Float64
+    double_precision: dcs.Double  # or Float64
+    double_precision_alias: float  # alias for Float64
 
-    # bytes arrays: arrays shorter than size will be padded with b'\x00'
-    array: Annotated[bytes, 100]  # integer > 0
+    # Byte arrays: values shorter than size will be padded with b'\x00'
+    array: Annotated[bytes, 100]  # an array of length 100
 ```
 
 Decorated classes are transformed to a standard Python
@@ -106,6 +106,19 @@ Decorated classes are transformed to a standard Python
 are added to the class: `pack`, a method for packing an instance of the class to
 `bytes`, and `from_packed`, a class method that returns a new instance of the
 class from its packed `bytes` representation.
+
+An additional class attribute, `__dataclass_struct__`, of type
+[`struct.Struct`](https://docs.python.org/3/library/struct.html#struct.Struct)
+is added. The [`struct` format
+string](https://docs.python.org/3/library/struct.html#format-strings) and packed
+size can be accessed like so:
+
+```
+>>> Test.__dataclass_struct__.format
+'@cc??bBhHiIQqqNnPfdd100s'
+>>> Test.__dataclass_struct__.size
+196
+```
 
 Default attribute values will be validated against their expected type and
 allowable value range. For example,
