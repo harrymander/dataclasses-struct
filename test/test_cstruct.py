@@ -1,6 +1,8 @@
 from pathlib import Path
+import shutil
 import subprocess
 import sys
+from typing import Sequence
 from typing_extensions import Annotated
 
 import pytest
@@ -15,43 +17,43 @@ def run(*args: str) -> None:
 
 
 if sys.platform.startswith('win'):
-    def _struct_tester(dir: Path, packed: bool = False) -> Path:
-        """
-        Compiles struct.c and returns path to executable
-        """
-        exe_path = dir / 'struct-test.exe'
-        args = [
-            'cl.exe',
+    CC = 'cl.exe'
+
+    def build_cc_args(
+        dir: Path, exe_path: Path, packed: bool
+    ) -> Sequence[str]:
+        return (
+            CC,
             'test\\struct.c',
             f'/Fo:{dir}',
             '/WX',
-        ]
-        if packed:
-            args.append('/DTEST_PACKED_STRUCT')
-        args.extend(('/link', f'/out:{exe_path}'))
-
-        run(*args)
-        return exe_path
+            f'/{"D" if packed else "U"}TEST_PACKED_STRUCT',
+            '/link', f'/out:{exe_path}',
+        )
 else:
     if sys.platform == 'darwin':
         CC = 'clang'
     else:
         CC = 'gcc'
 
-    def _struct_tester(dir: Path, packed: bool = False) -> Path:
-        exe_path = dir / 'struct-test'
-        args = [
+    def build_cc_args(
+        dir: Path, exe_path: Path, packed: bool
+    ) -> Sequence[str]:
+        return (
             CC,
             '-o', str(exe_path),
             'test/struct.c',
-            '-Wall',
-            '-Werror',
-        ]
-        if packed:
-            args.append('-DTEST_PACKED_STRUCT')
+            '-Wall', '-Werror',
+            f'-{"D" if packed else "U"}TEST_PACKED_STRUCT',
+        )
 
-        run(*args)
-        return exe_path
+
+def _struct_tester(dir: Path, packed: bool) -> Path:
+    assert shutil.which(CC), f"Cannot find C compiler '{CC}'"
+    exe = dir / 'struct-tester.exe'
+    args = build_cc_args(dir, exe, packed)
+    run(*args)
+    return exe
 
 
 @pytest.fixture
