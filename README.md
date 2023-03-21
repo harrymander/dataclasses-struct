@@ -98,6 +98,12 @@ class Test:
 
     # Byte arrays: values shorter than size will be padded with b'\x00'
     array: Annotated[bytes, 100]  # an array of length 100
+
+    # Pad bytes can be added before and after fields: a b'\x00' will be
+    # inserted for each pad byte.
+    pad_before: Annotated[int, dcs.PadBefore(4)]
+    pad_after: Annotated[int, dcs.PadAfter(2)]
+    pad_before_and_after: Annotated[int, dcs.PadBefore(3), dcs.PadAfter(2)]
 ```
 
 Decorated classes are transformed to a standard Python

@@ -349,3 +349,17 @@ def test_unvalidated() -> None:
         ae: dcs.Char = b'aa'
 
         af: Annotated[bytes, 3] = b'1234'
+
+
+def test_annotated_invalid() -> None:
+    with pytest.raises(TypeError):
+        @dcs.dataclass()
+        class _:
+            x: Annotated[int, dcs.Int64]
+
+
+def test_invalid_bytes_annotated() -> None:
+    with pytest.raises(TypeError, match=r'^too many annotations: 12$'):
+        @dcs.dataclass()
+        class _:
+            x: Annotated[bytes, 1, 12]

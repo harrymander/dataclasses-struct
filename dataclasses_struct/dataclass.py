@@ -10,6 +10,7 @@ from typing_extensions import (
 )
 
 from .field import primitive_fields, Field, BytesField
+from .types import PadBefore, PadAfter
 
 
 NATIVE_ENDIAN_ALIGNED = '@'
@@ -28,6 +29,22 @@ _allowed_endians = frozenset((
 ))
 
 
+def _get_padding_and_field(fields):
+    pad_before = pad_after = 0
+    field = None
+    for f in fields:
+        if isinstance(f, PadBefore):
+            pad_before += f.size
+        elif isinstance(f, PadAfter):
+            pad_after += f.size
+        elif field is not None:
+            raise TypeError(f'too many annotations: {f}')
+        else:
+            field = f
+
+    return pad_before, pad_after, field
+
+
 def _validate_and_parse_field(
     cls: type,
     name: str,
@@ -36,12 +53,17 @@ def _validate_and_parse_field(
     validate: bool,
 ) -> str:
     if get_origin(f) == Annotated:
-        type_, field = get_args(f)
+        type_, *fields = get_args(f)
+        pad_before, pad_after, field = _get_padding_and_field(fields)
     else:
-        field = primitive_fields.get(f)
+        pad_before = pad_after = 0
+        type_ = f
+        field = None
+
+    if field is None:
+        field = primitive_fields.get(type_)
         if field is None:
             raise TypeError(f'type not supported: {f}')
-        type_ = f
 
     if issubclass(type_, bytes) and isinstance(field, int):
         field = BytesField(field)
@@ -63,7 +85,11 @@ def _validate_and_parse_field(
             )
         field.validate(val)
 
-    return field.format()
+    return (
+        (f'{pad_before}x' if pad_before else '')
+        + field.format()
+        + (f'{pad_after}x' if pad_after else '')
+    )
 
 
 def _make_pack_method(fieldnames: List[str]) -> Callable:

@@ -30,6 +30,8 @@ from .types import (
     Float,
     Float64,
     Double,
+    PadBefore,
+    PadAfter,
 )
 from .field import (
     BoolField,

@@ -28,3 +28,29 @@ Float32 = Annotated[float, field.FloatField()]
 Float = Float32
 Float64 = Annotated[float, field.DoubleField()]
 Double = Float64
+
+
+class _Padding:
+    before: bool
+
+    def __init__(self, size: int):
+        if size < 1:
+            raise ValueError('size must be >= 1')
+        self.size = size
+
+    def __repr__(self) -> str:
+        return f'{type(self).__name__}({self.size})'
+
+
+class PadBefore(_Padding):
+    before = True
+
+    def __init__(self, size: int):
+        super().__init__(size)
+
+
+class PadAfter(_Padding):
+    before = False
+
+    def __init__(self, size: int):
+        super().__init__(size)

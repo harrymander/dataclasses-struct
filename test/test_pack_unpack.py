@@ -36,6 +36,7 @@ def test_pack_unpack(endian: str) -> None:
         n: dcs.Float64
 
         o: Annotated[bytes, 3]
+        p: Annotated[bytes, dcs.BytesField(5)]
 
     t = Test(
         a=0xff,
@@ -51,6 +52,7 @@ def test_pack_unpack(endian: str) -> None:
         m=0.25,
         n=PI,
         o=b'123',
+        p=b'12345',
     )
 
     packed = t.pack()
