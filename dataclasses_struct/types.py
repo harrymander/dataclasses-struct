@@ -34,8 +34,8 @@ class _Padding:
     before: bool
 
     def __init__(self, size: int):
-        if size < 1:
-            raise ValueError('size must be >= 1')
+        if size < 0:
+            raise ValueError('size must be non-negative')
         self.size = size
 
     def __repr__(self) -> str:

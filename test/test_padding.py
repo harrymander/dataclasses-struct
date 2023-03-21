@@ -4,13 +4,22 @@ from typing_extensions import Annotated
 import dataclasses_struct as dcs
 
 
-@pytest.mark.parametrize('size', (-1, 0))
+@pytest.mark.parametrize('size', (-1,))
 @pytest.mark.parametrize('padding', (dcs.PadBefore, dcs.PadAfter))
 def test_invalid_padding_size(size: int, padding: type) -> None:
-    with pytest.raises(ValueError, match=r'^size must be >= 1$'):
+    with pytest.raises(ValueError, match=r'^size must be non-negative$'):
         @dcs.dataclass()
         class _:
             x: Annotated[int, padding(size)]
+
+
+@pytest.mark.parametrize('padding', (dcs.PadBefore, dcs.PadAfter))
+def test_padding_zero(padding: type) -> None:
+    @dcs.dataclass(dcs.BIG_ENDIAN)
+    class T:
+        x: Annotated[int, padding(0)]
+
+    assert T(0x45).pack() == b'\x00' * 7 + b'\x45'
 
 
 def test_padding_before() -> None:
