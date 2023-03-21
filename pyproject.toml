@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dataclasses-struct"
-version = "0.3.1"
+version = "0.4.0"
 description = "Converting dataclasses to and from fixed-length binary data using struct"
 authors = ["Harry Mander <harrymander96@gmail.com>"]
 license = "MIT"
