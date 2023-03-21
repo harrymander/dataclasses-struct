@@ -35,6 +35,9 @@ jobs:
           python-version: ${{ matrix.pyversion }}
           cache: 'pip'
 
+      - name: Install Poetry
+        run: pip install -r requirements.txt
+
       - name: Configure Poetry
         run: poetry config virtualenvs.in-project true
 
