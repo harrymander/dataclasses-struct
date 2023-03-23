@@ -121,9 +121,9 @@ size can be accessed like so:
 
 ```
 >>> Test.__dataclass_struct__.format
-'@cc??bBhHiIQqqNnPfdd100s'
+'@cc??bBhHiIQqqNnPfdd100s4xqq2x3xq2x'
 >>> Test.__dataclass_struct__.size
-196
+234
 ```
 
 Default attribute values will be validated against their expected type and
