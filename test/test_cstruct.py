@@ -31,10 +31,7 @@ if sys.platform.startswith('win'):
             '/link', f'/out:{exe_path}',
         )
 else:
-    if sys.platform == 'darwin':
-        CC = 'clang'
-    else:
-        CC = 'gcc'
+    CC = 'cc'
 
     def build_cc_args(
         dir: Path, exe_path: Path, packed: bool
