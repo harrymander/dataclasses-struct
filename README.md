@@ -23,7 +23,7 @@ class Test:
     s: Annotated[bytes, 10]
 ```
 
-```
+```python
 >>> t = Test(100, -0.25, 0xff, b'12345')
 >>> t
 Test(x=100, y=-0.25, z=255, s=b'12345')
@@ -119,7 +119,7 @@ is added. The [`struct` format
 string](https://docs.python.org/3/library/struct.html#format-strings) and packed
 size can be accessed like so:
 
-```
+```python
 >>> Test.__dataclass_struct__.format
 '@cc??bBhHiIQqqNnPfdd100s4xqq2x3xq2x'
 >>> Test.__dataclass_struct__.size
