@@ -2,6 +2,7 @@ import abc
 from ctypes import c_size_t, c_ssize_t, c_void_p, sizeof
 from typing import Generic, Literal, Type, TypeVar
 
+from . import sizes as intsizes
 
 T = TypeVar('T')
 
@@ -52,17 +53,17 @@ class IntField(Field[int]):
     }
 
     _signed_sizes = {
-        1: (-0x80, 0x7f),
-        2: (-0x8000, 0x7fff),
-        4: (-0x8000_0000, 0x7fff_ffff),
-        8: (-0x8000_0000_0000_0000, 0x7fff_ffff_ffff_ffff),
+        1: (intsizes.INT8_MIN, intsizes.INT8_MAX),
+        2: (intsizes.INT16_MIN, intsizes.INT16_MAX),
+        4: (intsizes.INT32_MIN, intsizes.INT32_MAX),
+        8: (intsizes.INT64_MIN, intsizes.INT64_MAX),
     }
 
     _unsigned_sizes = {
-        1: (0, 0xff),
-        2: (0, 0xffff),
-        4: (0, 0xffff_ffff),
-        8: (0, 0xffff_ffff_ffff_ffff),
+        1: (intsizes.UINT8_MIN, intsizes.UINT8_MAX),
+        2: (intsizes.UINT16_MIN, intsizes.UINT16_MAX),
+        4: (intsizes.UINT32_MIN, intsizes.UINT32_MAX),
+        8: (intsizes.UINT64_MIN, intsizes.UINT64_MAX),
     }
 
     def __init__(
