@@ -17,7 +17,8 @@ def transform_dataclass_struct(ctx: ClassDefContext) -> bool:
         f'{ctx.cls.info.fullname}.T',
         -1,
         [],
-        ctx.api.named_type('builtins.object')
+        ctx.api.named_type('builtins.object'),
+        ctx.api.named_type('builtins.object'),
     )
     add_method_to_class(ctx.api, ctx.cls, 'pack', [], bytes_type)
     add_method_to_class(
