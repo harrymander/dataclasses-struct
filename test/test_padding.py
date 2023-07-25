@@ -25,7 +25,7 @@ def test_padding_zero(padding: type) -> None:
 def test_padding_before() -> None:
     @dcs.dataclass(dcs.LITTLE_ENDIAN)
     class Test:
-        x: Annotated[dcs.Uint8, dcs.PadBefore(5)]
+        x: Annotated[dcs.U8, dcs.PadBefore(5)]
 
     t = Test(12)
     assert t.pack() == b'\x00' * 5 + b'\x0c'
@@ -34,7 +34,7 @@ def test_padding_before() -> None:
 def test_padding_after() -> None:
     @dcs.dataclass(dcs.LITTLE_ENDIAN)
     class Test:
-        x: Annotated[dcs.Uint8, dcs.PadAfter(5)]
+        x: Annotated[dcs.U8, dcs.PadAfter(5)]
 
     t = Test(12)
     assert t.pack() == b'\x0c' + b'\x00' * 5
@@ -43,7 +43,7 @@ def test_padding_after() -> None:
 def test_padding_before_and_after() -> None:
     @dcs.dataclass(dcs.LITTLE_ENDIAN)
     class Test:
-        x: Annotated[dcs.Uint8, dcs.PadAfter(5), dcs.PadBefore(3)]
+        x: Annotated[dcs.U8, dcs.PadAfter(5), dcs.PadBefore(3)]
 
     t = Test(12)
     assert t.pack() == b'\x00' * 3 + b'\x0c' + b'\x00' * 5
@@ -52,7 +52,7 @@ def test_padding_before_and_after() -> None:
 def test_padding_multiple() -> None:
     @dcs.dataclass(dcs.LITTLE_ENDIAN)
     class Test:
-        x: Annotated[dcs.Uint8, dcs.PadAfter(5), dcs.PadAfter(3)]
+        x: Annotated[dcs.U8, dcs.PadAfter(5), dcs.PadAfter(3)]
 
     t = Test(12)
     assert t.pack() == b'\x0c' + b'\x00' * 8
@@ -79,8 +79,8 @@ def test_padding_with_primitive() -> None:
 def test_unpack_padding() -> None:
     @dcs.dataclass(dcs.LITTLE_ENDIAN)
     class Test:
-        x: Annotated[dcs.Uint8, dcs.PadAfter(2)]
-        y: Annotated[dcs.Uint8, dcs.PadBefore(2), dcs.PadAfter(7)]
+        x: Annotated[dcs.U8, dcs.PadAfter(2)]
+        y: Annotated[dcs.U8, dcs.PadBefore(2), dcs.PadAfter(7)]
 
     unpacked = Test.from_packed(b'\x12' + b'\x00' * 4 + b'\x07' + b'\x00' * 7)
     assert unpacked == Test(0x12, 0x07)

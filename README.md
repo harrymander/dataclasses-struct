@@ -12,15 +12,15 @@ A simple Python package that combines
 unpacking Python dataclasses to fixed-length `bytes` representations.
 
 ```python
-from typing import Annotated
+from typing import Annotated  # use typing_extensions on Python <3.9
 import dataclasses_struct as dcs
 
 @dcs.dataclass()
 class Test:
-    x: int  # or dcs.UInt64
-    y: dcs.Float32
-    z: dcs.Uint8
-    s: Annotated[bytes, 10]
+    x: int  # or dcs.I64, i.e., a signed 64-bit integer
+    y: float  # or dcs.Float64, i.e., a double-precision (64-bit) floating point
+    z: dcs.U8  # unsigned 8-bit integer
+    s: Annotated[bytes, 10]  # fixed-length byte array of length 10
 ```
 
 ```python
@@ -29,7 +29,7 @@ class Test:
 Test(x=100, y=-0.25, z=255, s=b'12345')
 >>> packed = t.pack()
 >>> packed
-b'd\x00\x00\x00\x00\x00\x00\x00\x00\x00\x80\xbe\xff12345\x00\x00\x00\x00\x00'
+b'd\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xd0\xbf\xff12345\x00\x00\x00\x00\x00'
 >>> Test.from_packed(packed)
 Test(x=100, y=-0.25, z=255, s=b'12345\x00\x00\x00\x00\x00')
 ```
@@ -75,16 +75,16 @@ class Test:
     bool_1: dcs.Bool
     bool_2: bool  # alias for Bool
 
-    # Integers
-    int8: dcs.Int8
-    uint8: dcs.Uint8
-    int16: dcs.Int16
-    uint16: dcs.Uint16
-    int32: dcs.Int32
-    uint32: dcs.Uint32
-    uint64: dcs.Uint64
-    int64: dcs.Int64
-    int64_alias: int  # alias for Int64
+    # Iegers
+    int8: dcs.I8
+    uint8: dcs.U8
+    int16: dcs.I16
+    uint16: dcs.U16
+    int32: dcs.I32
+    uint32: dcs.U32
+    uint64: dcs.U64
+    int64: dcs.I64
+    int64_alias: int  # alias for I64
 
     # Only supported with NATIVE_ENDIAN_ALIGNED
     unsigned_size: dcs.Size
@@ -92,8 +92,8 @@ class Test:
     pointer: dcs.Pointer
 
     # Floating point types
-    single_precision: dcs.Float  # or Float32
-    double_precision: dcs.Double  # or Float64
+    single_precision: dcs.Float32  # equivalent to float in C
+    double_precision: dcs.Float64  # equivalent to double in C
     double_precision_alias: float  # alias for Float64
 
     # Byte arrays: values shorter than size will be padded with b'\x00'
@@ -134,7 +134,7 @@ import dataclasses_struct as dcs
 
 @dcs.dataclass()
 class Test:
-    x: dcs.Uint8 = -1
+    x: dcs.U8 = -1
 ```
 
 will raise a `ValueError`. This can be disabled by passing `validate=False` to

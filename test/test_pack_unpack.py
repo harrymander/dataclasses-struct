@@ -19,15 +19,15 @@ import dataclasses_struct as dcs
 def test_pack_unpack(endian: str) -> None:
     @dcs.dataclass(endian)
     class Test:
-        a: dcs.Uint8
-        b: dcs.Uint16
-        c: dcs.Uint32
-        d: dcs.Uint64
+        a: dcs.U8
+        b: dcs.U16
+        c: dcs.U32
+        d: dcs.U64
 
-        e: dcs.Int8
-        f: dcs.Int16
-        g: dcs.Int32
-        h: dcs.Int64
+        e: dcs.I8
+        f: dcs.I16
+        g: dcs.I32
+        h: dcs.I64
 
         j: bool
         k: bytes

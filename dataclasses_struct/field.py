@@ -53,17 +53,17 @@ class IntField(Field[int]):
     }
 
     _signed_sizes = {
-        1: (intsizes.INT8_MIN, intsizes.INT8_MAX),
-        2: (intsizes.INT16_MIN, intsizes.INT16_MAX),
-        4: (intsizes.INT32_MIN, intsizes.INT32_MAX),
-        8: (intsizes.INT64_MIN, intsizes.INT64_MAX),
+        1: (intsizes.I8_MIN, intsizes.I8_MAX),
+        2: (intsizes.I16_MIN, intsizes.I16_MAX),
+        4: (intsizes.I32_MIN, intsizes.I32_MAX),
+        8: (intsizes.I64_MIN, intsizes.I64_MAX),
     }
 
     _unsigned_sizes = {
-        1: (intsizes.UINT8_MIN, intsizes.UINT8_MAX),
-        2: (intsizes.UINT16_MIN, intsizes.UINT16_MAX),
-        4: (intsizes.UINT32_MIN, intsizes.UINT32_MAX),
-        8: (intsizes.UINT64_MIN, intsizes.UINT64_MAX),
+        1: (intsizes.U8_MIN, intsizes.U8_MAX),
+        2: (intsizes.U16_MIN, intsizes.U16_MAX),
+        4: (intsizes.U32_MIN, intsizes.U32_MAX),
+        8: (intsizes.U64_MIN, intsizes.U64_MAX),
     }
 
     def __init__(
@@ -106,14 +106,14 @@ class UnsignedIntField(IntField):
         super().__init__(False, size)
 
 
-class FloatField(Field[float]):
+class Float32Field(Field[float]):
     type_ = float
 
     def format(self) -> str:
         return 'f'
 
 
-class DoubleField(Field[float]):
+class Float64Field(Field[float]):
     type_ = float
 
     def format(self) -> str:
@@ -184,8 +184,8 @@ class BytesField(Field[bytes]):
 
 
 primitive_fields = {
-    int: IntField(True, 8),
-    float: DoubleField(),
+    int: SignedIntField(8),
+    float: Float64Field(),
     bool: BoolField(),
     bytes: CharField(),
 }

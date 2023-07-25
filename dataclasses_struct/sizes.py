@@ -1,23 +1,23 @@
-INT8_MIN = -0x80
-INT8_MAX = 0x7f
+I8_MIN = -0x80
+I8_MAX = 0x7f
 
-UINT8_MIN = 0
-UINT8_MAX = 0xff
+U8_MIN = 0
+U8_MAX = 0xff
 
-INT16_MIN = -0x8000
-INT16_MAX = 0x7fff
+I16_MIN = -0x8000
+I16_MAX = 0x7fff
 
-UINT16_MIN = 0
-UINT16_MAX = 0xffff
+U16_MIN = 0
+U16_MAX = 0xffff
 
-INT32_MIN = -0x8000_0000
-INT32_MAX = 0x7fff_ffff
+I32_MIN = -0x8000_0000
+I32_MAX = 0x7fff_ffff
 
-UINT32_MIN = 0
-UINT32_MAX = 0xffff_ffff
+U32_MIN = 0
+U32_MAX = 0xffff_ffff
 
-INT64_MIN = -0x8000_0000_0000_0000
-INT64_MAX = 0x7fff_ffff_ffff_ffff
+I64_MIN = -0x8000_0000_0000_0000
+I64_MAX = 0x7fff_ffff_ffff_ffff
 
-UINT64_MIN = 0
-UINT64_MAX = 0xffff_ffff_ffff_ffff
+U64_MIN = 0
+U64_MAX = 0xffff_ffff_ffff_ffff

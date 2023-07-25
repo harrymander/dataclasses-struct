@@ -9,7 +9,7 @@ import dataclasses_struct as dcs
 SSIZE_MIN = -2**(sizeof(c_ssize_t) * 8 - 1)
 SSIZE_MAX = -SSIZE_MIN - 1
 SIZE_MAX = 2**(sizeof(c_size_t) * 8) - 1
-POINTER_MAX = 2**(sizeof(c_void_p) * 8) - 1
+POIER_MAX = 2**(sizeof(c_void_p) * 8) - 1
 
 
 def assert_same_format(t1: type, t2: type) -> None:
@@ -26,7 +26,7 @@ def test_native_int_as_int64() -> None:
 
     @dcs.dataclass()
     class Field:
-        x: dcs.Int64
+        x: dcs.I64
 
     assert_same_format(Native, Field)
 
@@ -43,14 +43,14 @@ def test_native_bool_as_bool() -> None:
     assert_same_format(Native, Field)
 
 
-def test_native_float_as_double() -> None:
+def test_native_float_as_float64() -> None:
     @dcs.dataclass()
     class Native:
         x: float
 
     @dcs.dataclass()
     class Field:
-        x: dcs.Double
+        x: dcs.Float64
 
     assert_same_format(Native, Field)
 
@@ -134,20 +134,18 @@ def test_valid_non_native_fields(endian: str) -> None:
     @dcs.dataclass(endian)
     class _:
         a: dcs.Char
-        b: dcs.Int8
-        c: dcs.Uint8
+        b: dcs.I8
+        c: dcs.U8
         d: dcs.Bool
-        e: dcs.Int16
-        f: dcs.Uint16
-        g: dcs.Int32
-        h: dcs.Uint32
-        i: dcs.Int64
-        j: dcs.Uint64
+        e: dcs.I16
+        f: dcs.U16
+        g: dcs.I32
+        h: dcs.U32
+        i: dcs.I64
+        j: dcs.U64
         k: dcs.Float32
-        l: dcs.Float
-        m: dcs.Float64
-        n: dcs.Double
-        q: Annotated[bytes, dcs.BytesField(10)]
+        l: dcs.Float64
+        m: Annotated[bytes, dcs.BytesField(10)]
 
 
 @pytest.mark.parametrize('size', (-1, 0))
@@ -166,27 +164,27 @@ def test_invalid_bytes_size(size: int) -> None:
         (dcs.SSize, SSIZE_MAX + 1),
 
         (dcs.Pointer, -1),
-        (dcs.Pointer, POINTER_MAX + 1),
+        (dcs.Pointer, POIER_MAX + 1),
 
-        (dcs.Int8, -0x80 - 1),
-        (dcs.Int8, 0x7f + 1),
-        (dcs.Uint8, -1),
-        (dcs.Uint8, 0xff + 1),
+        (dcs.I8, -0x80 - 1),
+        (dcs.I8, 0x7f + 1),
+        (dcs.U8, -1),
+        (dcs.U8, 0xff + 1),
 
-        (dcs.Int16, -0x8000 - 1),
-        (dcs.Int16, 0x7fff + 1),
-        (dcs.Uint16, -1),
-        (dcs.Uint16, 0xffff + 1),
+        (dcs.I16, -0x8000 - 1),
+        (dcs.I16, 0x7fff + 1),
+        (dcs.U16, -1),
+        (dcs.U16, 0xffff + 1),
 
-        (dcs.Int32, -0x8000_0000 - 1),
-        (dcs.Int32, 0x7fff_ffff + 1),
-        (dcs.Uint32, -1),
-        (dcs.Uint32, 0xffff_ffff + 1),
+        (dcs.I32, -0x8000_0000 - 1),
+        (dcs.I32, 0x7fff_ffff + 1),
+        (dcs.U32, -1),
+        (dcs.U32, 0xffff_ffff + 1),
 
-        (dcs.Int64, -0x8000_0000_0000_0000 - 1),
-        (dcs.Int64, 0x7fff_ffff_ffff_ffff + 1),
-        (dcs.Uint64, -1),
-        (dcs.Uint64, 0xffff_ffff_ffff_ffff + 1),
+        (dcs.I64, -0x8000_0000_0000_0000 - 1),
+        (dcs.I64, 0x7fff_ffff_ffff_ffff + 1),
+        (dcs.U64, -1),
+        (dcs.U64, 0xffff_ffff_ffff_ffff + 1),
     )
 )
 def test_int_default_out_of_range(type_: type, default: int) -> None:
@@ -205,27 +203,27 @@ def test_int_default_range_boundary() -> None:
         d: dcs.SSize = SSIZE_MAX
 
         e: dcs.Pointer = 0
-        f: dcs.Pointer = POINTER_MAX
+        f: dcs.Pointer = POIER_MAX
 
-        g: dcs.Int8 = -0x80
-        h: dcs.Int8 = 0x7f
-        i: dcs.Uint8 = 0
-        j: dcs.Uint8 = 0xff
+        g: dcs.I8 = -0x80
+        h: dcs.I8 = 0x7f
+        i: dcs.U8 = 0
+        j: dcs.U8 = 0xff
 
-        k: dcs.Int16 = -0x8000
-        l: dcs.Int16 = 0x7fff
-        m: dcs.Uint16 = 0
-        n: dcs.Uint16 = 0xffff
+        k: dcs.I16 = -0x8000
+        l: dcs.I16 = 0x7fff
+        m: dcs.U16 = 0
+        n: dcs.U16 = 0xffff
 
-        o: dcs.Int32 = -0x8000_0000
-        p: dcs.Int32 = 0x7fff_ffff
-        q: dcs.Uint32 = 0
-        r: dcs.Uint32 = 0xffff_ffff
+        o: dcs.I32 = -0x8000_0000
+        p: dcs.I32 = 0x7fff_ffff
+        q: dcs.U32 = 0
+        r: dcs.U32 = 0xffff_ffff
 
-        s: dcs.Int64 = -0x8000_0000_0000_0000
-        t: dcs.Int64 = 0x7fff_ffff_ffff_ffff
-        u: dcs.Uint64 = 0
-        v: dcs.Uint64 = 0xffff_ffff_ffff_ffff
+        s: dcs.I64 = -0x8000_0000_0000_0000
+        t: dcs.I64 = 0x7fff_ffff_ffff_ffff
+        u: dcs.U64 = 0
+        v: dcs.U64 = 0xffff_ffff_ffff_ffff
 
         w: int = -0x8000_0000_0000_0000
         x: int = 0x7fff_ffff_ffff_ffff
@@ -237,14 +235,14 @@ def test_int_default_range_boundary() -> None:
         dcs.Size,
         dcs.SSize,
         dcs.Pointer,
-        dcs.Uint8,
-        dcs.Uint16,
-        dcs.Uint32,
-        dcs.Uint64,
-        dcs.Int8,
-        dcs.Int16,
-        dcs.Int32,
-        dcs.Int64,
+        dcs.U8,
+        dcs.U16,
+        dcs.U32,
+        dcs.U64,
+        dcs.I8,
+        dcs.I16,
+        dcs.I32,
+        dcs.I64,
     )
 )
 @pytest.mark.parametrize(
@@ -314,27 +312,27 @@ def test_unvalidated() -> None:
         d: dcs.SSize = SSIZE_MAX + 1
 
         e: dcs.Pointer = -1
-        f: dcs.Pointer = POINTER_MAX
+        f: dcs.Pointer = POIER_MAX
 
-        g: dcs.Int8 = -0x80 - 1
-        h: dcs.Int8 = 0x7f + 1
-        i: dcs.Uint8 = -1
-        j: dcs.Uint8 = 0xff + 1
+        g: dcs.I8 = -0x80 - 1
+        h: dcs.I8 = 0x7f + 1
+        i: dcs.U8 = -1
+        j: dcs.U8 = 0xff + 1
 
-        k: dcs.Int16 = -0x8000 - 1
-        l: dcs.Int16 = 0x7fff + 1
-        m: dcs.Uint16 = -1
-        n: dcs.Uint16 = 0xffff + 1
+        k: dcs.I16 = -0x8000 - 1
+        l: dcs.I16 = 0x7fff + 1
+        m: dcs.U16 = -1
+        n: dcs.U16 = 0xffff + 1
 
-        o: dcs.Int32 = -0x8000_0000 - 1
-        p: dcs.Int32 = 0x7fff_ffff + 1
-        q: dcs.Uint32 = -1
-        r: dcs.Uint32 = 0xffff_ffff + 1
+        o: dcs.I32 = -0x8000_0000 - 1
+        p: dcs.I32 = 0x7fff_ffff + 1
+        q: dcs.U32 = -1
+        r: dcs.U32 = 0xffff_ffff + 1
 
-        s: dcs.Int64 = -0x8000_0000_0000_0000 - 1
-        t: dcs.Int64 = 0x7fff_ffff_ffff_ffff + 1
-        u: dcs.Uint64 = -1
-        v: dcs.Uint64 = 0xffff_ffff_ffff_ffff + 1
+        s: dcs.I64 = -0x8000_0000_0000_0000 - 1
+        t: dcs.I64 = 0x7fff_ffff_ffff_ffff + 1
+        u: dcs.U64 = -1
+        v: dcs.U64 = 0xffff_ffff_ffff_ffff + 1
 
         w: int = -0x8000_0000_0000_0000 - 1
         x: int = 0x7fff_ffff_ffff_ffff + 1
@@ -355,7 +353,7 @@ def test_annotated_invalid() -> None:
     with pytest.raises(TypeError):
         @dcs.dataclass()
         class _:
-            x: Annotated[int, dcs.Int64]
+            x: Annotated[int, dcs.I64]
 
 
 def test_invalid_bytes_annotated() -> None:

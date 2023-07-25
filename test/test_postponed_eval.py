@@ -9,20 +9,18 @@ def test_postponed() -> None:
     @dcs.dataclass()
     class _:
         a: dcs.Char
-        b: dcs.Int8
-        c: dcs.Uint8
+        b: dcs.I8
+        c: dcs.U8
         d: dcs.Bool
-        e: dcs.Int16
-        f: dcs.Uint16
-        g: dcs.Int32
-        h: dcs.Uint32
-        i: dcs.Int64
-        j: dcs.Uint64
+        e: dcs.I16
+        f: dcs.U16
+        g: dcs.I32
+        h: dcs.U32
+        i: dcs.I64
+        j: dcs.U64
         k: dcs.Float32
-        l: dcs.Float
-        m: dcs.Float64
-        n: dcs.Double
-        q: Annotated[bytes, dcs.BytesField(10)]
-        r: dcs.Size
-        s: dcs.SSize
-        t: dcs.Pointer
+        l: dcs.Float64
+        m: Annotated[bytes, dcs.BytesField(10)]
+        n: dcs.Size
+        o: dcs.SSize
+        p: dcs.Pointer
