@@ -6,16 +6,20 @@ import pytest
 import dataclasses_struct as dcs
 
 
-@pytest.mark.parametrize(
-    'endian',
-    (
-        dcs.NATIVE_ENDIAN_ALIGNED,
-        dcs.NATIVE_ENDIAN,
-        dcs.LITTLE_ENDIAN,
-        dcs.BIG_ENDIAN,
-        dcs.NETWORK_ENDIAN,
-    )
-)
+def parametrize_endian(f):
+    return pytest.mark.parametrize(
+        'endian',
+        (
+            dcs.NATIVE_ENDIAN_ALIGNED,
+            dcs.NATIVE_ENDIAN,
+            dcs.LITTLE_ENDIAN,
+            dcs.BIG_ENDIAN,
+            dcs.NETWORK_ENDIAN,
+        )
+    )(f)
+
+
+@parametrize_endian
 def test_pack_unpack(endian: str) -> None:
     @dcs.dataclass(endian)
     class Test:
@@ -77,16 +81,7 @@ def test_pack_unpack_native_types() -> None:
     assert t == unpacked
 
 
-@pytest.mark.parametrize(
-    'endian',
-    (
-        dcs.NATIVE_ENDIAN_ALIGNED,
-        dcs.NATIVE_ENDIAN,
-        dcs.LITTLE_ENDIAN,
-        dcs.BIG_ENDIAN,
-        dcs.NETWORK_ENDIAN,
-    )
-)
+@parametrize_endian
 def test_packed_bytes_padding(endian: str) -> None:
     @dcs.dataclass(endian)
     class Test:
@@ -99,3 +94,13 @@ def test_packed_bytes_padding(endian: str) -> None:
     t = Test(b'123').pack()
     assert t == b'123\x00\x00'
     assert Test.from_packed(t) == Test(b'123\x00\x00')
+
+
+@parametrize_endian
+def test_pack_unpack_empty(endian: str) -> None:
+    @dcs.dataclass(endian)
+    class Empty:
+        pass
+
+    assert Empty().pack() == b''
+    assert Empty.from_packed(b'') == Empty()
