@@ -2,7 +2,7 @@ import abc
 from ctypes import c_size_t, c_ssize_t, c_void_p, sizeof
 from typing import Generic, Literal, Type, TypeVar
 
-from . import sizes as intsizes
+from . import intsizes
 
 T = TypeVar('T')
 
