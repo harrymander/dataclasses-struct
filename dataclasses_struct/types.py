@@ -8,7 +8,7 @@ Char = Annotated[bytes, field.CharField()]
 # Boolean type
 Bool = Annotated[bool, field.BoolField()]
 
-# Ieger types
+# Integer types
 I8 = Annotated[int, field.SignedIntField(1)]
 U8 = Annotated[int, field.UnsignedIntField(1)]
 I16 = Annotated[int, field.SignedIntField(2)]
