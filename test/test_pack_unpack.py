@@ -36,8 +36,8 @@ def test_pack_unpack(endian: str) -> None:
         j: bool
         k: bytes
 
-        m: dcs.Float32
-        n: dcs.Float64
+        m: dcs.F32
+        n: dcs.F64
 
         o: Annotated[bytes, 3]
         p: Annotated[bytes, dcs.BytesField(5)]

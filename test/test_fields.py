@@ -50,7 +50,7 @@ def test_native_float_as_float64() -> None:
 
     @dcs.dataclass()
     class Field:
-        x: dcs.Float64
+        x: dcs.F64
 
     assert_same_format(Native, Field)
 
@@ -143,8 +143,8 @@ def test_valid_non_native_fields(endian: str) -> None:
         h: dcs.U32
         i: dcs.I64
         j: dcs.U64
-        k: dcs.Float32
-        l: dcs.Float64
+        k: dcs.F32
+        l: dcs.F64
         m: Annotated[bytes, dcs.BytesField(10)]
 
 
@@ -286,7 +286,7 @@ def test_default_fixed_length_bytes_wrong_length() -> None:
             x: Annotated[bytes, dcs.BytesField(8)] = b'123456789'
 
 
-@pytest.mark.parametrize('float_type', (dcs.Float32, dcs.Float64))
+@pytest.mark.parametrize('float_type', (dcs.F32, dcs.F64))
 @pytest.mark.parametrize('default', ('wrong', 1, '1.5'))
 def test_float_default_wrong_type(float_type: type, default) -> None:
     with pytest.raises(TypeError):

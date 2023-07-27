@@ -18,8 +18,8 @@ def test_postponed() -> None:
         h: dcs.U32
         i: dcs.I64
         j: dcs.U64
-        k: dcs.Float32
-        l: dcs.Float64
+        k: dcs.F32
+        l: dcs.F64
         m: Annotated[bytes, dcs.BytesField(10)]
         n: dcs.Size
         o: dcs.SSize

@@ -80,7 +80,7 @@ def packed_cstruct(tmp_path: Path, packed_struct_tester: Path) -> Path:
 class StructTest:
     str_test: Annotated[bytes, dcs.BytesField(13)]
     u32_test: dcs.U32
-    double_test: dcs.Float64
+    double_test: dcs.F64
 
 
 def assert_struct(struct_path: Path, packed: bool) -> None:

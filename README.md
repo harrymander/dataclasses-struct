@@ -18,7 +18,7 @@ import dataclasses_struct as dcs
 @dcs.dataclass()
 class Test:
     x: int  # or dcs.I64, i.e., a signed 64-bit integer
-    y: float  # or dcs.Float64, i.e., a double-precision (64-bit) floating point
+    y: float  # or dcs.F64, i.e., a double-precision (64-bit) floating point
     z: dcs.U8  # unsigned 8-bit integer
     s: Annotated[bytes, 10]  # fixed-length byte array of length 10
 ```
@@ -92,9 +92,9 @@ class Test:
     pointer: dcs.Pointer
 
     # Floating point types
-    single_precision: dcs.Float32  # equivalent to float in C
-    double_precision: dcs.Float64  # equivalent to double in C
-    double_precision_alias: float  # alias for Float64
+    single_precision: dcs.F32  # equivalent to float in C
+    double_precision: dcs.F64  # equivalent to double in C
+    double_precision_alias: float  # alias for F64
 
     # Byte arrays: values shorter than size will be padded with b'\x00'
     array: Annotated[bytes, 100]  # an array of length 100

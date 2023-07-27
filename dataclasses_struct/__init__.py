@@ -26,8 +26,8 @@ from .types import (
     Size,
     SSize,
     Pointer,
-    Float32,
-    Float64,
+    F32,
+    F64,
     PadBefore,
     PadAfter,
 )
