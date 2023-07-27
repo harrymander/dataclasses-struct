@@ -96,11 +96,11 @@ def _validate_and_parse_field(
             )
         field.validate(val)
 
-    return (
-        (f'{pad_before}x' if pad_before else '')
-        + field.format()
-        + (f'{pad_after}x' if pad_after else '')
-    )
+    return ''.join((
+        (f'{pad_before}x' if pad_before else ''),
+        field.format(),
+        (f'{pad_after}x' if pad_after else ''),
+    ))
 
 
 def _make_pack_method(fieldnames: List[str]) -> Callable:
@@ -133,14 +133,18 @@ def _make_class(
     cls: type, endian: str, allow_native: bool, validate: bool
 ) -> type:
     cls_annotations = get_type_hints(cls, include_extras=True)
-    struct_format = ''.join(
+    struct_format = [endian]
+    struct_format.extend(
         _validate_and_parse_field(cls, name, field, allow_native, validate)
         for name, field in cls_annotations.items()
     )
-    names = list(cls_annotations.keys())
 
-    setattr(cls, '__dataclass_struct__', struct.Struct(endian + struct_format))
-    setattr(cls, 'pack', _make_pack_method(names))
+    setattr(
+        cls,
+        '__dataclass_struct__',
+        struct.Struct(''.join(struct_format))
+    )
+    setattr(cls, 'pack', _make_pack_method(list(cls_annotations.keys())))
     setattr(cls, 'from_packed', _make_unpack_method(cls))
 
     return dataclasses.dataclass(cls)
