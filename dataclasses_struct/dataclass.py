@@ -20,7 +20,7 @@ BIG_ENDIAN = '>'
 NETWORK_ENDIAN = '!'
 
 
-_allowed_endians = frozenset((
+ENDIANS = frozenset((
     NATIVE_ENDIAN_ALIGNED,
     NATIVE_ENDIAN,
     LITTLE_ENDIAN,
@@ -140,7 +140,7 @@ def dataclass(
     endian: str = NATIVE_ENDIAN_ALIGNED,
     validate: bool = True,
 ) -> Callable[[type], type]:
-    if endian not in _allowed_endians:
+    if endian not in ENDIANS:
         raise ValueError(
             f'invalid endianness: {endian}. '
             '(Did you forget to add parentheses: @dataclass()?)'

@@ -7,16 +7,7 @@ import dataclasses_struct as dcs
 
 
 def parametrize_endian(f):
-    return pytest.mark.parametrize(
-        'endian',
-        (
-            dcs.NATIVE_ENDIAN_ALIGNED,
-            dcs.NATIVE_ENDIAN,
-            dcs.LITTLE_ENDIAN,
-            dcs.BIG_ENDIAN,
-            dcs.NETWORK_ENDIAN,
-        )
-    )(f)
+    return pytest.mark.parametrize('endian', dcs.ENDIANS)(f)
 
 
 @parametrize_endian
