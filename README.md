@@ -21,21 +21,30 @@ class Test:
     y: float  # or dcs.F64, i.e., a double-precision (64-bit) floating point
     z: dcs.U8  # unsigned 8-bit integer
     s: Annotated[bytes, 10]  # fixed-length byte array of length 10
+
+@dcs.dataclass()
+class Container:
+    test1: Test
+    test2: Test
 ```
 
 ```python
 >>> dcs.is_dataclass_struct(Test)
 True
->>> t = Test(100, -0.25, 0xff, b'12345')
->>> dcs.is_dataclass_struct(t)
+>>> t1 = Test(100, -0.25, 0xff, b'12345')
+>>> dcs.is_dataclass_struct(t1)
 True
->>> t
+>>> t1
 Test(x=100, y=-0.25, z=255, s=b'12345')
->>> packed = t.pack()
+>>> packed = t1.pack()
 >>> packed
 b'd\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xd0\xbf\xff12345\x00\x00\x00\x00\x00'
 >>> Test.from_packed(packed)
 Test(x=100, y=-0.25, z=255, s=b'12345\x00\x00\x00\x00\x00')
+>>> t2 = Test(1, 100, 12, b'hello, world')
+>>> c = Container(t1, t2)
+>>> Container.from_packed(c.pack())
+Container(test1=Test(x=100, y=-0.25, z=255, s=b'12345\x00\x00\x00\x00\x00'), test2=Test(x=1, y=100.0, z=12, s=b'hello, wor'))
 ```
 
 ## Installation
@@ -108,6 +117,14 @@ class Test:
     pad_before: Annotated[int, dcs.PadBefore(4)]
     pad_after: Annotated[int, dcs.PadAfter(2)]
     pad_before_and_after: Annotated[int, dcs.PadBefore(3), dcs.PadAfter(2)]
+
+# Also supports nesting dataclass-structs
+@dcs.dataclass(endians[0])  # endianness of contained classes must match
+class Container:
+    contained1: Test
+
+    # supports PadBefore and PadAfter as well:
+    contained2: Annotated[Test, dcs.PadBefore(10)]
 ```
 
 Decorated classes are transformed to a standard Python

@@ -1,6 +1,19 @@
+from collections.abc import Generator, Iterator
 import dataclasses
 import struct
-from typing import Any, Callable, Dict, List, Protocol, Type, Union, overload
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    List,
+    Protocol,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+    overload,
+)
 from typing_extensions import (
     Annotated,
     TypeGuard,
@@ -46,9 +59,14 @@ def _get_padding_and_field(fields):
     return pad_before, pad_after, field
 
 
-class _DataclassStructInternal:
+T = TypeVar('T')
+
+
+class _DataclassStructInternal(Generic[T]):
     struct: struct.Struct
-    cls: type
+    cls: Type[T]
+    _fieldnames: List[str]
+    _fieldtypes: List[type]
 
     @property
     def format(self) -> str:
@@ -62,15 +80,49 @@ class _DataclassStructInternal:
     def endianness(self) -> str:
         return self.format[0]
 
-    def __init__(self, fmt: str, cls: type):
+    def __init__(
+        self,
+        fmt: str,
+        cls: type,
+        fieldnames: List[str],
+        fieldtypes: List[type],
+    ):
         self.struct = struct.Struct(fmt)
         self.cls = cls
+        self._fieldnames = fieldnames
+        self._fieldtypes = fieldtypes
 
-    def pack(self, *args) -> bytes:
-        return self.struct.pack(*args)
+    def _flattened_attrs(self, obj) -> List[Any]:
+        """
+        Returns a list of all attributes, including those of any nested structs
+        """
+        attrs = []
+        for fieldname in self._fieldnames:
+            attr = getattr(obj, fieldname)
+            if is_dataclass_struct(attr):
+                attrs.extend(attr.__dataclass_struct__._flattened_attrs(attr))
+            else:
+                attrs.append(attr)
+        return attrs
 
-    def unpack(self, data: bytes) -> Any:
-        return self.struct.unpack(data)
+    def pack(self, obj: T) -> bytes:
+        return self.struct.pack(*self._flattened_attrs(obj))
+
+    def _arg_generator(self, args: Iterator) -> Generator:
+        for fieldtype in self._fieldtypes:
+            if is_dataclass_struct(fieldtype):
+                yield fieldtype.__dataclass_struct__._init_from_args(args)
+            else:
+                yield next(args)
+
+    def _init_from_args(self, args: Iterator) -> T:
+        """
+        Returns an instance of self.cls, consuming args
+        """
+        return self.cls(*self._arg_generator(args))
+
+    def unpack(self, data: bytes) -> T:
+        return self._init_from_args(iter(self.struct.unpack(data)))
 
 
 class DataclassStructProtocol(Protocol):
@@ -78,7 +130,7 @@ class DataclassStructProtocol(Protocol):
 
 
 @overload
-def is_dataclass_struct(obj: type) -> TypeGuard[type[DataclassStructProtocol]]:
+def is_dataclass_struct(obj: type) -> TypeGuard[Type[DataclassStructProtocol]]:
     ...
 
 
@@ -89,7 +141,7 @@ def is_dataclass_struct(obj: Any) -> TypeGuard[DataclassStructProtocol]:
 
 def is_dataclass_struct(obj: Union[type, Any]) -> Union[
     TypeGuard[DataclassStructProtocol],
-    TypeGuard[type[DataclassStructProtocol]]
+    TypeGuard[Type[DataclassStructProtocol]]
 ]:
     """
     Returns True if obj is a class that has been decorated with
@@ -102,27 +154,72 @@ def is_dataclass_struct(obj: Union[type, Any]) -> Union[
     )
 
 
+class _NestedField(Field):
+    type_: Type[DataclassStructProtocol]
+
+    def __init__(self, cls: Type[DataclassStructProtocol]):
+        self.type_ = cls
+
+    def format(self) -> str:
+        # Return the format without the endian specifier at the beginning
+        return self.type_.__dataclass_struct__.format[1:]
+
+
 def _validate_and_parse_field(
     cls: type,
     name: str,
     f: Type[Any],
     allow_native: bool,
     validate: bool,
-) -> str:
+    endianness: str,
+) -> Tuple[str, type]:
+    """
+    name is the name of the attribute, f is its type annotation.
+    """
+
     if get_origin(f) == Annotated:
+        # The types defined in .types (e.g. U32, F32, etc.) are of the form:
+        #     Annotated[<primitive type>, Field(<field args>)]
+        # Alternatively, accept annotations of the form:
+        #     Annotated[<primitive type>, PadBefore(<size>), PadAfter(<size>)]
+        # or:
+        #     Annotated[<dcs.types type>, PadBefore(<size>), PadAfter(<size>)]
+        # which will expand to:
+        #     Annotated[
+        #         <primitive type associated with dcs.types type>,
+        #         Field(<field args>),
+        #         PadBefore(<size>),
+        #         PadAfter(<size>),
+        #     ]
+        # PadBefore and PadAfter are optional and may be repeated or in
+        # different orders
         type_, *fields = get_args(f)
         pad_before, pad_after, field = _get_padding_and_field(fields)
     else:
+        # Accept type annotations without Annotated e.g. primitive types or
+        # nested dataclass-structs
         pad_before = pad_after = 0
         type_ = f
         field = None
 
     if field is None:
-        field = primitive_fields.get(type_)
-        if field is None:
-            raise TypeError(f'type not supported: {f}')
+        # Must be either a nested type or one of the supported primitives
+        if is_dataclass_struct(type_):
+            nested_endian = type_.__dataclass_struct__.endianness
+            if nested_endian != endianness:
+                raise TypeError(
+                    'endianness of contained dataclass-struct does not match '
+                    'that of container (expected '
+                    f'{endianness}, got {nested_endian})'
+                )
+            field = _NestedField(type_)
+        else:
+            field = primitive_fields.get(type_)
+            if field is None:
+                raise TypeError(f'type not supported: {f}')
 
     if issubclass(type_, bytes) and isinstance(field, int):
+        # Annotated[bytes, <positive non-zero integer>] is a byte array
         field = BytesField(field)
     elif not isinstance(field, Field):
         raise TypeError(f'invalid field annotation: {field}')
@@ -142,20 +239,21 @@ def _validate_and_parse_field(
             )
         field.validate(val)
 
-    return ''.join((
-        (f'{pad_before}x' if pad_before else ''),
-        field.format(),
-        (f'{pad_after}x' if pad_after else ''),
-    ))
+    return (
+        ''.join((
+            (f'{pad_before}x' if pad_before else ''),
+            field.format(),
+            (f'{pad_after}x' if pad_after else ''),
+        )),
+        type_
+    )
 
 
-def _make_pack_method(fieldnames: List[str]) -> Callable:
-    func = f"""
+def _make_pack_method() -> Callable:
+    func = """
 def pack(self) -> bytes:
     '''Pack to bytes using struct.pack.'''
-    return self.__dataclass_struct__.pack(
-    {','.join(f'self.{name}' for name in fieldnames)}
-    )
+    return self.__dataclass_struct__.pack(self)
 """
 
     scope: Dict[str, Any] = {}
@@ -167,7 +265,7 @@ def _make_unpack_method(cls: type) -> classmethod:
     func = """
 def from_packed(cls, data: bytes) -> cls_type:
     '''Unpack from bytes.'''
-    return cls(*cls.__dataclass_struct__.unpack(data))
+    return cls.__dataclass_struct__.unpack(data)
 """
 
     scope: Dict[str, Any] = {'cls_type': cls}
@@ -180,17 +278,30 @@ def _make_class(
 ) -> type:
     cls_annotations = get_type_hints(cls, include_extras=True)
     struct_format = [endian]
-    struct_format.extend(
-        _validate_and_parse_field(cls, name, field, allow_native, validate)
-        for name, field in cls_annotations.items()
-    )
+    fieldtypes = []
+    for name, field in cls_annotations.items():
+        fmt, type_ = _validate_and_parse_field(
+            cls,
+            name,
+            field,
+            allow_native,
+            validate,
+            endian,
+        )
+        struct_format.append(fmt)
+        fieldtypes.append(type_)
 
     setattr(
         cls,
         '__dataclass_struct__',
-        _DataclassStructInternal(''.join(struct_format), cls)
+        _DataclassStructInternal(
+            ''.join(struct_format),
+            cls,
+            list(cls_annotations.keys()),
+            fieldtypes,
+        )
     )
-    setattr(cls, 'pack', _make_pack_method(list(cls_annotations.keys())))
+    setattr(cls, 'pack', _make_pack_method())
     setattr(cls, 'from_packed', _make_unpack_method(cls))
 
     return dataclasses.dataclass(cls)
