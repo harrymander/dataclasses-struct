@@ -45,6 +45,16 @@ def _get_padding_and_field(fields):
     return pad_before, pad_after, field
 
 
+def is_dataclass_struct(cls) -> bool:
+    """
+    Returns True if cls has been decorated with dataclass.dataclasses_struct
+    """
+    return (
+        dataclasses.is_dataclass(cls)
+        and hasattr(cls, '__dataclass_struct__')
+    )
+
+
 def _validate_and_parse_field(
     cls: type,
     name: str,

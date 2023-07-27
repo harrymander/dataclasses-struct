@@ -24,7 +24,11 @@ class Test:
 ```
 
 ```python
+>>> dcs.is_dataclass_struct(Test)
+True
 >>> t = Test(100, -0.25, 0xff, b'12345')
+>>> dcs.is_dataclass_struct(t)
+True
 >>> t
 Test(x=100, y=-0.25, z=255, s=b'12345')
 >>> packed = t.pack()
@@ -112,6 +116,9 @@ Decorated classes are transformed to a standard Python
 are added to the class: `pack`, a method for packing an instance of the class to
 `bytes`, and `from_packed`, a class method that returns a new instance of the
 class from its packed `bytes` representation.
+
+A class or object can be check to see if it is a dataclass-struct using the
+`is_dataclass_struct` function.
 
 An additional class attribute, `__dataclass_struct__`, of type
 [`struct.Struct`](https://docs.python.org/3/library/struct.html#struct.Struct)

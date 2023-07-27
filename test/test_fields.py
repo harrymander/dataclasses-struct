@@ -1,5 +1,4 @@
 from ctypes import c_size_t, c_ssize_t, c_void_p, sizeof
-from dataclasses import is_dataclass
 from typing_extensions import Annotated
 
 import pytest
@@ -18,15 +17,6 @@ def assert_same_format(t1: type, t2: type) -> None:
         t1.__dataclass_struct__.format  # type: ignore
         == t2.__dataclass_struct__.format  # type: ignore
     )
-
-
-def test_is_dataclass() -> None:
-    @dcs.dataclass()
-    class Dataclass:
-        pass
-
-    assert is_dataclass(Dataclass)
-    assert is_dataclass(Dataclass())
 
 
 def test_native_int_as_int64() -> None:
