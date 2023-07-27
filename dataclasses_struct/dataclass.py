@@ -52,6 +52,7 @@ def is_dataclass_struct(cls) -> bool:
     return (
         dataclasses.is_dataclass(cls)
         and hasattr(cls, '__dataclass_struct__')
+        and isinstance(cls.__dataclass_struct__, struct.Struct)
     )
 
 
