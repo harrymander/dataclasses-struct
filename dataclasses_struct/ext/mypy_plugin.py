@@ -35,7 +35,8 @@ def transform_dataclass_struct(ctx: ClassDefContext) -> bool:
         ctx.api,
         ctx.cls,
         '__dataclass_struct__',
-        ctx.api.named_type('struct.Struct'),
+        ctx.api.named_type(
+            'dataclasses_struct.dataclass._DataclassStructInternal'),
         is_classvar=True,
     )
 

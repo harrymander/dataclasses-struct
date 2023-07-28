@@ -11,6 +11,16 @@ def test_valid_endians(endian: str) -> None:
     class Test:
         pass
 
+    assert Test.__dataclass_struct__.endianness == endian
+
+
+def test_default_endian_is_native_aligned() -> None:
+    @dcs.dataclass()
+    class Test:
+        pass
+
+    assert Test.__dataclass_struct__.endianness == dcs.NATIVE_ENDIAN_ALIGNED
+
 
 def test_invalid_endian() -> None:
     with pytest.raises(ValueError, match=escape('invalid endianness: ?')):

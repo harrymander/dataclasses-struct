@@ -1,8 +1,9 @@
 import dataclasses
 import struct
-from typing import Any, Callable, Dict, List, Type
+from typing import Any, Callable, Dict, List, Protocol, Type, Union, overload
 from typing_extensions import (
     Annotated,
+    TypeGuard,
     dataclass_transform,
     get_args,
     get_origin,
@@ -45,14 +46,59 @@ def _get_padding_and_field(fields):
     return pad_before, pad_after, field
 
 
-def is_dataclass_struct(cls) -> bool:
+class _DataclassStructInternal:
+    struct: struct.Struct
+    cls: type
+
+    @property
+    def format(self) -> str:
+        return self.struct.format
+
+    @property
+    def size(self) -> int:
+        return self.struct.size
+
+    @property
+    def endianness(self) -> str:
+        return self.format[0]
+
+    def __init__(self, fmt: str, cls: type):
+        self.struct = struct.Struct(fmt)
+        self.cls = cls
+
+    def pack(self, *args) -> bytes:
+        return self.struct.pack(*args)
+
+    def unpack(self, data: bytes) -> Any:
+        return self.struct.unpack(data)
+
+
+class DataclassStructProtocol(Protocol):
+    __dataclass_struct__: _DataclassStructInternal
+
+
+@overload
+def is_dataclass_struct(obj: type) -> TypeGuard[type[DataclassStructProtocol]]:
+    ...
+
+
+@overload
+def is_dataclass_struct(obj: Any) -> TypeGuard[DataclassStructProtocol]:
+    ...
+
+
+def is_dataclass_struct(obj: Union[type, Any]) -> Union[
+    TypeGuard[DataclassStructProtocol],
+    TypeGuard[type[DataclassStructProtocol]]
+]:
     """
-    Returns True if cls has been decorated with dataclass.dataclasses_struct
+    Returns True if obj is a class that has been decorated with
+    dataclasses_struct.dataclass or an instance of one.
     """
     return (
-        dataclasses.is_dataclass(cls)
-        and hasattr(cls, '__dataclass_struct__')
-        and isinstance(cls.__dataclass_struct__, struct.Struct)
+        dataclasses.is_dataclass(obj)
+        and hasattr(obj, '__dataclass_struct__')
+        and isinstance(obj.__dataclass_struct__, _DataclassStructInternal)
     )
 
 
@@ -142,7 +188,7 @@ def _make_class(
     setattr(
         cls,
         '__dataclass_struct__',
-        struct.Struct(''.join(struct_format))
+        _DataclassStructInternal(''.join(struct_format), cls)
     )
     setattr(cls, 'pack', _make_pack_method(list(cls_annotations.keys())))
     setattr(cls, 'from_packed', _make_unpack_method(cls))

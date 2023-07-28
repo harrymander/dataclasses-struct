@@ -120,17 +120,17 @@ class from its packed `bytes` representation.
 A class or object can be check to see if it is a dataclass-struct using the
 `is_dataclass_struct` function.
 
-An additional class attribute, `__dataclass_struct__`, of type
-[`struct.Struct`](https://docs.python.org/3/library/struct.html#struct.Struct)
-is added. The [`struct` format
-string](https://docs.python.org/3/library/struct.html#format-strings) and packed
-size can be accessed like so:
+An additional class attribute, `__dataclass_struct__`. The [`struct` format
+string](https://docs.python.org/3/library/struct.html#format-strings), packed
+size, and endianness can be accessed like so:
 
 ```python
 >>> Test.__dataclass_struct__.format
 '@cc??bBhHiIQqqNnPfdd100s4xqq2x3xq2x'
 >>> Test.__dataclass_struct__.size
 234
+>>> Test.__dataclass_struct__.endianness
+'@'
 ```
 
 Default attribute values will be validated against their expected type and

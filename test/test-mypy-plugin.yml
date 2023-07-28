@@ -25,7 +25,7 @@
     reveal_type(t.pack())  # N: Revealed type is "builtins.bytes"
 
 
-- case: test_has_struct_attribute
+- case: test_dataclass_struct_attribute
   mypy_config: 'plugins = dataclasses_struct.ext.mypy_plugin'
   main: |
     import dataclasses_struct as dcs
@@ -34,7 +34,9 @@
     class Test:
         x: int
 
-    reveal_type(Test.__dataclass_struct__)  # N: Revealed type is "struct.Struct"
+    reveal_type(Test.__dataclass_struct__.size)  # N: Revealed type is "builtins.int"
+    reveal_type(Test.__dataclass_struct__.format)  # N: Revealed type is "builtins.str"
+    reveal_type(Test.__dataclass_struct__.endianness)  # N: Revealed type is "builtins.str"
 
 
 - case: test_from_packed_returns_instance
