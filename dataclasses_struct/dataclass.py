@@ -113,7 +113,7 @@ class _DataclassStructInternal(Generic[T]):
             if is_dataclass_struct(fieldtype):
                 yield fieldtype.__dataclass_struct__._init_from_args(args)
             else:
-                yield next(args)
+                yield fieldtype(next(args))
 
     def _init_from_args(self, args: Iterator) -> T:
         """
