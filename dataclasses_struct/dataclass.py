@@ -273,6 +273,31 @@ def from_packed(cls, data: bytes) -> cls_type:
     return classmethod(scope['from_packed'])
 
 
+def _make_pprint_method() -> Callable:
+    func = """
+def _repr_pretty_(self, p, cycle):
+    '''Pretty-printing repr for IPython.'''
+    p.text(f'{self.__class__.__name__}(')
+    if cycle:
+        p.text('...)')
+        return
+    with p.indent(2):
+        p.breakable('')
+        fields = ((k,v) for k,v in self.__dict__.items() if not k.startswith('_'))
+        for i, (k, v) in enumerate(fields):
+            if i > 0:
+                p.text(',')
+                p.breakable()
+            p.text(f'{k}=')
+            p.pretty(v)
+    p.text(')')
+"""
+
+    scope: Dict[str, Any] = {}
+    exec(func, {}, scope)
+    return scope['_repr_pretty_']
+
+
 def _make_class(
     cls: type, endian: str, allow_native: bool, validate: bool
 ) -> type:
@@ -303,6 +328,7 @@ def _make_class(
     )
     setattr(cls, 'pack', _make_pack_method())
     setattr(cls, 'from_packed', _make_unpack_method(cls))
+    setattr(cls, '_repr_pretty_', _make_pprint_method())
 
     return dataclasses.dataclass(cls)
 
