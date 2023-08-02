@@ -135,7 +135,9 @@ are added to the class: `pack`, a method for packing an instance of the class to
 class from its packed `bytes` representation.
 
 A class or object can be check to see if it is a dataclass-struct using the
-`is_dataclass_struct` function.
+`is_dataclass_struct` function. The `get_struct_size` function will return
+the size in bytes of the packed representation of a dataclass_struct class
+or an instance of one.
 
 An additional class attribute, `__dataclass_struct__`. The [`struct` format
 string](https://docs.python.org/3/library/struct.html#format-strings), packed

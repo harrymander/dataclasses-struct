@@ -1,6 +1,7 @@
 import itertools
 from re import escape
 from typing_extensions import Annotated
+import struct
 
 import pytest
 
@@ -13,12 +14,17 @@ def test_nested() -> None:
         x: dcs.I64
         y: Annotated[bytes, 3]
 
+    assert dcs.get_struct_size(Nested) == struct.calcsize('@ q3b')
+
     @dcs.dataclass()
     class Container:
         x: dcs.I32
         item1: Annotated[Nested, dcs.PadBefore(10)]
         item2: Annotated[Nested, dcs.PadAfter(12)]
         y: dcs.I32
+
+    fmt = '@ i 10xq3b q3b12x i'
+    assert dcs.get_struct_size(Container) == struct.calcsize(fmt)
 
     c = Container(1, Nested(2, b'123'), Nested(5, b'456'), 12)
     unpacked = Container.from_packed(c.pack())

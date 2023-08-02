@@ -2,6 +2,7 @@ from typing_extensions import Annotated
 
 from math import pi as PI
 import pytest
+import struct
 
 import dataclasses_struct as dcs
 
@@ -50,6 +51,10 @@ def test_pack_unpack(endian: str) -> None:
         p=b'12345',
     )
 
+    fmt = endian + 'BHIQ bhiq ?c fd 3s5s'
+    assert dcs.get_struct_size(Test) == struct.calcsize(fmt)
+    assert dcs.get_struct_size(t) == struct.calcsize(fmt)
+
     packed = t.pack()
     assert isinstance(packed, bytes)
 
@@ -78,6 +83,8 @@ def test_packed_bytes_padding(endian: str) -> None:
     class Test:
         x: Annotated[bytes, 5]
 
+    assert dcs.get_struct_size(Test) == struct.calcsize(endian + '5s')
+
     t = Test(b'').pack()
     assert t == b'\x00' * 5
     assert Test.from_packed(t) == Test(b'\x00' * 5)
@@ -92,6 +99,8 @@ def test_pack_unpack_empty(endian: str) -> None:
     @dcs.dataclass(endian)
     class Empty:
         pass
+
+    assert dcs.get_struct_size(Empty) == 0
 
     assert Empty().pack() == b''
     assert Empty.from_packed(b'') == Empty()

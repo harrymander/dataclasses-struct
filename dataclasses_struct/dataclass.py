@@ -159,6 +159,16 @@ def is_dataclass_struct(obj: Union[type, Any]) -> Union[
     )
 
 
+def get_struct_size(cls_or_obj: Any) -> int:
+    """
+    Returns the size of the packed representation of the struct in bytes.
+    Accepts either a class or an instance of a dataclass_struct.
+    """
+    if not is_dataclass_struct(cls_or_obj):
+        raise TypeError(f'{cls_or_obj} is not a dataclass_struct')
+    return cls_or_obj.__dataclass_struct__.size
+
+
 class _NestedField(Field):
     type_: Type[DataclassStructProtocol]
 

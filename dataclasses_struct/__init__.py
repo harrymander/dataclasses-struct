@@ -6,6 +6,7 @@ __version__ = metadata.version(__package__)
 
 from .dataclass import (
     dataclass,
+    get_struct_size,
     is_dataclass_struct,
     DataclassStructProtocol,
     ENDIANS,
