@@ -1,6 +1,6 @@
 from collections.abc import Generator, Iterator
 import dataclasses
-import struct
+from struct import Struct
 from typing import (
     Any,
     Callable,
@@ -63,7 +63,7 @@ T = TypeVar('T')
 
 
 class _DataclassStructInternal(Generic[T]):
-    struct: struct.Struct
+    struct: Struct
     cls: Type[T]
     _fieldnames: List[str]
     _fieldtypes: List[type]
@@ -87,7 +87,7 @@ class _DataclassStructInternal(Generic[T]):
         fieldnames: List[str],
         fieldtypes: List[type],
     ):
-        self.struct = struct.Struct(fmt)
+        self.struct = Struct(fmt)
         self.cls = cls
         self._fieldnames = fieldnames
         self._fieldtypes = fieldtypes
@@ -127,6 +127,11 @@ class _DataclassStructInternal(Generic[T]):
 
 class DataclassStructProtocol(Protocol):
     __dataclass_struct__: _DataclassStructInternal
+
+    @classmethod
+    def from_packed(cls: Type[T], data: bytes) -> T: ...
+
+    def pack(self) -> bytes: ...
 
 
 @overload
@@ -275,7 +280,7 @@ def from_packed(cls, data: bytes) -> cls_type:
 
 def _make_class(
     cls: type, endian: str, allow_native: bool, validate: bool
-) -> type:
+) -> Type[DataclassStructProtocol]:
     cls_annotations = get_type_hints(cls, include_extras=True)
     struct_format = [endian]
     fieldtypes = []
