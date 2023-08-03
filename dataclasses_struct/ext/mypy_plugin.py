@@ -7,7 +7,7 @@ from mypy.plugins.dataclasses import dataclass_class_maker_callback
 from mypy.types import TypeType, TypeVarType
 
 
-DATACLASS_STRUCT_DECORATOR = 'dataclasses_struct.dataclass.dataclass'
+DATACLASS_STRUCT_DECORATOR = 'dataclasses_struct._dataclass.dataclass'
 
 
 def transform_dataclass_struct(ctx: ClassDefContext) -> bool:
@@ -36,7 +36,7 @@ def transform_dataclass_struct(ctx: ClassDefContext) -> bool:
         ctx.cls,
         '__dataclass_struct__',
         ctx.api.named_type(
-            'dataclasses_struct.dataclass._DataclassStructInternal'),
+            'dataclasses_struct._dataclass._DataclassStructInternal'),
         is_classvar=True,
     )
 

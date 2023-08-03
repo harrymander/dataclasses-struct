@@ -4,7 +4,7 @@ from importlib import metadata
 
 __version__ = metadata.version(__package__)
 
-from .dataclass import (
+from ._dataclass import (
     dataclass,
     get_struct_size,
     is_dataclass_struct,
