@@ -29,7 +29,11 @@ markers = [
 
 [tool.coverage.run]
 source = ["dataclasses_struct/"]
-omit = ["dataclasses_struct/ext/**/*.py", "dataclasses_struct/sizes.py"]
+omit = [
+	"dataclasses_struct/contrib/**/*.py",
+	"dataclasses_struct/ext/**/*.py",
+	"dataclasses_struct/sizes.py",
+]
 
 [build-system]
 requires = ["poetry-core"]
