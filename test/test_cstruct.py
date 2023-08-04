@@ -1,11 +1,11 @@
-from pathlib import Path
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 from typing import Sequence
-from typing_extensions import Annotated
 
 import pytest
+from typing_extensions import Annotated
 
 import dataclasses_struct as dcs
 

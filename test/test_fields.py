@@ -1,10 +1,9 @@
 from ctypes import c_size_t, c_ssize_t, c_void_p, sizeof
-from typing_extensions import Annotated
 
 import pytest
+from typing_extensions import Annotated
 
 import dataclasses_struct as dcs
-
 
 SSIZE_MIN = -2**(sizeof(c_ssize_t) * 8 - 1)
 SSIZE_MAX = -SSIZE_MIN - 1

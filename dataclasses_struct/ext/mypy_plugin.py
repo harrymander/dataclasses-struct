@@ -1,11 +1,11 @@
 from typing import Callable, Optional, Type
 
-from mypy.nodes import Argument, ArgKind, Var
-from mypy.plugin import ClassDefContext, Plugin as BasePlugin
+from mypy.nodes import ArgKind, Argument, Var
+from mypy.plugin import ClassDefContext
+from mypy.plugin import Plugin as BasePlugin
 from mypy.plugins.common import add_attribute_to_class, add_method_to_class
 from mypy.plugins.dataclasses import dataclass_class_maker_callback
 from mypy.types import TypeType, TypeVarType
-
 
 DATACLASS_STRUCT_DECORATOR = 'dataclasses_struct.dataclass.dataclass'
 
