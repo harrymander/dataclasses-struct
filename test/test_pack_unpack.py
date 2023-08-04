@@ -1,8 +1,8 @@
-from typing_extensions import Annotated
-
-from math import pi as PI
-import pytest
 import struct
+from math import pi as PI
+
+import pytest
+from typing_extensions import Annotated
 
 import dataclasses_struct as dcs
 

@@ -37,6 +37,7 @@ select = [
 	"F", # pyflakes
 	"I", # isort
 ]
+fixable = ["I"]
 
 [build-system]
 requires = ["poetry-core"]

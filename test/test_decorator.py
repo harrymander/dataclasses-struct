@@ -1,6 +1,7 @@
 import dataclasses
-import pytest
 from re import escape
+
+import pytest
 
 import dataclasses_struct as dcs
 

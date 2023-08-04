@@ -1,5 +1,5 @@
-from collections.abc import Generator, Iterator
 import dataclasses
+from collections.abc import Generator, Iterator
 from struct import Struct
 from typing import (
     Any,
@@ -14,6 +14,7 @@ from typing import (
     Union,
     overload,
 )
+
 from typing_extensions import (
     Annotated,
     TypeGuard,
@@ -23,9 +24,8 @@ from typing_extensions import (
     get_type_hints,
 )
 
-from .field import primitive_fields, Field, BytesField
-from .types import PadBefore, PadAfter
-
+from .field import BytesField, Field, primitive_fields
+from .types import PadAfter, PadBefore
 
 NATIVE_ENDIAN_ALIGNED = '@'
 NATIVE_ENDIAN = '='

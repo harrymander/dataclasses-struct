@@ -1,9 +1,9 @@
 import itertools
-from re import escape
-from typing_extensions import Annotated
 import struct
+from re import escape
 
 import pytest
+from typing_extensions import Annotated
 
 import dataclasses_struct as dcs
 
