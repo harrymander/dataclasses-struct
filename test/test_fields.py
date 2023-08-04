@@ -144,7 +144,7 @@ def test_valid_non_native_fields(endian: str) -> None:
         i: dcs.I64
         j: dcs.U64
         k: dcs.F32
-        l: dcs.F64
+        l: dcs.F64  # noqa: E741
         m: Annotated[bytes, dcs.BytesField(10)]
 
 
@@ -211,7 +211,7 @@ def test_int_default_range_boundary() -> None:
         j: dcs.U8 = 0xff
 
         k: dcs.I16 = -0x8000
-        l: dcs.I16 = 0x7fff
+        l: dcs.I16 = 0x7fff  # noqa: E741
         m: dcs.U16 = 0
         n: dcs.U16 = 0xffff
 
@@ -320,7 +320,7 @@ def test_unvalidated() -> None:
         j: dcs.U8 = 0xff + 1
 
         k: dcs.I16 = -0x8000 - 1
-        l: dcs.I16 = 0x7fff + 1
+        l: dcs.I16 = 0x7fff + 1  # noqa: E741
         m: dcs.U16 = -1
         n: dcs.U16 = 0xffff + 1
 
