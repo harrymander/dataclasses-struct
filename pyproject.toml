@@ -35,6 +35,7 @@ omit = ["dataclasses_struct/ext/**/*.py", "dataclasses_struct/sizes.py"]
 select = [
 	"E", # pycodestyle
 	"F", # pyflakes
+	"I", # isort
 ]
 
 [build-system]
