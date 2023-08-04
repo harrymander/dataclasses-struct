@@ -1,53 +1,51 @@
-# flake8: noqa
-
 from importlib import metadata
 
 __version__ = metadata.version(__package__)
 
 from .dataclass import (
+    BIG_ENDIAN,
+    ENDIANS,
+    LITTLE_ENDIAN,
+    NATIVE_ENDIAN,
+    NATIVE_ENDIAN_ALIGNED,
+    NETWORK_ENDIAN,
+    DataclassStructProtocol,
     dataclass,
     get_struct_size,
     is_dataclass_struct,
-    DataclassStructProtocol,
-    ENDIANS,
-    NATIVE_ENDIAN_ALIGNED,
-    NATIVE_ENDIAN,
-    LITTLE_ENDIAN,
-    BIG_ENDIAN,
-    NETWORK_ENDIAN,
-)
-from .types import (
-    Char,
-    I8,
-    U8,
-    Bool,
-    I16,
-    U16,
-    I32,
-    U32,
-    I64,
-    U64,
-    Size,
-    SSize,
-    Pointer,
-    F32,
-    F64,
-    PadBefore,
-    PadAfter,
 )
 from .field import (
     BoolField,
+    BytesField,
     CharField,
-    IntField,
-    SignedIntField,
-    UnsignedIntField,
     Float32Field,
     Float64Field,
-    SizeField,
-    SignedSizeField,
-    UnsignedSizeField,
+    IntField,
     PointerField,
-    BytesField,
+    SignedIntField,
+    SignedSizeField,
+    SizeField,
+    UnsignedIntField,
+    UnsignedSizeField,
+)
+from .types import (
+    F32,
+    F64,
+    I8,
+    I16,
+    I32,
+    I64,
+    U8,
+    U16,
+    U32,
+    U64,
+    Bool,
+    Char,
+    PadAfter,
+    PadBefore,
+    Pointer,
+    Size,
+    SSize,
 )
 
 __all__ = (
