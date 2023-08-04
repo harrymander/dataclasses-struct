@@ -57,7 +57,7 @@ jobs:
         if: matrix.os == 'Windows'
 
       - name: Lint
-        run: poetry run flake8 --exclude .venv .
+        run: poetry run ruff check --exclude .venv .
 
       - name: Python type checking
         run: poetry run mypy
