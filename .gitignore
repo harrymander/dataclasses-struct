@@ -1,6 +1,5 @@
+.*_cache/
 .coverage
-.mypy_cache/
-.pytest_cache/
 /dist/
 __pycache__/
 coverage.xml
