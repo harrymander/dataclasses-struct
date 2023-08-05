@@ -165,3 +165,42 @@ class Test:
 
 will raise a `ValueError`. This can be disabled by passing `validate=False` to
 the `dataclasses_struct.dataclass` decorator.
+
+## Development and contributing
+
+Pull requests are welcomed!
+
+This project uses [Poetry](https://python-poetry.org/) as its build system. To
+install all dependencies (including development dependencies) into a virtualenv
+for local development:
+
+```
+poetry install --with dev
+```
+
+Uses `pytest` for testing:
+
+```
+poetry run pytest
+```
+
+(Omit the `poetry run` if the Poetry virtualenv is activated.)
+
+Uses `ruff` for linting, which is enforced on pull requests:
+
+```
+poetry run ruff check .
+```
+
+See `pyproject.toml` for the list of enabled checks. I recommend installing the
+provided [`pre-commmit`](https://pre-commit.com/) hooks to ensure new commits
+pass linting:
+
+```
+pre-commit install
+```
+
+This will help speed-up pull requests by reducing the chance of failing CI
+checks.
+
+PRs must also pass `mypy` checks (`poetry run mypy`).
