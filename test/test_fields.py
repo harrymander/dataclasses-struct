@@ -8,7 +8,7 @@ import dataclasses_struct as dcs
 SSIZE_MIN = -2**(sizeof(c_ssize_t) * 8 - 1)
 SSIZE_MAX = -SSIZE_MIN - 1
 SIZE_MAX = 2**(sizeof(c_size_t) * 8) - 1
-POIER_MAX = 2**(sizeof(c_void_p) * 8) - 1
+POINTER_MAX = 2**(sizeof(c_void_p) * 8) - 1
 
 
 def assert_same_format(t1: type, t2: type) -> None:
@@ -163,7 +163,7 @@ def test_invalid_bytes_size(size: int) -> None:
         (dcs.SSize, SSIZE_MAX + 1),
 
         (dcs.Pointer, -1),
-        (dcs.Pointer, POIER_MAX + 1),
+        (dcs.Pointer, POINTER_MAX + 1),
 
         (dcs.I8, -0x80 - 1),
         (dcs.I8, 0x7f + 1),
@@ -202,7 +202,7 @@ def test_int_default_range_boundary() -> None:
         d: dcs.SSize = SSIZE_MAX
 
         e: dcs.Pointer = 0
-        f: dcs.Pointer = POIER_MAX
+        f: dcs.Pointer = POINTER_MAX
 
         g: dcs.I8 = -0x80
         h: dcs.I8 = 0x7f
@@ -311,7 +311,7 @@ def test_unvalidated() -> None:
         d: dcs.SSize = SSIZE_MAX + 1
 
         e: dcs.Pointer = -1
-        f: dcs.Pointer = POIER_MAX
+        f: dcs.Pointer = POINTER_MAX
 
         g: dcs.I8 = -0x80 - 1
         h: dcs.I8 = 0x7f + 1
