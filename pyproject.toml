@@ -39,6 +39,7 @@ select = [
 	"UP", # pyupgrade
 ]
 fixable = ["I"]
+line-length = 79
 target-version = "py38"
 
 [build-system]
