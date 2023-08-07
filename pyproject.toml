@@ -34,7 +34,7 @@ omit = ["dataclasses_struct/ext/**/*.py", "dataclasses_struct/sizes.py"]
 
 [tool.ruff]
 select = [
-	"E", # pycodestyle
+	"E", "W", # pycodestyle errors and warnings
 	"F", # pyflakes
 	"I", # isort
 	"UP", # pyupgrade
