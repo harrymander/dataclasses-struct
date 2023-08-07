@@ -186,10 +186,11 @@ poetry run pytest
 
 (Omit the `poetry run` if the Poetry virtualenv is activated.)
 
-Uses `ruff` for linting, which is enforced on pull requests:
+Uses `ruff` and `flake8` for linting, which is enforced on pull requests:
 
 ```
 poetry run ruff check .
+poetry run flake8
 ```
 
 See `pyproject.toml` for the list of enabled checks. I recommend installing the
