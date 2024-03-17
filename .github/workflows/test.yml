@@ -44,7 +44,7 @@ jobs:
         run: poetry config virtualenvs.in-project true
 
       - name: Cache the virtualenv
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ./.venv
           key: ${{ matrix.image }}-py${{ matrix.pyversion }}-venv-${{ hashFiles('**/poetry.lock') }}
