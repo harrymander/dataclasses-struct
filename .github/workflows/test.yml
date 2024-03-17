@@ -43,14 +43,23 @@ jobs:
       - name: Configure Poetry
         run: poetry config virtualenvs.in-project true
 
-      - name: Cache the virtualenv
-        uses: actions/cache@v4
+      - name: Restore virtualenv cache
+        uses: actions/cache/restore@v4
         with:
           path: ./.venv
           key: ${{ matrix.image }}-py${{ matrix.pyversion }}-venv-${{ hashFiles('**/poetry.lock') }}
 
-      - name: Install
-        run: poetry install -vvv --with dev --no-interaction --no-ansi
+      - name: Install dependencies
+        run: poetry install -vvv --with dev --no-interaction --no-root
+
+      - name: Save virtualenv cache
+        uses: actions/cache/save@v4
+        with:
+          path: ./.venv
+          key: ${{ matrix.image }}-py${{ matrix.pyversion }}-venv-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install package
+        run: poetry install -vvv --no-interaction --only-root
 
       - name: Configure MSVC
         uses: ilammy/msvc-dev-cmd@v1
