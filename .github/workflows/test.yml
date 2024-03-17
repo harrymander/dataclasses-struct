@@ -68,7 +68,8 @@ jobs:
         run: poetry run pytest --cov --cov-report=xml
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         if: matrix.os == 'Ubuntu' && matrix.pyversion == '3.10'
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage.xml
