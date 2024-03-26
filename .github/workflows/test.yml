@@ -61,10 +61,6 @@ jobs:
       - name: Install package
         run: poetry install -vvv --no-interaction --only-root
 
-      - name: Configure MSVC
-        uses: ilammy/msvc-dev-cmd@v1
-        if: matrix.os == 'Windows'
-
       - name: Lint
         run: |
           poetry run flake8 --exclude .venv &&
@@ -72,6 +68,10 @@ jobs:
 
       - name: Python type checking
         run: poetry run mypy
+
+      - name: Configure MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        if: matrix.os == 'Windows'
 
       - name: Run tests
         run: poetry run pytest --cov --cov-report=xml
