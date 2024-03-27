@@ -7,6 +7,7 @@ from typing import (
     Dict,
     Generic,
     List,
+    Literal,
     Protocol,
     Tuple,
     Type,
@@ -26,21 +27,6 @@ from typing_extensions import (
 
 from .field import BytesField, Field, primitive_fields
 from .types import PadAfter, PadBefore
-
-NATIVE_ENDIAN_ALIGNED = '@'
-NATIVE_ENDIAN = '='
-LITTLE_ENDIAN = '<'
-BIG_ENDIAN = '>'
-NETWORK_ENDIAN = '!'
-
-
-ENDIANS = frozenset((
-    NATIVE_ENDIAN_ALIGNED,
-    NATIVE_ENDIAN,
-    LITTLE_ENDIAN,
-    BIG_ENDIAN,
-    NETWORK_ENDIAN,
-))
 
 
 def _get_padding_and_field(fields):
@@ -62,6 +48,18 @@ def _get_padding_and_field(fields):
 T = TypeVar('T')
 
 
+_SIZE_ENDIAN_MODE_CHAR: dict[tuple[str, str], str] = {
+    ('native', 'native'): '@',
+    ('std', 'native'): '=',
+    ('std', 'little'): '<',
+    ('std', 'big'): '>',
+    ('std', 'network'): '!',
+}
+_MODE_CHAR_SIZE_ENDIAN: dict[str, tuple[str, str]] = {
+    v: k for k, v in _SIZE_ENDIAN_MODE_CHAR.items()
+}
+
+
 class _DataclassStructInternal(Generic[T]):
     struct: Struct
     cls: Type[T]
@@ -77,7 +75,7 @@ class _DataclassStructInternal(Generic[T]):
         return self.struct.size
 
     @property
-    def endianness(self) -> str:
+    def mode_char(self) -> str:
         return self.format[0]
 
     def __init__(
@@ -183,16 +181,16 @@ class _NestedField(Field):
 def _validate_and_parse_field(
     cls: type,
     name: str,
-    f: Type[Any],
-    allow_native: bool,
+    field_type: Type[Any],
+    is_native: bool,
     validate: bool,
-    endianness: str,
+    mode_char: str,
 ) -> Tuple[str, type]:
     """
     name is the name of the attribute, f is its type annotation.
     """
 
-    if get_origin(f) == Annotated:
+    if get_origin(field_type) == Annotated:
         # The types defined in .types (e.g. U32, F32, etc.) are of the form:
         #     Annotated[<primitive type>, Field(<field args>)]
         # Alternatively, accept annotations of the form:
@@ -208,30 +206,34 @@ def _validate_and_parse_field(
         #     ]
         # PadBefore and PadAfter are optional and may be repeated or in
         # different orders
-        type_, *fields = get_args(f)
+        type_, *fields = get_args(field_type)
         pad_before, pad_after, field = _get_padding_and_field(fields)
     else:
         # Accept type annotations without Annotated e.g. primitive types or
         # nested dataclass-structs
         pad_before = pad_after = 0
-        type_ = f
+        type_ = field_type
         field = None
 
     if field is None:
         # Must be either a nested type or one of the supported primitives
         if is_dataclass_struct(type_):
-            nested_endian = type_.__dataclass_struct__.endianness
-            if nested_endian != endianness:
-                raise TypeError(
-                    'endianness of contained dataclass-struct does not match '
-                    'that of container (expected '
-                    f'{endianness}, got {nested_endian})'
+            nested_mode = type_.__dataclass_struct__.mode_char
+            if nested_mode != mode_char:
+                size, endian = _MODE_CHAR_SIZE_ENDIAN[mode_char]
+                exp_size, exp_endian = _MODE_CHAR_SIZE_ENDIAN[nested_mode]
+                msg = (
+                    'endianness and size mode of nested dataclass-struct does '
+                    f'not match that of container (expected {exp_size} size '
+                    f'and {exp_endian} endian, got {size} size and '
+                    f'{endian} endian)'
                 )
+                raise TypeError(msg)
             field = _NestedField(type_)
         else:
             field = primitive_fields.get(type_)
             if field is None:
-                raise TypeError(f'type not supported: {f}')
+                raise TypeError(f'type not supported: {field_type}')
 
     if issubclass(type_, bytes) and isinstance(field, int):
         # Annotated[bytes, <positive non-zero integer>] is a byte array
@@ -239,18 +241,23 @@ def _validate_and_parse_field(
     elif not isinstance(field, Field):
         raise TypeError(f'invalid field annotation: {field}')
 
-    if not issubclass(type_, field.type_):
+    if not issubclass(type_, field.field_type):
         raise TypeError(f'type {type_} not supported for field: {field}')
 
-    if field.native_only and not allow_native:
-        raise TypeError(f'field {field} only supported for native alignment')
+    if is_native:
+        if not field.is_native:
+            raise TypeError(
+                f'field {field} only support in standard size mode'
+            )
+    elif not field.is_std:
+        raise TypeError(f'field {field} only supported in native size mode')
 
     if validate and hasattr(cls, name):
         val = getattr(cls, name)
-        if not isinstance(val, field.type_):
+        if not isinstance(val, field.field_type):
             raise TypeError(
                 'invalid type for field: expected '
-                f'{field.type_} got {type(val)}'
+                f'{field.field_type} got {type(val)}'
             )
         field.validate(val)
 
@@ -289,19 +296,19 @@ def from_packed(cls, data: bytes) -> cls_type:
 
 
 def _make_class(
-    cls: type, endian: str, allow_native: bool, validate: bool
+    cls: type, mode_char: str, is_native: bool, validate: bool
 ) -> Type[DataclassStructProtocol]:
     cls_annotations = get_type_hints(cls, include_extras=True)
-    struct_format = [endian]
+    struct_format = [mode_char]
     fieldtypes = []
     for name, field in cls_annotations.items():
         fmt, type_ = _validate_and_parse_field(
             cls,
-            name,
-            field,
-            allow_native,
-            validate,
-            endian,
+            name=name,
+            field_type=field,
+            is_native=is_native,
+            validate=validate,
+            mode_char=mode_char,
         )
         struct_format.append(fmt)
         fieldtypes.append(type_)
@@ -322,23 +329,48 @@ def _make_class(
     return dataclasses.dataclass(cls)
 
 
+@overload
+def dataclass(
+    *,
+    size: Literal['native'] = 'native',
+    endian: Literal['native'] = 'native',
+    validate: bool = ...
+):
+    ...
+
+
+@overload
+def dataclass(
+    *,
+    size: Literal['std'],
+    endian: Literal['native', 'big', 'little', 'network'] = 'native',
+    validate: bool = ...
+):
+    ...
+
+
 @dataclass_transform()
 def dataclass(
-    endian: str = NATIVE_ENDIAN_ALIGNED,
+    *,
+    size: Literal['native', 'std'] = 'native',
+    endian: Literal['native', 'big', 'little', 'network'] = 'native',
     validate: bool = True,
 ) -> Callable[[type], type]:
-    if endian not in ENDIANS:
-        raise ValueError(
-            f'invalid endianness: {endian}. '
-            '(Did you forget to add parentheses: @dataclass()?)'
-        )
+    is_native = size == 'native'
+    if is_native:
+        if endian != 'native':
+            raise TypeError("'native' size requires 'native' endian")
+    elif size != 'std':
+        raise TypeError(f'invalid size: {size}')
+    if endian not in ('native', 'big', 'little', 'network'):
+        raise TypeError(f'invalid endian: {endian}')
 
     def decorator(cls: type) -> type:
         return _make_class(
             cls,
-            endian,
-            endian == NATIVE_ENDIAN_ALIGNED,
-            validate
+            mode_char=_SIZE_ENDIAN_MODE_CHAR[(size, endian)],
+            is_native=is_native,
+            validate=validate,
         )
 
     return decorator

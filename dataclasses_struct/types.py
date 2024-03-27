@@ -8,19 +8,33 @@ Char = Annotated[bytes, field.CharField()]
 # Boolean type
 Bool = Annotated[bool, field.BoolField()]
 
-# Integer types
-I8 = Annotated[int, field.SignedIntField(1)]
-U8 = Annotated[int, field.UnsignedIntField(1)]
-I16 = Annotated[int, field.SignedIntField(2)]
-U16 = Annotated[int, field.UnsignedIntField(2)]
-I32 = Annotated[int, field.SignedIntField(4)]
-U32 = Annotated[int, field.UnsignedIntField(4)]
-I64 = Annotated[int, field.SignedIntField(8)]
-U64 = Annotated[int, field.UnsignedIntField(8)]
+# Standard integer types
+I8 = Annotated[int, field.SignedStdIntField(1)]
+U8 = Annotated[int, field.UnsignedStdIntField(1)]
+I16 = Annotated[int, field.SignedStdIntField(2)]
+U16 = Annotated[int, field.UnsignedStdIntField(2)]
+I32 = Annotated[int, field.SignedStdIntField(4)]
+U32 = Annotated[int, field.UnsignedStdIntField(4)]
+I64 = Annotated[int, field.SignedStdIntField(8)]
+U64 = Annotated[int, field.UnsignedStdIntField(8)]
+
+# Native integer types
+UnsignedChar = Annotated[int, field.NativeIntField('B', 'ubyte')]
+SignedChar = Annotated[int, field.NativeIntField('b', 'byte')]
+Short = Annotated[int, field.NativeIntField('h', 'short')]
+UnsignedShort = Annotated[int, field.NativeIntField('H', 'ushort')]
+Int = Annotated[int, field.NativeIntField('i', 'int')]
+UnsignedInt = Annotated[int, field.NativeIntField('I', 'uint')]
+Long = Annotated[int, field.NativeIntField('l', 'long')]
+UnsignedLong = Annotated[int, field.NativeIntField('L', 'ulong')]
+LongLong = Annotated[int, field.NativeIntField('q', 'longlong')]
+UnsignedLongLong = Annotated[int, field.NativeIntField('Q', 'ulonglong')]
 
 # Native size types
-Size = Annotated[int, field.UnsignedSizeField()]
-SSize = Annotated[int, field.SignedSizeField()]
+UnsignedSize = Annotated[int, field.SizeField(signed=False)]
+SignedSize = Annotated[int, field.SizeField(signed=True)]
+
+# Native pointer types
 Pointer = Annotated[int, field.PointerField()]
 
 # Floating point types
