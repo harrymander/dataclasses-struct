@@ -1,15 +1,14 @@
 import abc
-from ctypes import c_size_t, c_ssize_t, c_void_p, sizeof
+import ctypes
 from typing import Generic, Literal, Type, TypeVar
-
-from . import intsizes
 
 T = TypeVar('T')
 
 
 class Field(abc.ABC, Generic[T]):
-    native_only: bool = False
-    type_: Type[T]
+    is_native: bool = True
+    is_std: bool = True
+    field_type: Type[T]
 
     @abc.abstractmethod
     def format(self) -> str:
@@ -23,14 +22,14 @@ class Field(abc.ABC, Generic[T]):
 
 
 class BoolField(Field[bool]):
-    type_ = bool
+    field_type = bool
 
     def format(self) -> str:
         return '?'
 
 
 class CharField(Field[bytes]):
-    type_ = bytes
+    field_type = bytes
 
     def format(self) -> str:
         return 'c'
@@ -41,130 +40,125 @@ class CharField(Field[bytes]):
 
 
 class IntField(Field[int]):
-    signed: bool
-    size: int
-    type_ = int
-
-    _formats = {
-        1: 'b',
-        2: 'h',
-        4: 'i',
-        8: 'q',
-    }
-
-    _signed_sizes = {
-        1: (intsizes.I8_MIN, intsizes.I8_MAX),
-        2: (intsizes.I16_MIN, intsizes.I16_MAX),
-        4: (intsizes.I32_MIN, intsizes.I32_MAX),
-        8: (intsizes.I64_MIN, intsizes.I64_MAX),
-    }
-
-    _unsigned_sizes = {
-        1: (intsizes.U8_MIN, intsizes.U8_MAX),
-        2: (intsizes.U16_MIN, intsizes.U16_MAX),
-        4: (intsizes.U32_MIN, intsizes.U32_MAX),
-        8: (intsizes.U64_MIN, intsizes.U64_MAX),
-    }
+    field_type = int
 
     def __init__(
         self,
+        fmt: str,
         signed: bool,
-        size: Literal[1, 2, 4, 8]
+        size: int,
     ):
+        if signed and fmt.isupper():
+            raise ValueError(
+                'signed integer should have lowercase format string'
+            )
+
         self.signed = signed
         self.size = size
+        self._format = fmt
 
-        if size not in self._formats:
-            allowed = ', '.join(map(str, self._formats))
-            raise ValueError(f'only allowed sizes of: {allowed}')
+        nbits = self.size * 8
+        if signed:
+            exp = 2**(nbits - 1)
+            self.min_ = -exp
+            self.max_ = exp - 1
+        else:
+            self.min_ = 0
+            self.max_ = 2**nbits - 1
 
     def format(self) -> str:
-        f = self._formats[self.size]
-        return f if self.signed else f.upper()
+        return self._format
 
     def validate(self, val: int) -> None:
-        sizes = self._signed_sizes if self.signed else self._unsigned_sizes
-        min_, max_ = sizes[self.size]
-        if not (min_ <= val <= max_):
+        if not (self.min_ <= val <= self.max_):
             sign = 'signed' if self.signed else 'unsigned'
             n = self.size * 8
             raise ValueError(f'value out of range for {n}-bit {sign} integer')
 
     def __repr__(self) -> str:
         sign = 'signed' if self.signed else 'unsigned'
-        bits = self.size * 8
-        return f'{super().__repr__()}({sign}, {bits}-bit)'
+        return f'{super().__repr__()}({sign}, {self.size * 8}-bit)'
 
 
-class SignedIntField(IntField):
+class StdIntField(IntField):
+    is_native = False
+    _unsigned_formats = {
+        1: 'B',
+        2: 'H',
+        4: 'I',
+        8: 'Q',
+    }
+
+    def __init__(self, signed: bool, size: Literal[1, 2, 4, 8]):
+        fmt = self._unsigned_formats[size]
+        if signed:
+            fmt = fmt.lower()
+        super().__init__(fmt, signed, size)
+
+
+class SignedStdIntField(StdIntField):
     def __init__(self, size: Literal[1, 2, 4, 8]):
         super().__init__(True, size)
 
 
-class UnsignedIntField(IntField):
+class UnsignedStdIntField(StdIntField):
     def __init__(self, size: Literal[1, 2, 4, 8]):
         super().__init__(False, size)
 
 
 class Float32Field(Field[float]):
-    type_ = float
+    field_type = float
 
     def format(self) -> str:
         return 'f'
 
 
 class Float64Field(Field[float]):
-    type_ = float
+    field_type = float
 
     def format(self) -> str:
         return 'd'
 
 
-class SizeField(Field[int]):
-    native_only = True
-    type_ = int
+class NativeIntField(IntField):
+    is_std = False
 
-    signed_field = IntField(True, sizeof(c_ssize_t))  # type: ignore
-    unsigned_field = IntField(False, sizeof(c_size_t))  # type: ignore
+    def __init__(self, fmt: str, ctype_name: str):
+        size = ctypes.sizeof(getattr(ctypes, f'c_{ctype_name}'))
+        signed = not ctype_name.startswith('u')
+        super().__init__(fmt, signed, size)
+
+
+class SizeField(IntField):
+    is_std = False
 
     def __init__(self, signed: bool):
-        self.signed = signed
-
-    def format(self) -> str:
-        return 'n' if self.signed else 'N'
+        fmt = 'n' if signed else 'N'
+        size = ctypes.sizeof(ctypes.c_ssize_t if signed else ctypes.c_size_t)
+        super().__init__(fmt, signed, size)
 
     def validate(self, val: int) -> None:
-        if self.signed:
-            self.signed_field.validate(val)
-        else:
-            self.unsigned_field.validate(val)
+        if not (self.min_ <= val <= self.max_):
+            sign = 'signed' if self.signed else 'unsigned'
+            raise ValueError(f'value out of range for {sign} size type')
 
 
-class UnsignedSizeField(SizeField):
+class PointerField(IntField):
+    is_std = False
+
     def __init__(self):
-        super().__init__(False)
-
-
-class SignedSizeField(SizeField):
-    def __init__(self):
-        super().__init__(True)
-
-
-class PointerField(Field[int]):
-    native_only = True
-    type_ = int
-    max_ = 2**(sizeof(c_void_p) * 8) - 1
+        super().__init__('P', False, ctypes.sizeof(ctypes.c_void_p))
 
     def format(self) -> str:
         return 'P'
 
     def validate(self, val: int) -> None:
-        if not (0 <= val <= self.max_):
+        if not (self.min_ <= val <= self.max_):
             raise ValueError('value out of range for system pointer')
 
 
 class BytesField(Field[bytes]):
-    type_ = bytes
+    field_type = bytes
 
     def __init__(self, n: int):
         if n < 1:
@@ -184,7 +178,7 @@ class BytesField(Field[bytes]):
 
 
 primitive_fields = {
-    int: SignedIntField(8),
+    int: NativeIntField('i', 'int'),
     float: Float64Field(),
     bool: BoolField(),
     bytes: CharField(),

@@ -6,7 +6,7 @@ import dataclasses_struct as dcs
 
 
 def test_postponed() -> None:
-    @dcs.dataclass()
+    @dcs.dataclass(size='std')
     class _:
         a: dcs.Char
         b: dcs.I8
@@ -21,6 +21,3 @@ def test_postponed() -> None:
         k: dcs.F32
         l: dcs.F64  # noqa: E741
         m: Annotated[bytes, dcs.BytesField(10)]
-        n: dcs.Size
-        o: dcs.SSize
-        p: dcs.Pointer

@@ -67,8 +67,8 @@ def test_pack_unpack(endian: str) -> None:
 def test_pack_unpack_native_types() -> None:
     @dcs.dataclass()
     class Test:
-        size: dcs.Size
-        ssize: dcs.SSize
+        size: dcs.UnsignedSize
+        ssize: dcs.SignedSize
         pointer: dcs.Pointer
 
     t = Test(10, -10, 100)
