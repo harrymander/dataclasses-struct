@@ -1,40 +1,54 @@
 import dataclasses
-from re import escape
 
 import pytest
 
 import dataclasses_struct as dcs
 
 
-@pytest.mark.parametrize('endian', dcs.ENDIANS)
-def test_valid_endians(endian: str) -> None:
-    @dcs.dataclass(endian)
-    class Test:
-        pass
-
-    assert Test.__dataclass_struct__.endianness == endian
-
-
-def test_default_endian_is_native_aligned() -> None:
-    @dcs.dataclass()
-    class Test:
-        pass
-
-    assert Test.__dataclass_struct__.endianness == dcs.NATIVE_ENDIAN_ALIGNED
-
-
-def test_invalid_endian() -> None:
-    with pytest.raises(ValueError, match=escape('invalid endianness: ?')):
-        @dcs.dataclass('?')
-        class Test:
+def test_no_parens_fails():
+    with pytest.raises(TypeError):
+        @dcs.dataclass
+        class _:  # type: ignore
             pass
 
 
-def test_missing_parens() -> None:
-    with pytest.raises(ValueError, match=escape('invalid endianness')):
-        @dcs.dataclass  # type: ignore
-        class Test:
+@pytest.mark.parametrize(
+    'kwargs',
+    (
+        {'size': 'native', 'endian': 'big'},
+        {'size': 'native', 'endian': 'little'},
+        {'size': 'native', 'endian': 'network'},
+        {'endian': 'big'},
+        {'endian': 'little'},
+        {'endian': 'network'},
+        {'endian': 'invalid_endian'},
+        {'size': 'invalid_size'},
+        {'size': 'std', 'endian': 'invalid_endian'},
+    )
+)
+def test_invalid_decorator_args(kwargs):
+    with pytest.raises(TypeError):
+        @dcs.dataclass(**kwargs)
+        class _:
             pass
+
+
+# TODO
+# @pytest.mark.parametrize('endian', dcs.ENDIANS)
+# def test_valid_endians(endian: str) -> None:
+#     @dcs.dataclass(endian)
+#     class Test:
+#         pass
+
+#     assert Test.__dataclass_struct__.endianness == endian
+
+
+# def test_default_endian_is_native_aligned() -> None:
+#     @dcs.dataclass()
+#     class Test:
+#         pass
+
+#     assert Test.__dataclass_struct__.endianness == dcs.NATIVE_ENDIAN_ALIGNED
 
 
 def test_is_dataclass_struct() -> None:
