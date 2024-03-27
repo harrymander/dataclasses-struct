@@ -177,7 +177,7 @@ class BytesField(Field[bytes]):
         return f'{super().__repr__()}({self.n})'
 
 
-primitive_fields = {
+builtin_fields = {
     int: NativeIntField('i', 'int'),
     float: Float64Field(),
     bool: BoolField(),
