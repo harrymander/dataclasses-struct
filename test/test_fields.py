@@ -105,7 +105,7 @@ def parametrize_endian_size(f):
 
 
 @parametrize_endian_size
-def test_builtin_bool_is_bool(endian: str, size: str) -> None:
+def test_builtin_bool_is_bool(endian, size) -> None:
     @dcs.dataclass(endian=endian, size=size)
     class Builtin:
         x: bool
@@ -118,7 +118,7 @@ def test_builtin_bool_is_bool(endian: str, size: str) -> None:
 
 
 @parametrize_endian_size
-def test_builtin_float_is_f64(endian: str, size: str) -> None:
+def test_builtin_float_is_f64(endian, size) -> None:
     @dcs.dataclass(endian=endian, size=size)
     class Builtin:
         x: float
@@ -131,7 +131,7 @@ def test_builtin_float_is_f64(endian: str, size: str) -> None:
 
 
 @parametrize_endian_size
-def test_builtin_bytes_is_char(endian: str, size: str) -> None:
+def test_builtin_bytes_is_char(endian, size) -> None:
     @dcs.dataclass(endian=endian, size=size)
     class Builtin:
         x: bytes
@@ -144,9 +144,7 @@ def test_builtin_bytes_is_char(endian: str, size: str) -> None:
 
 
 @parametrize_endian_size
-def test_bytes_annotated_with_int_same_as_bytes_field(
-    endian: str, size: str
-) -> None:
+def test_bytes_annotated_with_int_same_as_bytes_field(endian, size) -> None:
     @dcs.dataclass(endian=endian, size=size)
     class Builtin:
         x: Annotated[bytes, 10]
@@ -159,7 +157,7 @@ def test_bytes_annotated_with_int_same_as_bytes_field(
 
 
 @parametrize_endian_size
-def test_invalid_field_type(endian: str, size: str) -> None:
+def test_invalid_field_type(endian, size) -> None:
     with pytest.raises(TypeError):
         @dcs.dataclass(endian=endian, size=size)
         class _:
@@ -202,7 +200,7 @@ for field_type, nbits, signed in (
 
 @pytest.mark.parametrize('field_type,default', std_int_boundary_vals)
 @pytest.mark.parametrize('endian', std_endians)
-def test_std_int_default(field_type, default, endian: str) -> None:
+def test_std_int_default(field_type, default, endian) -> None:
     @dcs.dataclass(size='std', endian=endian)
     class Class:
         field: field_type = default
@@ -212,9 +210,7 @@ def test_std_int_default(field_type, default, endian: str) -> None:
 
 @pytest.mark.parametrize('field_type,default', std_int_out_of_range_vals)
 @pytest.mark.parametrize('endian', std_endians)
-def test_std_int_default_out_of_range(
-    field_type, default, endian: str
-) -> None:
+def test_std_int_default_out_of_range(field_type, default, endian) -> None:
     with pytest.raises(ValueError):
         @dcs.dataclass(size='std', endian=endian)
         class _:
@@ -223,7 +219,7 @@ def test_std_int_default_out_of_range(
 
 @pytest.mark.parametrize('field_type,default', std_int_out_of_range_vals)
 @pytest.mark.parametrize('endian', std_endians)
-def test_std_int_unvalidated(field_type, default, endian: str) -> None:
+def test_std_int_unvalidated(field_type, default, endian) -> None:
     @dcs.dataclass(size='std', endian=endian, validate=False)
     class Class:
         x: field_type = default

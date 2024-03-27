@@ -334,8 +334,8 @@ def dataclass(
     *,
     size: Literal['native'] = 'native',
     endian: Literal['native'] = 'native',
-    validate: bool = ...
-):
+    validate: bool = True,
+) -> Callable[[type], type]:
     ...
 
 
@@ -344,16 +344,16 @@ def dataclass(
     *,
     size: Literal['std'],
     endian: Literal['native', 'big', 'little', 'network'] = 'native',
-    validate: bool = ...
-):
+    validate: bool = True,
+) -> Callable[[type], type]:
     ...
 
 
 @dataclass_transform()
 def dataclass(
     *,
-    size: Literal['native', 'std'] = 'native',
-    endian: Literal['native', 'big', 'little', 'network'] = 'native',
+    size: str = 'native',
+    endian: str = 'native',
     validate: bool = True,
 ) -> Callable[[type], type]:
     is_native = size == 'native'
