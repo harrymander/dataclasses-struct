@@ -19,8 +19,8 @@ I64 = Annotated[int, field.SignedStdIntField(8)]
 U64 = Annotated[int, field.UnsignedStdIntField(8)]
 
 # Native integer types
-UnsignedChar = Annotated[int, field.NativeIntField('B', 'ubyte')]
 SignedChar = Annotated[int, field.NativeIntField('b', 'byte')]
+UnsignedChar = Annotated[int, field.NativeIntField('B', 'ubyte')]
 Short = Annotated[int, field.NativeIntField('h', 'short')]
 UnsignedShort = Annotated[int, field.NativeIntField('H', 'ushort')]
 Int = Annotated[int, field.NativeIntField('i', 'int')]
