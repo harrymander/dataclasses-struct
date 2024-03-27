@@ -17,9 +17,9 @@ import dataclasses_struct as dcs
 
 @dcs.dataclass()
 class Test:
-    x: int  # or dcs.I64, i.e., a signed 64-bit integer
-    y: float  # or dcs.F64, i.e., a double-precision (64-bit) floating point
-    z: dcs.U8  # unsigned 8-bit integer
+    x: int
+    y: float
+    z: dcs.UnsignedShort
     s: Annotated[bytes, 10]  # fixed-length byte array of length 10
 
 @dcs.dataclass()
@@ -38,7 +38,7 @@ True
 Test(x=100, y=-0.25, z=255, s=b'12345')
 >>> packed = t1.pack()
 >>> packed
-b'd\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xd0\xbf\xff12345\x00\x00\x00\x00\x00'
+b'd\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xd0\xbf\xff\x0012345\x00\x00\x00\x00\x00'
 >>> Test.from_packed(packed)
 Test(x=100, y=-0.25, z=255, s=b'12345\x00\x00\x00\x00\x00')
 >>> t2 = Test(1, 100, 12, b'hello, world')
@@ -64,6 +64,129 @@ plugins = dataclasses_struct.ext.mypy_plugin
 ```
 
 ## Usage
+
+Use the `dataclass` decorator to convert a class into a [stdlib
+`dataclass`](https://docs.python.org/3/library/dataclasses.html) with struct
+packing/unpacking functionality:
+
+```python
+def dataclass(
+    *,
+    size: str = 'native',
+    endian: str = 'native',
+    validate: bool = True,
+):
+    ...
+```
+
+The `size` argument can be either `'native'` (the default) or `'std'`:
+
+### Native size mode
+
+In `native` mode, the struct is packed based on the platform and compiler on
+which Python was built: padding bytes may be added to maintain proper alignment
+of the fields and byte ordering (endianness) follows that of the platform. (The
+`endian` argument must also be `native`.)
+
+In `native` size mode, integer type sizes follow those of the standard C integer
+types of the platform and compiler on which Python was compiled (`int`,
+`unsigned short` etc.).
+
+```python
+@dcs.dataclass()  # defaults to size=`native`, endian=`native`
+class NativeStruct:
+    signed_char: dcs.SignedChar
+    signed_short: dcs.Short
+    unsigned_long_long: dcs.UnsignedLongLong
+    void_pointer: dcs.Pointer
+```
+
+### Standard size mode
+
+In `std` mode, the struct is packed without any additional padding for
+alignment.
+
+The `std` size mode supports four different endianness settings: `'native'`,
+`'little'`, `'big'`, and `'network'`. The `'native'` setting uses the system
+endianness (similar to `native` size mode, but without alignment). The
+`'network'` setting is equivalent to `'big'`.
+
+The `std` size uses platform-independent integer sizes, similar to using the
+integer types from `stdint.h` in C. When used with any of the non-`native` byte
+orders, it is appropriate for packing and unpacking data to be sent between
+different platforms, which may have different alignment, byte ordering, and
+integer type sizes.
+
+```python
+@dcs.dataclass()  # defaults to size=`native`, endian=`native`
+class NativeStruct:
+    int8_t: dcs.I8
+    uint64_t: dcs.U64
+```
+
+### Supported type annotations
+
+#### Native integer types
+
+These types are only supported in `native` size mode. Their native Python types
+are all `int`.
+
+| Type annotation                      | Equivalent C type           |
+| ------------------------------------ | --------------------------- |
+| `SignedChar`                         | `signed char`               |
+| `UnsignedChar`                       | `unsigned char`             |
+| `Short`                              | `short`                     |
+| `UnsignedShort`                      | `unsigned short`            |
+| `Int`                                | `int`                       |
+| `int` (builtin type, alias to `Int`) | `int`                       |
+| `UnsignedInt`                        | `unsigned int`              |
+| `Long`                               | `long`                      |
+| `UnsignedLong`                       | `unsigned long`             |
+| `LongLong`                           | `long long`                 |
+| `UnsignedLongLong`                   | `unsigned long long`        |
+| `UnsignedSize`                       | `size_t`                    |
+| `SignedSize`                         | `ssize_t` (POSIX) extension |
+| `Pointer`                            | `void *`                    |
+
+#### Standard integer types
+
+These types are only supported in `std` size mode. Their native Python types are
+all `int`.
+
+| Type annotation                      | Equivalent C type           |
+| ------------------------------------ | --------------------------- |
+| `I8`                                 | `int8_t`                    |
+| `U8`                                 | `uint8_t`                   |
+| `I16`                                | `int16_t`                   |
+| `U16`                                | `uint16_t`                  |
+| `I32`                                | `int32_t`                   |
+| `U32`                                | `uint32_t`                  |
+| `I64`                                | `int64_t`                   |
+| `U64`                                | `uint64_t`                  |
+
+#### Floating point types
+
+Supported in both size modes. The native Python type is `float`.
+
+| Type annotation                      | Equivalent C type           |
+| ------------------------------------ | --------------------------- |
+| `F32`                                | `float`                     |
+| `F64`                                | `double`                    |
+| `float` (bultin alias to `F64`)      | `double`                    |
+
+#### Boolean
+
+The builtin `bool` type or `dataclasses_struct.Bool` type can be used to
+represent a boolean, which uses a single byte in either native or standard size
+modes.
+
+#### Characters and bytes arrays
+
+In both size modes, a single-byte ASCII character can packed by annotating a
+field with the builtin `bytes` type or the `dataclasses_struct.Char` type. The
+field's unpacked Python representation will be a `bytes` of length 1.
+
+```
 
 ```python
 from typing import Annotated  # use typing_extensions on Python <3.9
