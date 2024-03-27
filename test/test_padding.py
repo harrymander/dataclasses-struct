@@ -67,7 +67,7 @@ def test_padding_with_bytes() -> None:
     assert t.pack() == b'\x00\x001234\x00\x00\x00'
 
 
-def test_padding_with_primitive() -> None:
+def test_padding_with_builtin() -> None:
     @dcs.dataclass(dcs.LITTLE_ENDIAN)
     class Test:
         a: Annotated[int, dcs.PadBefore(2)]
