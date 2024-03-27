@@ -332,6 +332,14 @@ def test_char_default_wrong_length(endian, size, c: bytes) -> None:
 
 
 @parametrize_endian_size
+def test_char_default_not_ascii(endian, size) -> None:
+    with pytest.raises(ValueError):
+        @dcs.dataclass(endian=endian, size=size)
+        class _:
+            x: dcs.Char = b'\x80'
+
+
+@parametrize_endian_size
 def test_default_fixed_length_bytes_wrong_length(endian, size) -> None:
     with pytest.raises(ValueError):
         @dcs.dataclass(endian=endian, size=size)
