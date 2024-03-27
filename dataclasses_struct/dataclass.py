@@ -25,7 +25,7 @@ from typing_extensions import (
     get_type_hints,
 )
 
-from .field import BytesField, Field, primitive_fields
+from .field import BytesField, Field, builtin_fields
 from .types import PadAfter, PadBefore
 
 
@@ -192,14 +192,14 @@ def _validate_and_parse_field(
 
     if get_origin(field_type) == Annotated:
         # The types defined in .types (e.g. U32, F32, etc.) are of the form:
-        #     Annotated[<primitive type>, Field(<field args>)]
+        #     Annotated[<builtin type>, Field(<field args>)]
         # Alternatively, accept annotations of the form:
-        #     Annotated[<primitive type>, PadBefore(<size>), PadAfter(<size>)]
+        #     Annotated[<builtin type>, PadBefore(<size>), PadAfter(<size>)]
         # or:
         #     Annotated[<dcs.types type>, PadBefore(<size>), PadAfter(<size>)]
         # which will expand to:
         #     Annotated[
-        #         <primitive type associated with dcs.types type>,
+        #         <builtin type associated with dcs.types type>,
         #         Field(<field args>),
         #         PadBefore(<size>),
         #         PadAfter(<size>),
@@ -209,14 +209,14 @@ def _validate_and_parse_field(
         type_, *fields = get_args(field_type)
         pad_before, pad_after, field = _get_padding_and_field(fields)
     else:
-        # Accept type annotations without Annotated e.g. primitive types or
+        # Accept type annotations without Annotated e.g. builtin types or
         # nested dataclass-structs
         pad_before = pad_after = 0
         type_ = field_type
         field = None
 
     if field is None:
-        # Must be either a nested type or one of the supported primitives
+        # Must be either a nested type or one of the supported builtins
         if is_dataclass_struct(type_):
             nested_mode = type_.__dataclass_struct__.mode_char
             if nested_mode != mode_char:
@@ -231,7 +231,7 @@ def _validate_and_parse_field(
                 raise TypeError(msg)
             field = _NestedField(type_)
         else:
-            field = primitive_fields.get(type_)
+            field = builtin_fields.get(type_)
             if field is None:
                 raise TypeError(f'type not supported: {field_type}')
 
