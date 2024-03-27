@@ -168,14 +168,14 @@ def get_struct_size(cls_or_obj: Any) -> int:
 
 
 class _NestedField(Field):
-    type_: Type[DataclassStructProtocol]
+    field_type: Type[DataclassStructProtocol]
 
     def __init__(self, cls: Type[DataclassStructProtocol]):
-        self.type_ = cls
+        self.field_type = cls
 
     def format(self) -> str:
         # Return the format without the endian specifier at the beginning
-        return self.type_.__dataclass_struct__.format[1:]
+        return self.field_type.__dataclass_struct__.format[1:]
 
 
 def _validate_and_parse_field(
