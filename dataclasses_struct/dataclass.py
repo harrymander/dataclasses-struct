@@ -247,7 +247,7 @@ def _validate_and_parse_field(
     if is_native:
         if not field.is_native:
             raise TypeError(
-                f'field {field} only support in standard size mode'
+                f'field {field} only supported in standard size mode'
             )
     elif not field.is_std:
         raise TypeError(f'field {field} only supported in native size mode')
