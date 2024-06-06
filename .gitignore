@@ -1,5 +1,6 @@
 .*_cache/
 .coverage
+.dmypy.json
 /dist/
 __pycache__/
 coverage.xml
