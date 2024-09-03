@@ -1,6 +1,6 @@
 import abc
 import ctypes
-from typing import Generic, Literal, Type, TypeVar
+from typing import Generic, Literal, Tuple, Type, TypeVar, Union
 
 T = TypeVar('T')
 
@@ -8,7 +8,7 @@ T = TypeVar('T')
 class Field(abc.ABC, Generic[T]):
     is_native: bool = True
     is_std: bool = True
-    field_type: Type[T]
+    field_type: Union[Type[T], Tuple[Type[T], ...]]
 
     @abc.abstractmethod
     def format(self) -> str:
@@ -107,14 +107,14 @@ class UnsignedStdIntField(StdIntField):
 
 
 class Float32Field(Field[float]):
-    field_type = float
+    field_type = (int, float)
 
     def format(self) -> str:
         return 'f'
 
 
 class Float64Field(Field[float]):
-    field_type = float
+    field_type = (int, float)
 
     def format(self) -> str:
         return 'd'

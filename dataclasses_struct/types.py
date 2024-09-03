@@ -3,7 +3,7 @@ from typing_extensions import Annotated
 from . import field
 
 # Single char type
-Char = Annotated[bytes, field.CharField()]
+Char = bytes
 
 # Boolean type
 Bool = Annotated[bool, field.BoolField()]
