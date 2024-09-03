@@ -10,7 +10,6 @@ from .dataclass import (
 )
 from .field import (
     BoolField,
-    BytesField,
     CharField,
     Float32Field,
     Float64Field,
@@ -55,7 +54,6 @@ from .types import (
 __all__ = (
     'Bool',
     'BoolField',
-    'BytesField',
     'Char',
     'CharField',
     'dataclass',
