@@ -1,7 +1,7 @@
 import dataclasses
 
 import pytest
-from conftest import parametrize_all_sizes_and_endians
+from conftest import parametrize_all_sizes_and_byteorders
 
 import dataclasses_struct as dcs
 
@@ -16,20 +16,20 @@ def test_no_parens_fails():
 @pytest.mark.parametrize(
     'kwargs',
     (
-        # Invalid endian with explicit arg size='native'
-        {'size': 'native', 'endian': 'big'},
-        {'size': 'native', 'endian': 'little'},
-        {'size': 'native', 'endian': 'network'},
+        # Invalid byteorder with explicit arg size='native'
+        {'size': 'native', 'byteorder': 'big'},
+        {'size': 'native', 'byteorder': 'little'},
+        {'size': 'native', 'byteorder': 'network'},
 
-        # Invalid endian with default arg size='native'
-        {'endian': 'big'},
-        {'endian': 'little'},
-        {'endian': 'network'},
+        # Invalid byteorder with default arg size='native'
+        {'byteorder': 'big'},
+        {'byteorder': 'little'},
+        {'byteorder': 'network'},
 
         # Invalid parameters
-        {'endian': 'invalid_endian'},
+        {'byteorder': 'invalid_byteorder'},
         {'size': 'invalid_size'},
-        {'size': 'std', 'endian': 'invalid_endian'},
+        {'size': 'std', 'byteorder': 'invalid_byteorder'},
     )
 )
 def test_invalid_decorator_args(kwargs):
@@ -39,14 +39,14 @@ def test_invalid_decorator_args(kwargs):
             pass
 
 
-@parametrize_all_sizes_and_endians()
-def test_valid_sizes_and_endians(size, endian) -> None:
-    @dcs.dataclass(size=size, endian=endian)
+@parametrize_all_sizes_and_byteorders()
+def test_valid_sizes_and_byteorders(size, byteorder) -> None:
+    @dcs.dataclass(size=size, byteorder=byteorder)
     class Test:
         pass
 
     assert Test.__dataclass_struct__.size == size
-    assert Test.__dataclass_struct__.endianness == endian
+    assert Test.__dataclass_struct__.byteorder == byteorder
 
 
 def test_class_is_dataclass_struct() -> None:

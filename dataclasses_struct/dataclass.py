@@ -174,7 +174,7 @@ class _NestedField(Field):
         self.field_type = cls
 
     def format(self) -> str:
-        # Return the format without the endian specifier at the beginning
+        # Return the format without the byteorder specifier at the beginning
         return self.field_type.__dataclass_struct__.format[1:]
 
 
@@ -220,13 +220,13 @@ def _validate_and_parse_field(
         if is_dataclass_struct(type_):
             nested_mode = type_.__dataclass_struct__.mode_char
             if nested_mode != mode_char:
-                size, endian = _MODE_CHAR_SIZE_ENDIAN[mode_char]
-                exp_size, exp_endian = _MODE_CHAR_SIZE_ENDIAN[nested_mode]
+                size, byteorder = _MODE_CHAR_SIZE_ENDIAN[mode_char]
+                exp_size, exp_byteorder = _MODE_CHAR_SIZE_ENDIAN[nested_mode]
                 msg = (
-                    'endianness and size mode of nested dataclass-struct does '
+                    'byteorder and size mode of nested dataclass-struct does '
                     f'not match that of container (expected {exp_size} size '
-                    f'and {exp_endian} endian, got {size} size and '
-                    f'{endian} endian)'
+                    f'and {exp_byteorder} byteorder, got {size} size and '
+                    f'{byteorder} byteorder)'
                 )
                 raise TypeError(msg)
             field = _NestedField(type_)
@@ -333,7 +333,7 @@ def _make_class(
 def dataclass(
     *,
     size: Literal['native'] = 'native',
-    endian: Literal['native'] = 'native',
+    byteorder: Literal['native'] = 'native',
     validate: bool = True,
 ) -> Callable[[type], type]:
     ...
@@ -343,7 +343,7 @@ def dataclass(
 def dataclass(
     *,
     size: Literal['std'],
-    endian: Literal['native', 'big', 'little', 'network'] = 'native',
+    byteorder: Literal['native', 'big', 'little', 'network'] = 'native',
     validate: bool = True,
 ) -> Callable[[type], type]:
     ...
@@ -353,22 +353,22 @@ def dataclass(
 def dataclass(
     *,
     size: str = 'native',
-    endian: str = 'native',
+    byteorder: str = 'native',
     validate: bool = True,
 ) -> Callable[[type], type]:
     is_native = size == 'native'
     if is_native:
-        if endian != 'native':
-            raise TypeError("'native' size requires 'native' endian")
+        if byteorder != 'native':
+            raise TypeError("'native' size requires 'native' byteorder")
     elif size != 'std':
         raise TypeError(f'invalid size: {size}')
-    if endian not in ('native', 'big', 'little', 'network'):
-        raise TypeError(f'invalid endian: {endian}')
+    if byteorder not in ('native', 'big', 'little', 'network'):
+        raise TypeError(f'invalid byteorder: {byteorder}')
 
     def decorator(cls: type) -> type:
         return _make_class(
             cls,
-            mode_char=_SIZE_ENDIAN_MODE_CHAR[(size, endian)],
+            mode_char=_SIZE_ENDIAN_MODE_CHAR[(size, byteorder)],
             is_native=is_native,
             validate=validate,
         )

@@ -73,7 +73,7 @@ packing/unpacking functionality:
 def dataclass(
     *,
     size: str = 'native',
-    endian: str = 'native',
+    byteorder: str = 'native',
     validate: bool = True,
 ):
     ...
@@ -86,14 +86,14 @@ The `size` argument can be either `'native'` (the default) or `'std'`:
 In `native` mode, the struct is packed based on the platform and compiler on
 which Python was built: padding bytes may be added to maintain proper alignment
 of the fields and byte ordering (endianness) follows that of the platform. (The
-`endian` argument must also be `native`.)
+`byteorder` argument must also be `native`.)
 
 In `native` size mode, integer type sizes follow those of the standard C integer
 types of the platform and compiler on which Python was compiled (`int`,
 `unsigned short` etc.).
 
 ```python
-@dcs.dataclass()  # defaults to size=`native`, endian=`native`
+@dcs.dataclass()  # defaults to size=`native`, byteorder=`native`
 class NativeStruct:
     signed_char: dcs.SignedChar
     signed_short: dcs.Short
@@ -106,9 +106,9 @@ class NativeStruct:
 In `std` mode, the struct is packed without any additional padding for
 alignment.
 
-The `std` size mode supports four different endianness settings: `'native'`,
+The `std` size mode supports four different byte order settings: `'native'`,
 `'little'`, `'big'`, and `'network'`. The `'native'` setting uses the system
-endianness (similar to `native` size mode, but without alignment). The
+byte order (similar to `native` size mode, but without alignment). The
 `'network'` setting is equivalent to `'big'`.
 
 The `std` size uses platform-independent integer sizes, similar to using the
@@ -118,7 +118,7 @@ different platforms, which may have different alignment, byte ordering, and
 integer type sizes.
 
 ```python
-@dcs.dataclass()  # defaults to size=`native`, endian=`native`
+@dcs.dataclass()  # defaults to size=`native`, byteorder=`native`
 class NativeStruct:
     int8_t: dcs.I8
     uint64_t: dcs.U64
@@ -193,14 +193,14 @@ from typing import Annotated  # use typing_extensions on Python <3.9
 import dataclasses_struct as dcs
 
 endians = (
-    dcs.NATIVE_ENDIAN_ALIGNED,  # uses system endianness and alignment
-    dcs.NATIVE_ENDIAN,  # system endianness, packed representation
+    dcs.NATIVE_ENDIAN_ALIGNED,  # uses system byte order and alignment
+    dcs.NATIVE_ENDIAN,  # system byte order, packed representation
     dcs.LITTLE_ENDIAN,
     dcs.BIG_ENDIAN,
     dcs.NETWORK_ENDIAN,
 )
 
-@dcs.dataclass(endians[0])  # if no endian provided, defaults to NATIVE_ENDIAN_ALIGNED
+@dcs.dataclass(endians[0])  # if no byteorder provided, defaults to NATIVE_ENDIAN_ALIGNED
 class Test:
 
     # Single char type (must be bytes)
@@ -242,7 +242,7 @@ class Test:
     pad_before_and_after: Annotated[int, dcs.PadBefore(3), dcs.PadAfter(2)]
 
 # Also supports nesting dataclass-structs
-@dcs.dataclass(endians[0])  # endianness of contained classes must match
+@dcs.dataclass(endians[0])  # byte order of contained classes must match
 class Container:
     contained1: Test
 
@@ -264,14 +264,14 @@ or an instance of one.
 
 An additional class attribute, `__dataclass_struct__`. The [`struct` format
 string](https://docs.python.org/3/library/struct.html#format-strings), packed
-size, and endianness can be accessed like so:
+size, and byte order can be accessed like so:
 
 ```python
 >>> Test.__dataclass_struct__.format
 '@cc??bBhHiIQqqNnPfdd100s4xqq2x3xq2x'
 >>> Test.__dataclass_struct__.size
 234
->>> Test.__dataclass_struct__.endianness
+>>> Test.__dataclass_struct__.byteorder
 '@'
 ```
 
