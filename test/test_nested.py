@@ -69,7 +69,7 @@ def test_mismatch_byteorder_fails(
 ) -> None:
     nested_size, nested_byteorder = nested_size_byteorder
     container_size, container_byteorder = container_size_byteorder
-    exp_msg = f"byteorder and size mode of nested dataclass-struct does not \
+    exp_msg = f"byteorder and size of nested dataclass-struct does not \
 match that of container (expected '{container_size}' size and \
 '{container_byteorder}' byteorder, got '{nested_size}' size and \
 '{nested_byteorder}' byteorder)"
