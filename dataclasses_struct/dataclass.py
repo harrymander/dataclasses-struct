@@ -48,14 +48,14 @@ def _get_padding_and_field(fields):
 T = TypeVar('T')
 
 
-_SIZE_BYTEORDER_MODE_CHAR: dict[tuple[str, str], str] = {
+_SIZE_BYTEORDER_MODE_CHAR: Dict[Tuple[str, str], str] = {
     ('native', 'native'): '@',
     ('std', 'native'): '=',
     ('std', 'little'): '<',
     ('std', 'big'): '>',
     ('std', 'network'): '!',
 }
-_MODE_CHAR_SIZE_BYTEORDER: dict[str, tuple[str, str]] = {
+_MODE_CHAR_SIZE_BYTEORDER: Dict[str, Tuple[str, str]] = {
     v: k for k, v in _SIZE_BYTEORDER_MODE_CHAR.items()
 }
 
