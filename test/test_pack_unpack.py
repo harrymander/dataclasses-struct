@@ -1,8 +1,8 @@
 # TODO
 
-# @parametrize_endian
-# def test_pack_unpack(endian: str) -> None:
-#     @dcs.dataclass(endian)
+# @parametrize_byteorder
+# def test_pack_unpack(byteorder: str) -> None:
+#     @dcs.dataclass(byteorder)
 #     class Test:
 #         a: dcs.U8
 #         b: dcs.U16
@@ -40,7 +40,7 @@
 #         p=b'12345',
 #     )
 
-#     fmt = endian + 'BHIQ bhiq ?c fd 3s5s'
+#     fmt = byteorder + 'BHIQ bhiq ?c fd 3s5s'
 #     assert dcs.get_struct_size(Test) == struct.calcsize(fmt)
 #     assert dcs.get_struct_size(t) == struct.calcsize(fmt)
 
@@ -66,13 +66,13 @@
 #     assert t == unpacked
 
 
-# @parametrize_endian
-# def test_packed_bytes_padding(endian: str) -> None:
-#     @dcs.dataclass(endian)
+# @parametrize_byteorder
+# def test_packed_bytes_padding(byteorder: str) -> None:
+#     @dcs.dataclass(byteorder)
 #     class Test:
 #         x: Annotated[bytes, 5]
 
-#     assert dcs.get_struct_size(Test) == struct.calcsize(endian + '5s')
+#     assert dcs.get_struct_size(Test) == struct.calcsize(byteorder + '5s')
 
 #     t = Test(b'').pack()
 #     assert t == b'\x00' * 5
@@ -83,9 +83,9 @@
 #     assert Test.from_packed(t) == Test(b'123\x00\x00')
 
 
-# @parametrize_endian
-# def test_pack_unpack_empty(endian: str) -> None:
-#     @dcs.dataclass(endian)
+# @parametrize_byteorder
+# def test_pack_unpack_empty(byteorder: str) -> None:
+#     @dcs.dataclass(byteorder)
 #     class Empty:
 #         pass
 
