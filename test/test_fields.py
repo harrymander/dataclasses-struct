@@ -137,19 +137,6 @@ def test_builtin_bytes_is_char(byteorder, size) -> None:
 
 
 @parametrize_all_sizes_and_byteorders()
-def test_bytes_annotated_with_int_same_as_bytes_field(byteorder, size) -> None:
-    @dcs.dataclass(byteorder=byteorder, size=size)
-    class Builtin:
-        x: Annotated[bytes, 10]
-
-    @dcs.dataclass(byteorder=byteorder, size=size)
-    class Field:
-        x: Annotated[bytes, dcs.BytesField(10)]
-
-    assert_same_format(Builtin, Field)
-
-
-@parametrize_all_sizes_and_byteorders()
 def test_invalid_field_type_fails(byteorder, size) -> None:
     with pytest.raises(TypeError):
         @dcs.dataclass(byteorder=byteorder, size=size)
@@ -161,7 +148,7 @@ def test_invalid_field_type_fails(byteorder, size) -> None:
 def test_invalid_bytes_size_fails(size: int) -> None:
     with pytest.raises(ValueError):
         class _:
-            x: Annotated[bytes, dcs.BytesField(size)]
+            x: Annotated[bytes, size]
 
 
 def int_min_max(nbits: int, signed: bool) -> tuple[int, int]:
@@ -312,7 +299,7 @@ def test_native_int_default_wrong_type_fails(int_type, default) -> None:
 @parametrize_all_sizes_and_byteorders()
 @pytest.mark.parametrize(
     'field_type',
-    (dcs.Char, Annotated[bytes, dcs.BytesField(1)])
+    (dcs.Char, Annotated[bytes, 1])
 )
 def test_bytes_default_wrong_type_fails(byteorder, size, field_type) -> None:
     with pytest.raises(TypeError):
@@ -337,7 +324,7 @@ def test_default_fixed_length_bytes_too_long_fails(
     with pytest.raises(ValueError):
         @dcs.dataclass(byteorder=byteorder, size=size)
         class _:
-            x: Annotated[bytes, dcs.BytesField(8)] = b'123456789'
+            x: Annotated[bytes, 8] = b'123456789'
 
 
 @parametrize_all_sizes_and_byteorders()

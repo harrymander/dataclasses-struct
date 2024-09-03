@@ -78,7 +78,7 @@ def packed_cstruct(tmp_path: Path, packed_struct_tester: Path) -> Path:
 
 
 class StructTest:
-    str_test: Annotated[bytes, dcs.BytesField(13)]
+    str_test: Annotated[bytes, 13]
     u32_test: dcs.U32
     double_test: dcs.F64
 

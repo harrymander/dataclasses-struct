@@ -18,4 +18,4 @@ def test_str_type_annotations() -> None:
         j: 'dcs.U64'
         k: 'dcs.F32'
         l: 'dcs.F64'  # noqa: E741
-        m: 'Annotated[bytes, dcs.BytesField(10)]'
+        m: 'Annotated[bytes, 10]'
