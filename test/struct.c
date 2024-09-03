@@ -7,22 +7,13 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#if defined(TEST_PACKED_STRUCT) && defined(_MSC_VER)
-#pragma pack(push, 1)
-#endif
 struct test {
-    char str_test[13];
-    uint32_t u32_test;
-    double double_test;
-}
-#ifdef TEST_PACKED_STRUCT
-#ifdef _MSC_VER
-#pragma pack(pop)
+#ifdef TEST_NATIVE_INTS
 #else
-__attribute__((packed))
-#endif // _MSC_VER
-#endif // TEST_PACKED_STRUCT
-;
+#endif
+    double double_test;
+    char str_test[13];
+};
 
 int main(const int argc, const char *argv[])
 {
@@ -32,9 +23,8 @@ int main(const int argc, const char *argv[])
     }
 
     const struct test t = {
-        .str_test = "Hello!",
-        .u32_test = 5,
         .double_test = -0.5,
+        .str_test = "Hello!",
     };
 
     FILE *fp = fopen(argv[1], "w");
