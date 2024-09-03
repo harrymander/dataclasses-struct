@@ -252,7 +252,7 @@ does not match that of container (expected '{exp_size}' size and \
             if field is None:
                 raise TypeError(f'type not supported: {field_type}')
 
-    if issubclass(type_, bytes) and isinstance(field, int):
+    if issubclass(type_, bytes) and isinstance(field, int):  # noqa: F821
         # Annotated[bytes, <positive non-zero integer>] is a byte array
         field = _BytesField(field)
     elif not isinstance(field, Field):
