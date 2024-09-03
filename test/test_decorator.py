@@ -51,33 +51,63 @@ def test_invalid_decorator_args(kwargs):
 #     assert Test.__dataclass_struct__.endianness == dcs.NATIVE_ENDIAN_ALIGNED
 
 
-def test_is_dataclass_struct() -> None:
+def test_class_is_dataclass_struct() -> None:
+    @dcs.dataclass()
+    class Test:
+        pass
+
+    assert dcs.is_dataclass_struct(Test)
+
+
+def test_object_is_dataclass_struct() -> None:
+    @dcs.dataclass()
+    class Test:
+        pass
+
+    assert dcs.is_dataclass_struct(Test())
+
+
+def test_object_is_dataclass() -> None:
+    @dcs.dataclass()
+    class Test:
+        pass
+
+    assert dataclasses.is_dataclass(Test())
+
+
+def test_class_is_dataclass() -> None:
     @dcs.dataclass()
     class Test:
         pass
 
     assert dataclasses.is_dataclass(Test)
-    assert dataclasses.is_dataclass(Test())
-    assert dcs.is_dataclass_struct(Test)
-    assert dcs.is_dataclass_struct(Test())
 
 
-def test_undecorated_is_not_dataclass_struct() -> None:
+def test_undecorated_class_is_not_dataclass_struct() -> None:
     class Test:
         pass
 
-    assert not dataclasses.is_dataclass(Test)
-    assert not dataclasses.is_dataclass(Test())
     assert not dcs.is_dataclass_struct(Test)
+
+
+def test_undecorated_object_is_not_dataclass_struct() -> None:
+    class Test:
+        pass
+
     assert not dcs.is_dataclass_struct(Test())
 
 
-def test_stdlib_dataclass_is_not_dataclass_struct() -> None:
+def test_stdlib_dataclass_class_is_not_dataclass_struct() -> None:
     @dataclasses.dataclass
     class Test:
         pass
 
-    assert dataclasses.is_dataclass(Test)
-    assert dataclasses.is_dataclass(Test())
     assert not dcs.is_dataclass_struct(Test)
+
+
+def test_stdlib_dataclass_object_is_not_dataclass_struct() -> None:
+    @dataclasses.dataclass
+    class Test:
+        pass
+
     assert not dcs.is_dataclass_struct(Test())
