@@ -12,22 +12,22 @@ import dataclasses_struct as dcs
 def test_nested() -> None:
     @dcs.dataclass()
     class Nested:
-        x: dcs.I64
+        x: float
         y: Annotated[bytes, 3]
 
-    assert dcs.get_struct_size(Nested) == struct.calcsize('@ q3b')
+    assert dcs.get_struct_size(Nested) == struct.calcsize('@ d3b')
 
     @dcs.dataclass()
     class Container:
-        x: dcs.I32
+        x: dcs.F32
         item1: Annotated[Nested, dcs.PadBefore(10)]
         item2: Annotated[Nested, dcs.PadAfter(12)]
-        y: dcs.I32
+        y: bool
 
-    fmt = '@ i 10xq3b q3b12x i'
+    fmt = '@ f 10xq3b q3b12x ?'
     assert dcs.get_struct_size(Container) == struct.calcsize(fmt)
 
-    c = Container(1, Nested(2, b'123'), Nested(5, b'456'), 12)
+    c = Container(1, Nested(2, b'123'), Nested(5, b'456'), False)
     unpacked = Container.from_packed(c.pack())
     assert c == unpacked
 
@@ -35,7 +35,7 @@ def test_nested() -> None:
 def test_double_nested() -> None:
     @dcs.dataclass()
     class Nested1:
-        x: dcs.I64
+        x: float
         y: Annotated[bytes, 3]
 
     @dcs.dataclass()
@@ -45,13 +45,13 @@ def test_double_nested() -> None:
 
     @dcs.dataclass()
     class Container:
-        x: dcs.I32
+        x: bool
         item1: Nested2
         item2: Nested2
-        y: dcs.U32
+        y: float
 
     c = Container(
-        1,
+        True,
         Nested2(Nested1(2, b'abc'), Nested1(7, b'123')),
         Nested2(Nested1(12, b'def'), Nested1(-1, b'456')),
         2
