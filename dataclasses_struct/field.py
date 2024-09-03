@@ -157,26 +157,6 @@ class PointerField(IntField):
             raise ValueError('value out of range for system pointer')
 
 
-class BytesField(Field[bytes]):
-    field_type = bytes
-
-    def __init__(self, n: int):
-        if n < 1:
-            raise ValueError('n must be positive non-zero integer')
-
-        self.n = n
-
-    def format(self) -> str:
-        return f'{self.n}s'
-
-    def validate(self, val: bytes) -> None:
-        if len(val) > self.n:
-            raise ValueError(f'bytes cannot be longer than {self.n} bytes')
-
-    def __repr__(self) -> str:
-        return f'{super().__repr__()}({self.n})'
-
-
 builtin_fields = {
     int: NativeIntField('i', 'int'),
     float: Float64Field(),
