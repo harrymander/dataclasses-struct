@@ -74,9 +74,11 @@ def native_cstruct(tmp_path: Path, native_struct_tester: Path) -> Path:
     return outpath
 
 
+@pytest.mark.xfail
 def test_unpack_from_cstruct_with_native_size():
     assert False, "TODO"
 
 
+@pytest.mark.xfail
 def test_unpack_from_cstruct_with_std_size():
     assert False, "TODO"
