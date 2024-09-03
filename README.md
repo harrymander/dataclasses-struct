@@ -81,6 +81,45 @@ def dataclass(
 
 The `size` argument can be either `'native'` (the default) or `'std'`:
 
+Decorated classes are transformed to a standard Python
+[dataclass](https://docs.python.org/3/library/dataclasses.html) with boilerplate
+`__init__`, `__repr__`, `__eq__` etc. auto-generated. Additionally, two methods
+are added to the class: `pack`, a method for packing an instance of the class to
+`bytes`, and `from_packed`, a class method that returns a new instance of the
+class from its packed `bytes` representation.
+
+A class or object can be check to see if it is a dataclass-struct using the
+`is_dataclass_struct` function. The `get_struct_size` function will return
+the size in bytes of the packed representation of a dataclass_struct class
+or an instance of one.
+
+An additional class attribute, `__dataclass_struct__`. The [`struct` format
+string](https://docs.python.org/3/library/struct.html#format-strings), packed
+size, and byte order can be accessed like so:
+
+```python
+>>> Test.__dataclass_struct__.format
+'@cc??bBhHiIQqqNnPfdd100s4xqq2x3xq2x'
+>>> Test.__dataclass_struct__.size
+234
+>>> Test.__dataclass_struct__.byteorder
+'@'
+```
+
+Default attribute values will be validated against their expected type and
+allowable value range. For example,
+
+```python3
+import dataclasses_struct as dcs
+
+@dcs.dataclass()
+class Test:
+    x: dcs.U8 = -1
+```
+
+will raise a `ValueError`. This can be disabled by passing `validate=False` to
+the `dataclasses_struct.dataclass` decorator.
+
 ### Native size mode
 
 In `native` mode, the struct is packed based on the platform and compiler on
@@ -89,8 +128,7 @@ of the fields and byte ordering (endianness) follows that of the platform. (The
 `byteorder` argument must also be `native`.)
 
 In `native` size mode, integer type sizes follow those of the standard C integer
-types of the platform and compiler on which Python was compiled (`int`,
-`unsigned short` etc.).
+types of the platform (`int`, `unsigned short` etc.).
 
 ```python
 @dcs.dataclass()  # defaults to size=`native`, byteorder=`native`
@@ -113,9 +151,8 @@ byte order (similar to `native` size mode, but without alignment). The
 
 The `std` size uses platform-independent integer sizes, similar to using the
 integer types from `stdint.h` in C. When used with any of the non-`native` byte
-orders, it is appropriate for packing and unpacking data to be sent between
-different platforms, which may have different alignment, byte ordering, and
-integer type sizes.
+orders, it is appropriate for marshalling data across different platforms, which
+may have different alignment, byte ordering, and integer type sizes.
 
 ```python
 @dcs.dataclass()  # defaults to size=`native`, byteorder=`native`
@@ -182,112 +219,34 @@ modes.
 
 #### Characters and bytes arrays
 
-In both size modes, a single-byte ASCII character can packed by annotating a
+In both size modes, a single-byte ASCII character can be packed  by annotating a
 field with the builtin `bytes` type or the `dataclasses_struct.Char` type. The
 field's unpacked Python representation will be a `bytes` of length 1.
 
+```python
+@dcs.dataclass()
+class Chars:
+    char: dcs.Char = b'x'
+    builtin: bytes = b'\x04'
 ```
+
+Fixed-length byte arrays can be represented by annotating a field with
+`typing.Annotated` and a positive length. The field's unpacked Python
+representation will be a `bytes` object zero-padded or truncated to the
+specified length.
 
 ```python
-from typing import Annotated  # use typing_extensions on Python <3.9
-import dataclasses_struct as dcs
-
-endians = (
-    dcs.NATIVE_ENDIAN_ALIGNED,  # uses system byte order and alignment
-    dcs.NATIVE_ENDIAN,  # system byte order, packed representation
-    dcs.LITTLE_ENDIAN,
-    dcs.BIG_ENDIAN,
-    dcs.NETWORK_ENDIAN,
-)
-
-@dcs.dataclass(endians[0])  # if no byteorder provided, defaults to NATIVE_ENDIAN_ALIGNED
-class Test:
-
-    # Single char type (must be bytes)
-    single_char: dcs.Char
-    single_char_alias: bytes  # alias for Char
-
-    # Boolean
-    bool_1: dcs.Bool
-    bool_2: bool  # alias for Bool
-
-    # Iegers
-    int8: dcs.I8
-    uint8: dcs.U8
-    int16: dcs.I16
-    uint16: dcs.U16
-    int32: dcs.I32
-    uint32: dcs.U32
-    uint64: dcs.U64
-    int64: dcs.I64
-    int64_alias: int  # alias for I64
-
-    # Only supported with NATIVE_ENDIAN_ALIGNED
-    unsigned_size: dcs.Size
-    signed_size: dcs.SSize
-    pointer: dcs.Pointer
-
-    # Floating point types
-    single_precision: dcs.F32  # equivalent to float in C
-    double_precision: dcs.F64  # equivalent to double in C
-    double_precision_alias: float  # alias for F64
-
-    # Byte arrays: values shorter than size will be padded with b'\x00'
-    array: Annotated[bytes, 100]  # an array of length 100
-
-    # Pad bytes can be added before and after fields: a b'\x00' will be
-    # inserted for each pad byte.
-    pad_before: Annotated[int, dcs.PadBefore(4)]
-    pad_after: Annotated[int, dcs.PadAfter(2)]
-    pad_before_and_after: Annotated[int, dcs.PadBefore(3), dcs.PadAfter(2)]
-
-# Also supports nesting dataclass-structs
-@dcs.dataclass(endians[0])  # byte order of contained classes must match
-class Container:
-    contained1: Test
-
-    # supports PadBefore and PadAfter as well:
-    contained2: Annotated[Test, dcs.PadBefore(10)]
-```
-
-Decorated classes are transformed to a standard Python
-[dataclass](https://docs.python.org/3/library/dataclasses.html) with boilerplate
-`__init__`, `__repr__`, `__eq__` etc. auto-generated. Additionally, two methods
-are added to the class: `pack`, a method for packing an instance of the class to
-`bytes`, and `from_packed`, a class method that returns a new instance of the
-class from its packed `bytes` representation.
-
-A class or object can be check to see if it is a dataclass-struct using the
-`is_dataclass_struct` function. The `get_struct_size` function will return
-the size in bytes of the packed representation of a dataclass_struct class
-or an instance of one.
-
-An additional class attribute, `__dataclass_struct__`. The [`struct` format
-string](https://docs.python.org/3/library/struct.html#format-strings), packed
-size, and byte order can be accessed like so:
-
-```python
->>> Test.__dataclass_struct__.format
-'@cc??bBhHiIQqqNnPfdd100s4xqq2x3xq2x'
->>> Test.__dataclass_struct__.size
-234
->>> Test.__dataclass_struct__.byteorder
-'@'
-```
-
-Default attribute values will be validated against their expected type and
-allowable value range. For example,
-
-```python3
-import dataclasses_struct as dcs
+from typing import Annotated
 
 @dcs.dataclass()
-class Test:
-    x: dcs.U8 = -1
+class FixedLength:
+    fixed: Annotated[bytes, 10]
 ```
 
-will raise a `ValueError`. This can be disabled by passing `validate=False` to
-the `dataclasses_struct.dataclass` decorator.
+```python
+>>> FixedLength.from_packed(FixedLength(b'Hello, world!').pack())
+FixedLength(fixed=b'Hello, wor')
+```
 
 ## Development and contributing
 
