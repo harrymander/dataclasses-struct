@@ -3,6 +3,7 @@ import struct
 from re import escape
 
 import pytest
+from conftest import ALL_VALID_SIZE_ENDIAN_PAIRS
 from typing_extensions import Annotated
 
 import dataclasses_struct as dcs
@@ -59,18 +60,25 @@ def test_double_nested() -> None:
     assert c == unpacked
 
 
-@pytest.mark.parametrize('e1,e2', itertools.combinations(dcs.ENDIANS, 2))
-def test_mismatch_endian_fails(e1: str, e2: str) -> None:
-    exp_msg = (
-        'endianness of contained dataclass-struct does '
-        'not match that of container '
-        f'(expected {e2}, got {e1})'
-    )
-    with pytest.raises(TypeError, match=f'^{escape(exp_msg)}$'):
-        @dcs.dataclass(e1)
-        class Nested:
-            x: dcs.I64
+@pytest.mark.parametrize(
+    'nested_size_endian,container_size_endian',
+    itertools.combinations(ALL_VALID_SIZE_ENDIAN_PAIRS, 2)
+)
+def test_mismatch_endian_fails(
+    nested_size_endian, container_size_endian
+) -> None:
+    nested_size, nested_endian = nested_size_endian
+    container_size, container_endian = container_size_endian
+    exp_msg = f"endianness and size mode of nested dataclass-struct does not \
+match that of container (expected '{container_size}' size and \
+'{container_endian}' endian, got '{nested_size}' size and '{nested_endian}' \
+endian)"
 
-        @dcs.dataclass(e2)
-        class Container:
+    with pytest.raises(TypeError, match=f'^{escape(exp_msg)}$'):
+        @dcs.dataclass(size=nested_size, endian=nested_endian)
+        class Nested:
+            pass
+
+        @dcs.dataclass(size=container_size, endian=container_endian)
+        class _:
             y: Nested

@@ -1,6 +1,7 @@
 import ctypes
 
 import pytest
+from conftest import parametrize_all_sizes_and_endians, parametrize_std_endians
 from typing_extensions import Annotated
 
 import dataclasses_struct as dcs
@@ -47,7 +48,6 @@ common_fields: list = [
     dcs.F64,
     float,
 ]
-std_endians = ('native', 'little', 'big', 'network')
 
 
 @pytest.mark.parametrize('field_type', native_only_fields + common_fields)
@@ -66,7 +66,7 @@ def test_invalid_native_size_fields(field_type) -> None:
 
 
 @pytest.mark.parametrize('field_type', std_only_fields + common_fields)
-@pytest.mark.parametrize('endian', std_endians)
+@parametrize_std_endians()
 def test_valid_std_size_fields(endian, field_type) -> None:
     @dcs.dataclass(endian=endian, size='std')
     class _:
@@ -74,7 +74,7 @@ def test_valid_std_size_fields(endian, field_type) -> None:
 
 
 @pytest.mark.parametrize('field_type', native_only_fields)
-@pytest.mark.parametrize('endian', ('native', 'little', 'big', 'network'))
+@parametrize_std_endians()
 def test_invalid_std_size_fields(endian, field_type) -> None:
     with pytest.raises(TypeError):
         @dcs.dataclass(endian=endian, size='std')
@@ -94,17 +94,7 @@ def test_builtin_int_is_int() -> None:
     assert_same_format(Builtin, Field)
 
 
-def parametrize_endian_size(f):
-    return pytest.mark.parametrize(
-        'endian,size',
-        [
-            ('native', 'native'),
-            *((endian, 'std') for endian in std_endians)
-        ]
-    )(f)
-
-
-@parametrize_endian_size
+@parametrize_all_sizes_and_endians()
 def test_builtin_bool_is_bool(endian, size) -> None:
     @dcs.dataclass(endian=endian, size=size)
     class Builtin:
@@ -117,7 +107,7 @@ def test_builtin_bool_is_bool(endian, size) -> None:
     assert_same_format(Builtin, Field)
 
 
-@parametrize_endian_size
+@parametrize_all_sizes_and_endians()
 def test_builtin_float_is_f64(endian, size) -> None:
     @dcs.dataclass(endian=endian, size=size)
     class Builtin:
@@ -130,7 +120,7 @@ def test_builtin_float_is_f64(endian, size) -> None:
     assert_same_format(Builtin, Field)
 
 
-@parametrize_endian_size
+@parametrize_all_sizes_and_endians()
 def test_builtin_bytes_is_char(endian, size) -> None:
     @dcs.dataclass(endian=endian, size=size)
     class Builtin:
@@ -143,7 +133,7 @@ def test_builtin_bytes_is_char(endian, size) -> None:
     assert_same_format(Builtin, Field)
 
 
-@parametrize_endian_size
+@parametrize_all_sizes_and_endians()
 def test_bytes_annotated_with_int_same_as_bytes_field(endian, size) -> None:
     @dcs.dataclass(endian=endian, size=size)
     class Builtin:
@@ -156,7 +146,7 @@ def test_bytes_annotated_with_int_same_as_bytes_field(endian, size) -> None:
     assert_same_format(Builtin, Field)
 
 
-@parametrize_endian_size
+@parametrize_all_sizes_and_endians()
 def test_invalid_field_type(endian, size) -> None:
     with pytest.raises(TypeError):
         @dcs.dataclass(endian=endian, size=size)
@@ -199,7 +189,7 @@ for field_type, nbits, signed in (
 
 
 @pytest.mark.parametrize('field_type,default', std_int_boundary_vals)
-@pytest.mark.parametrize('endian', std_endians)
+@parametrize_std_endians()
 def test_std_int_default(field_type, default, endian) -> None:
     @dcs.dataclass(size='std', endian=endian)
     class Class:
@@ -209,7 +199,7 @@ def test_std_int_default(field_type, default, endian) -> None:
 
 
 @pytest.mark.parametrize('field_type,default', std_int_out_of_range_vals)
-@pytest.mark.parametrize('endian', std_endians)
+@parametrize_std_endians()
 def test_std_int_default_out_of_range(field_type, default, endian) -> None:
     with pytest.raises(ValueError):
         @dcs.dataclass(size='std', endian=endian)
@@ -218,7 +208,7 @@ def test_std_int_default_out_of_range(field_type, default, endian) -> None:
 
 
 @pytest.mark.parametrize('field_type,default', std_int_out_of_range_vals)
-@pytest.mark.parametrize('endian', std_endians)
+@parametrize_std_endians()
 def test_std_int_unvalidated(field_type, default, endian) -> None:
     @dcs.dataclass(size='std', endian=endian, validate=False)
     class Class:
@@ -290,7 +280,7 @@ def parametrize_invalid_int_defaults(f):
 
 
 @pytest.mark.parametrize('int_type', std_only_fields)
-@pytest.mark.parametrize('endian', std_endians)
+@parametrize_std_endians()
 @parametrize_invalid_int_defaults
 def test_std_int_default_wrong_type(
     int_type, endian, default
@@ -310,7 +300,7 @@ def test_native_int_default_wrong_type(int_type, default) -> None:
             x: int_type = default
 
 
-@parametrize_endian_size
+@parametrize_all_sizes_and_endians()
 @pytest.mark.parametrize(
     'field_type',
     (dcs.Char, Annotated[bytes, dcs.BytesField(1)])
@@ -322,7 +312,7 @@ def test_bytes_default_wrong_type(endian, size, field_type) -> None:
             x: field_type = 's'
 
 
-@parametrize_endian_size
+@parametrize_all_sizes_and_endians()
 @pytest.mark.parametrize('c', (b'', b'ab'))
 def test_char_default_wrong_length(endian, size, c: bytes) -> None:
     with pytest.raises(ValueError):
@@ -331,7 +321,7 @@ def test_char_default_wrong_length(endian, size, c: bytes) -> None:
             x: dcs.Char = c
 
 
-@parametrize_endian_size
+@parametrize_all_sizes_and_endians()
 def test_char_default_not_ascii(endian, size) -> None:
     with pytest.raises(ValueError):
         @dcs.dataclass(endian=endian, size=size)
@@ -339,7 +329,7 @@ def test_char_default_not_ascii(endian, size) -> None:
             x: dcs.Char = b'\x80'
 
 
-@parametrize_endian_size
+@parametrize_all_sizes_and_endians()
 def test_default_fixed_length_bytes_wrong_length(endian, size) -> None:
     with pytest.raises(ValueError):
         @dcs.dataclass(endian=endian, size=size)
@@ -347,7 +337,7 @@ def test_default_fixed_length_bytes_wrong_length(endian, size) -> None:
             x: Annotated[bytes, dcs.BytesField(8)] = b'123456789'
 
 
-@parametrize_endian_size
+@parametrize_all_sizes_and_endians()
 @pytest.mark.parametrize('float_type', (dcs.F32, dcs.F64))
 @pytest.mark.parametrize('default', ('wrong', 1, '1.5'))
 def test_float_default_wrong_type(
@@ -359,7 +349,7 @@ def test_float_default_wrong_type(
             x: float_type = default  # type: ignore
 
 
-@parametrize_endian_size
+@parametrize_all_sizes_and_endians()
 @pytest.mark.parametrize('default', ('wrong', 1, '1.5', None, 'False'))
 def test_bool_default_wrong_type(endian, size, default) -> None:
     with pytest.raises(TypeError):
@@ -368,7 +358,7 @@ def test_bool_default_wrong_type(endian, size, default) -> None:
             x: bool = default
 
 
-@parametrize_endian_size
+@parametrize_all_sizes_and_endians()
 def test_annotated_invalid(endian, size) -> None:
     with pytest.raises(TypeError):
         @dcs.dataclass(endian=endian, size=size)
@@ -376,7 +366,7 @@ def test_annotated_invalid(endian, size) -> None:
             x: Annotated[int, dcs.I64]
 
 
-@parametrize_endian_size
+@parametrize_all_sizes_and_endians()
 def test_invalid_bytes_annotated(endian, size) -> None:
     with pytest.raises(TypeError, match=r'^too many annotations: 12$'):
         @dcs.dataclass(endian=endian, size=size)
