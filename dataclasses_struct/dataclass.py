@@ -220,14 +220,11 @@ def _validate_and_parse_field(
         if is_dataclass_struct(type_):
             nested_mode = type_.__dataclass_struct__.mode_char
             if nested_mode != mode_char:
-                size, byteorder = _MODE_CHAR_SIZE_ENDIAN[mode_char]
-                exp_size, exp_byteorder = _MODE_CHAR_SIZE_ENDIAN[nested_mode]
-                msg = (
-                    'byteorder and size mode of nested dataclass-struct does '
-                    f'not match that of container (expected {exp_size} size '
-                    f'and {exp_byteorder} byteorder, got {size} size and '
-                    f'{byteorder} byteorder)'
-                )
+                size, byteorder = _MODE_CHAR_SIZE_ENDIAN[nested_mode]
+                exp_size, exp_byteorder = _MODE_CHAR_SIZE_ENDIAN[mode_char]
+                msg = f"byteorder and size of nested dataclass-struct \
+does not match that of container (expected '{exp_size}' size and \
+'{exp_byteorder}' byteorder, got '{size}' size and '{byteorder}' byteorder)"
                 raise TypeError(msg)
             field = _NestedField(type_)
         else:
