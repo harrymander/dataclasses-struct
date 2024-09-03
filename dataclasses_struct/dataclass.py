@@ -75,7 +75,7 @@ class _DataclassStructInternal(Generic[T]):
         return self.struct.size
 
     @property
-    def mode_char(self) -> str:
+    def mode(self) -> str:
         return self.format[0]
 
     def __init__(
@@ -184,7 +184,7 @@ def _validate_and_parse_field(
     field_type: Type[Any],
     is_native: bool,
     validate: bool,
-    mode_char: str,
+    mode: str,
 ) -> Tuple[str, type]:
     """
     name is the name of the attribute, f is its type annotation.
@@ -218,10 +218,10 @@ def _validate_and_parse_field(
     if field is None:
         # Must be either a nested type or one of the supported builtins
         if is_dataclass_struct(type_):
-            nested_mode = type_.__dataclass_struct__.mode_char
-            if nested_mode != mode_char:
+            nested_mode = type_.__dataclass_struct__.mode
+            if nested_mode != mode:
                 size, byteorder = _MODE_CHAR_SIZE_BYTEORDER[nested_mode]
-                exp_size, exp_byteorder = _MODE_CHAR_SIZE_BYTEORDER[mode_char]
+                exp_size, exp_byteorder = _MODE_CHAR_SIZE_BYTEORDER[mode]
                 msg = f"byteorder and size of nested dataclass-struct \
 does not match that of container (expected '{exp_size}' size and \
 '{exp_byteorder}' byteorder, got '{size}' size and '{byteorder}' byteorder)"
@@ -293,10 +293,10 @@ def from_packed(cls, data: bytes) -> cls_type:
 
 
 def _make_class(
-    cls: type, mode_char: str, is_native: bool, validate: bool
+    cls: type, mode: str, is_native: bool, validate: bool
 ) -> Type[DataclassStructProtocol]:
     cls_annotations = get_type_hints(cls, include_extras=True)
-    struct_format = [mode_char]
+    struct_format = [mode]
     fieldtypes = []
     for name, field in cls_annotations.items():
         fmt, type_ = _validate_and_parse_field(
@@ -305,7 +305,7 @@ def _make_class(
             field_type=field,
             is_native=is_native,
             validate=validate,
-            mode_char=mode_char,
+            mode=mode,
         )
         struct_format.append(fmt)
         fieldtypes.append(type_)
@@ -365,7 +365,7 @@ def dataclass(
     def decorator(cls: type) -> type:
         return _make_class(
             cls,
-            mode_char=_SIZE_BYTEORDER_MODE_CHAR[(size, byteorder)],
+            mode=_SIZE_BYTEORDER_MODE_CHAR[(size, byteorder)],
             is_native=is_native,
             validate=validate,
         )
