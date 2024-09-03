@@ -42,11 +42,45 @@ def test_invalid_decorator_args(kwargs):
 @parametrize_all_sizes_and_byteorders()
 def test_valid_sizes_and_byteorders(size, byteorder) -> None:
     @dcs.dataclass(size=size, byteorder=byteorder)
+    class _:
+        pass
+
+
+@pytest.mark.parametrize(
+    'size,byteorder,mode',
+    (
+        ('native', 'native', '@'),
+        ('std', 'native', '='),
+        ('std', 'little', '<'),
+        ('std', 'big', '>'),
+        ('std', 'network', '!'),
+    )
+)
+def test_mode_char(size, byteorder, mode: str) -> None:
+    @dcs.dataclass(size=size, byteorder=byteorder)  # type: ignore
     class Test:
         pass
 
-    assert Test.__dataclass_struct__.size == size
-    assert Test.__dataclass_struct__.byteorder == byteorder
+    assert Test.__dataclass_struct__.mode == mode
+    assert Test.__dataclass_struct__.format == mode
+
+
+def test_default_mode_char_is_native() -> None:
+    @dcs.dataclass()
+    class Test:
+        pass
+
+    assert Test.__dataclass_struct__.mode == '@'
+    assert Test.__dataclass_struct__.format == '@'
+
+
+@parametrize_all_sizes_and_byteorders()
+def test_empty_class_has_zero_size(size, byteorder) -> None:
+    @dcs.dataclass(size=size, byteorder=byteorder)
+    class Test:
+        pass
+
+    assert Test.__dataclass_struct__.size == 0
 
 
 def test_class_is_dataclass_struct() -> None:
