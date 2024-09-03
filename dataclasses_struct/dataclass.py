@@ -25,7 +25,7 @@ from typing_extensions import (
     get_type_hints,
 )
 
-from .field import BytesField, Field, builtin_fields
+from .field import Field, builtin_fields
 from .types import PadAfter, PadBefore
 
 
@@ -167,6 +167,26 @@ def get_struct_size(cls_or_obj: Any) -> int:
     return cls_or_obj.__dataclass_struct__.size
 
 
+class _BytesField(Field[bytes]):
+    field_type = bytes
+
+    def __init__(self, n: int):
+        if n < 1:
+            raise ValueError('n must be positive non-zero integer')
+
+        self.n = n
+
+    def format(self) -> str:
+        return f'{self.n}s'
+
+    def validate(self, val: bytes) -> None:
+        if len(val) > self.n:
+            raise ValueError(f'bytes cannot be longer than {self.n} bytes')
+
+    def __repr__(self) -> str:
+        return f'{super().__repr__()}({self.n})'
+
+
 class _NestedField(Field):
     field_type: Type[DataclassStructProtocol]
 
@@ -234,7 +254,7 @@ does not match that of container (expected '{exp_size}' size and \
 
     if issubclass(type_, bytes) and isinstance(field, int):
         # Annotated[bytes, <positive non-zero integer>] is a byte array
-        field = BytesField(field)
+        field = _BytesField(field)
     elif not isinstance(field, Field):
         raise TypeError(f'invalid field annotation: {field}')
 

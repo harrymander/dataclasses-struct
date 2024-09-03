@@ -144,11 +144,13 @@ def test_invalid_field_type_fails(byteorder, size) -> None:
             x: str
 
 
-@pytest.mark.parametrize('size', (-1, 0))
-def test_invalid_bytes_size_fails(size: int) -> None:
+@pytest.mark.parametrize('length', (-1, 0))
+@parametrize_all_sizes_and_byteorders()
+def test_invalid_bytes_length_fails(size, byteorder, length: int) -> None:
     with pytest.raises(ValueError):
+        @dcs.dataclass(size=size, byteorder=byteorder)
         class _:
-            x: Annotated[bytes, size]
+            x: Annotated[bytes, length]
 
 
 def int_min_max(nbits: int, signed: bool) -> tuple[int, int]:
