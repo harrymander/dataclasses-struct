@@ -48,15 +48,15 @@ def _get_padding_and_field(fields):
 T = TypeVar('T')
 
 
-_SIZE_ENDIAN_MODE_CHAR: dict[tuple[str, str], str] = {
+_SIZE_BYTEORDER_MODE_CHAR: dict[tuple[str, str], str] = {
     ('native', 'native'): '@',
     ('std', 'native'): '=',
     ('std', 'little'): '<',
     ('std', 'big'): '>',
     ('std', 'network'): '!',
 }
-_MODE_CHAR_SIZE_ENDIAN: dict[str, tuple[str, str]] = {
-    v: k for k, v in _SIZE_ENDIAN_MODE_CHAR.items()
+_MODE_CHAR_SIZE_BYTEORDER: dict[str, tuple[str, str]] = {
+    v: k for k, v in _SIZE_BYTEORDER_MODE_CHAR.items()
 }
 
 
@@ -220,8 +220,8 @@ def _validate_and_parse_field(
         if is_dataclass_struct(type_):
             nested_mode = type_.__dataclass_struct__.mode_char
             if nested_mode != mode_char:
-                size, byteorder = _MODE_CHAR_SIZE_ENDIAN[nested_mode]
-                exp_size, exp_byteorder = _MODE_CHAR_SIZE_ENDIAN[mode_char]
+                size, byteorder = _MODE_CHAR_SIZE_BYTEORDER[nested_mode]
+                exp_size, exp_byteorder = _MODE_CHAR_SIZE_BYTEORDER[mode_char]
                 msg = f"byteorder and size of nested dataclass-struct \
 does not match that of container (expected '{exp_size}' size and \
 '{exp_byteorder}' byteorder, got '{size}' size and '{byteorder}' byteorder)"
@@ -365,7 +365,7 @@ def dataclass(
     def decorator(cls: type) -> type:
         return _make_class(
             cls,
-            mode_char=_SIZE_ENDIAN_MODE_CHAR[(size, byteorder)],
+            mode_char=_SIZE_BYTEORDER_MODE_CHAR[(size, byteorder)],
             is_native=is_native,
             validate=validate,
         )
