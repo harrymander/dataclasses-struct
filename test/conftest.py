@@ -1,5 +1,4 @@
-from collections.abc import Callable
-from typing import TypeAlias
+from typing import Callable
 
 import pytest
 
@@ -12,7 +11,7 @@ ALL_VALID_SIZE_BYTEORDER_PAIRS = (
 )
 
 
-ParametrizeDecorator: TypeAlias = Callable[[Callable], pytest.MarkDecorator]
+ParametrizeDecorator = Callable[[Callable], pytest.MarkDecorator]
 
 
 def parametrize_std_byteorders(

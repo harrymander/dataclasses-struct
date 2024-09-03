@@ -1,4 +1,5 @@
 import ctypes
+from typing import Tuple
 
 import pytest
 from conftest import (
@@ -153,7 +154,7 @@ def test_invalid_bytes_length_fails(size, byteorder, length: int) -> None:
             x: Annotated[bytes, length]
 
 
-def int_min_max(nbits: int, signed: bool) -> tuple[int, int]:
+def int_min_max(nbits: int, signed: bool) -> Tuple[int, int]:
     if signed:
         exp = 2**(nbits-1)
         return -exp, exp - 1
