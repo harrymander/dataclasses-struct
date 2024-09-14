@@ -1,6 +1,5 @@
-from typing_extensions import Annotated
-
 import dataclasses_struct as dcs
+from dataclasses_struct import Annotated
 
 
 def test_str_type_annotations() -> None:

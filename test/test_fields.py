@@ -7,9 +7,9 @@ from conftest import (
     parametrize_all_sizes_and_byteorders,
     parametrize_std_byteorders,
 )
-from typing_extensions import Annotated
 
 import dataclasses_struct as dcs
+from dataclasses_struct import Annotated
 
 
 def assert_same_format(t1, t2) -> None:

@@ -32,7 +32,7 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.8.1"
-typing-extensions = "^4.5.0"
+typing-extensions = { version = "^4.5.0", python = "<3.11" }
 
 [tool.poetry.group.dev.dependencies]
 mypy = [

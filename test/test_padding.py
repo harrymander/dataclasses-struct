@@ -1,8 +1,8 @@
 import pytest
 from conftest import parametrize_all_sizes_and_byteorders
-from typing_extensions import Annotated
 
 import dataclasses_struct as dcs
+from dataclasses_struct import Annotated
 
 
 @pytest.mark.parametrize('size', (-1,))
