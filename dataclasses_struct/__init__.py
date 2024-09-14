@@ -2,6 +2,7 @@ from importlib import metadata
 
 __version__ = metadata.version(__package__)
 
+from ._typing import Annotated
 from .dataclass import (
     DataclassStructProtocol,
     dataclass,
@@ -52,6 +53,7 @@ from .types import (
 )
 
 __all__ = (
+    'Annotated',
     'Bool',
     'BoolField',
     'Char',

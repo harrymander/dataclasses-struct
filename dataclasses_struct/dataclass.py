@@ -16,7 +16,7 @@ from typing import (
     overload,
 )
 
-from typing_extensions import (
+from ._typing import (
     Annotated,
     TypeGuard,
     dataclass_transform,
@@ -24,7 +24,6 @@ from typing_extensions import (
     get_origin,
     get_type_hints,
 )
-
 from .field import Field, builtin_fields
 from .types import PadAfter, PadBefore
 

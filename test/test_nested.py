@@ -4,9 +4,9 @@ from re import escape
 
 import pytest
 from conftest import ALL_VALID_SIZE_BYTEORDER_PAIRS
-from typing_extensions import Annotated
 
 import dataclasses_struct as dcs
+from dataclasses_struct import Annotated
 
 
 def test_nested() -> None:
