@@ -15,7 +15,7 @@ def transform_dataclass_struct(ctx: ClassDefContext) -> bool:
     tvd = TypeVarType(
         'T',
         f'{ctx.cls.info.fullname}.T',
-        TypeVarId(TypeVarId.next_raw_id),
+        TypeVarId(-1),
         [],
         ctx.api.named_type('builtins.object'),
         ctx.api.named_type('builtins.object'),
