@@ -183,7 +183,7 @@ are all `int`.
 | `LongLong`                           | `long long`                 |
 | `UnsignedLongLong`                   | `unsigned long long`        |
 | `UnsignedSize`                       | `size_t`                    |
-| `SignedSize`                         | `ssize_t` (POSIX) extension |
+| `SignedSize`                         | `ssize_t` (POSIX extension) |
 | `Pointer`                            | `void *`                    |
 
 #### Standard integer types
@@ -210,7 +210,7 @@ Supported in both size modes. The native Python type is `float`.
 | ------------------------------------ | --------------------------- |
 | `F32`                                | `float`                     |
 | `F64`                                | `double`                    |
-| `float` (bultin alias to `F64`)      | `double`                    |
+| `float` (builtin alias to `F64`)     | `double`                    |
 
 #### Boolean
 
