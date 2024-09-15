@@ -178,7 +178,7 @@ class _BytesField(Field[bytes]):
     def format(self) -> str:
         return f'{self.n}s'
 
-    def validate(self, val: bytes) -> None:
+    def validate_default(self, val: bytes) -> None:
         if len(val) > self.n:
             raise ValueError(f'bytes cannot be longer than {self.n} bytes')
 
@@ -202,7 +202,7 @@ def _validate_and_parse_field(
     name: str,
     field_type: type,
     is_native: bool,
-    validate: bool,
+    validate_defaults: bool,
     mode: str,
 ) -> Tuple[str, type]:
     """
@@ -268,14 +268,14 @@ does not match that of container (expected '{exp_size}' size and \
     elif not field.is_std:
         raise TypeError(f'field {field} only supported in native size mode')
 
-    if validate and hasattr(cls, name):
+    if validate_defaults and hasattr(cls, name):
         val = getattr(cls, name)
         if not isinstance(val, field.field_type):
             raise TypeError(
                 'invalid type for field: expected '
                 f'{field.field_type} got {type(val)}'
             )
-        field.validate(val)
+        field.validate_default(val)
 
     return (
         ''.join((
@@ -312,7 +312,7 @@ def from_packed(cls, data: bytes) -> cls_type:
 
 
 def _make_class(
-    cls: type, mode: str, is_native: bool, validate: bool
+    cls: type, mode: str, is_native: bool, validate_defaults: bool
 ) -> Type[DataclassStructProtocol]:
     cls_annotations = get_type_hints(cls, include_extras=True)
     struct_format = [mode]
@@ -323,7 +323,7 @@ def _make_class(
             name=name,
             field_type=field,
             is_native=is_native,
-            validate=validate,
+            validate_defaults=validate_defaults,
             mode=mode,
         )
         struct_format.append(fmt)
@@ -350,7 +350,7 @@ def dataclass(
     *,
     size: Literal['native'] = 'native',
     byteorder: Literal['native'] = 'native',
-    validate: bool = True,
+    validate_defaults: bool = True,
 ) -> Callable[[type], type]:
     ...
 
@@ -360,7 +360,7 @@ def dataclass(
     *,
     size: Literal['std'],
     byteorder: Literal['native', 'big', 'little', 'network'] = 'native',
-    validate: bool = True,
+    validate_defaults: bool = True,
 ) -> Callable[[type], type]:
     ...
 
@@ -370,7 +370,7 @@ def dataclass(
     *,
     size: str = 'native',
     byteorder: str = 'native',
-    validate: bool = True,
+    validate_defaults: bool = True,
 ) -> Callable[[type], type]:
     is_native = size == 'native'
     if is_native:
@@ -386,7 +386,7 @@ def dataclass(
             cls,
             mode=_SIZE_BYTEORDER_MODE_CHAR[(size, byteorder)],
             is_native=is_native,
-            validate=validate,
+            validate_defaults=validate_defaults,
         )
 
     return decorator

@@ -14,7 +14,7 @@ class Field(abc.ABC, Generic[T]):
     def format(self) -> str:
         ...
 
-    def validate(self, val: T) -> None:
+    def validate_default(self, val: T) -> None:
         pass
 
     def __repr__(self) -> str:
@@ -34,7 +34,7 @@ class CharField(Field[bytes]):
     def format(self) -> str:
         return 'c'
 
-    def validate(self, val: bytes) -> None:
+    def validate_default(self, val: bytes) -> None:
         if len(val) != 1:
             raise ValueError('value must be a single byte')
 
@@ -69,7 +69,7 @@ class IntField(Field[int]):
     def format(self) -> str:
         return self._format
 
-    def validate(self, val: int) -> None:
+    def validate_default(self, val: int) -> None:
         if not (self.min_ <= val <= self.max_):
             sign = 'signed' if self.signed else 'unsigned'
             n = self.size * 8
@@ -137,7 +137,7 @@ class SizeField(IntField):
         size = ctypes.sizeof(ctypes.c_ssize_t if signed else ctypes.c_size_t)
         super().__init__(fmt, signed, size)
 
-    def validate(self, val: int) -> None:
+    def validate_default(self, val: int) -> None:
         if not (self.min_ <= val <= self.max_):
             sign = 'signed' if self.signed else 'unsigned'
             raise ValueError(f'value out of range for {sign} size type')
@@ -152,7 +152,7 @@ class PointerField(IntField):
     def format(self) -> str:
         return 'P'
 
-    def validate(self, val: int) -> None:
+    def validate_default(self, val: int) -> None:
         if not (self.min_ <= val <= self.max_):
             raise ValueError('value out of range for system pointer')
 

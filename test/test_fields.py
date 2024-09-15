@@ -246,7 +246,7 @@ def test_std_int_default_out_of_range_fails(
 def test_std_int_default_out_of_range_with_unvalidated_does_not_fail(
     field_type, default, byteorder
 ) -> None:
-    @dcs.dataclass(size='std', byteorder=byteorder, validate=False)
+    @dcs.dataclass(size='std', byteorder=byteorder, validate_defaults=False)
     class Class:
         x: field_type = default
 
@@ -299,7 +299,7 @@ def test_native_int_default_out_of_range_fails(field_type, default) -> None:
 def test_native_int_default_out_of_range_with_unvalidated_does_not_fail(
     field_type, default
 ) -> None:
-    @dcs.dataclass(size='native', byteorder='native', validate=False)
+    @dcs.dataclass(size='native', byteorder='native', validate_defaults=False)
     class Class:
         x: field_type = default
 
