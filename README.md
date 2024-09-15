@@ -75,7 +75,7 @@ def dataclass(
     *,
     size: str = 'native',
     byteorder: str = 'native',
-    validate: bool = True,
+    validate_defaults: bool = True,
 ):
     ...
 ```
@@ -118,8 +118,8 @@ class Test:
     x: dcs.U8 = -1
 ```
 
-will raise a `ValueError`. This can be disabled by passing `validate=False` to
-the `dataclasses_struct.dataclass` decorator.
+will raise a `ValueError`. This can be disabled by passing
+`validate_defaults=False` to the `dataclasses_struct.dataclass` decorator.
 
 ### Native size mode
 
