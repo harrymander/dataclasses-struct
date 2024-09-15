@@ -137,11 +137,11 @@ def is_dataclass_struct(obj: type) -> TypeGuard[Type[DataclassStructProtocol]]:
 
 
 @overload
-def is_dataclass_struct(obj: Any) -> TypeGuard[DataclassStructProtocol]:
+def is_dataclass_struct(obj: object) -> TypeGuard[DataclassStructProtocol]:
     ...
 
 
-def is_dataclass_struct(obj: Union[type, Any]) -> Union[
+def is_dataclass_struct(obj: Union[type, object]) -> Union[
     TypeGuard[DataclassStructProtocol],
     TypeGuard[Type[DataclassStructProtocol]]
 ]:
@@ -156,7 +156,7 @@ def is_dataclass_struct(obj: Union[type, Any]) -> Union[
     )
 
 
-def get_struct_size(cls_or_obj: Any) -> int:
+def get_struct_size(cls_or_obj) -> int:
     """
     Returns the size of the packed representation of the struct in bytes.
     Accepts either a class or an instance of a dataclass_struct.
@@ -200,7 +200,7 @@ class _NestedField(Field):
 def _validate_and_parse_field(
     cls: type,
     name: str,
-    field_type: Type[Any],
+    field_type: type,
     is_native: bool,
     validate: bool,
     mode: str,
