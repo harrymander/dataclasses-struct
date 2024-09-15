@@ -59,12 +59,12 @@ class IntField(Field[int]):
 
         nbits = self.size * 8
         if signed:
-            exp = 2**(nbits - 1)
+            exp = 1 << (nbits - 1)
             self.min_ = -exp
             self.max_ = exp - 1
         else:
             self.min_ = 0
-            self.max_ = 2**nbits - 1
+            self.max_ = (1 << nbits) - 1
 
     def format(self) -> str:
         return self._format
