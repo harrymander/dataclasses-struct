@@ -9,7 +9,7 @@ from dataclasses_struct import Annotated
 @pytest.mark.parametrize('padding', (dcs.PadBefore, dcs.PadAfter))
 def test_invalid_padding_size(size: int, padding: type) -> None:
     with pytest.raises(ValueError, match=r'^size must be non-negative$'):
-        @dcs.dataclass()
+        @dcs.dataclass_struct()
         class _:
             x: Annotated[int, padding(size)]
 
@@ -23,7 +23,7 @@ def assert_true_has_correct_padding(
 @pytest.mark.parametrize('padding', (dcs.PadBefore, dcs.PadAfter))
 @parametrize_all_sizes_and_byteorders()
 def test_padding_zero(size, byteorder, padding: type) -> None:
-    @dcs.dataclass(size=size, byteorder=byteorder)
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
     class T:
         x: Annotated[bool, padding(0)]
 
@@ -32,7 +32,7 @@ def test_padding_zero(size, byteorder, padding: type) -> None:
 
 @parametrize_all_sizes_and_byteorders()
 def test_padding_before(size, byteorder) -> None:
-    @dcs.dataclass(size=size, byteorder=byteorder)
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
     class Test:
         x: Annotated[bool, dcs.PadBefore(5)]
 
@@ -42,7 +42,7 @@ def test_padding_before(size, byteorder) -> None:
 
 @parametrize_all_sizes_and_byteorders()
 def test_padding_after(size, byteorder) -> None:
-    @dcs.dataclass(size=size, byteorder=byteorder)
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
     class Test:
         x: Annotated[bool, dcs.PadAfter(5)]
 
@@ -52,7 +52,7 @@ def test_padding_after(size, byteorder) -> None:
 
 @parametrize_all_sizes_and_byteorders()
 def test_padding_before_and_after(size, byteorder) -> None:
-    @dcs.dataclass(size=size, byteorder=byteorder)
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
     class Test:
         x: Annotated[bool, dcs.PadBefore(10), dcs.PadAfter(5)]
 
@@ -64,7 +64,7 @@ def test_padding_before_and_after(size, byteorder) -> None:
 def test_padding_before_and_after_with_after_before_before(
     size, byteorder
 ) -> None:
-    @dcs.dataclass(size=size, byteorder=byteorder)
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
     class Test:
         x: Annotated[bool, dcs.PadAfter(5), dcs.PadBefore(10)]
 
@@ -74,7 +74,7 @@ def test_padding_before_and_after_with_after_before_before(
 
 @parametrize_all_sizes_and_byteorders()
 def test_padding_multiple(size, byteorder) -> None:
-    @dcs.dataclass(size=size, byteorder=byteorder)
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
     class Test:
         x: Annotated[
             bool,
@@ -91,7 +91,7 @@ def test_padding_multiple(size, byteorder) -> None:
 
 @parametrize_all_sizes_and_byteorders()
 def test_padding_with_bytes(size, byteorder) -> None:
-    @dcs.dataclass(size=size, byteorder=byteorder)
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
     class Test:
         a: Annotated[bytes, dcs.PadBefore(2), 4, dcs.PadAfter(3)]
 
@@ -101,7 +101,7 @@ def test_padding_with_bytes(size, byteorder) -> None:
 
 @parametrize_all_sizes_and_byteorders()
 def test_unpack_padding(size, byteorder) -> None:
-    @dcs.dataclass(size=size, byteorder=byteorder)
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
     class Test:
         x: Annotated[bool, dcs.PadAfter(2)]
         y: Annotated[bool, dcs.PadBefore(2), dcs.PadAfter(7)]

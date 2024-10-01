@@ -7,7 +7,7 @@ from mypy.plugins.common import add_attribute_to_class, add_method_to_class
 from mypy.plugins.dataclasses import dataclass_class_maker_callback
 from mypy.types import TypeType, TypeVarId, TypeVarType
 
-DATACLASS_STRUCT_DECORATOR = 'dataclasses_struct.dataclass.dataclass'
+DATACLASS_STRUCT_DECORATOR = 'dataclasses_struct.dataclass.dataclass_struct'
 
 
 def transform_dataclass_struct(ctx: ClassDefContext) -> bool:
