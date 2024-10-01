@@ -10,14 +10,14 @@ from dataclasses_struct import Annotated
 
 
 def test_nested() -> None:
-    @dcs.dataclass()
+    @dcs.dataclass_struct()
     class Nested:
         x: float
         y: Annotated[bytes, 3]
 
     assert dcs.get_struct_size(Nested) == struct.calcsize('@ d3b')
 
-    @dcs.dataclass()
+    @dcs.dataclass_struct()
     class Container:
         x: dcs.F32
         item1: Annotated[Nested, dcs.PadBefore(10)]
@@ -33,17 +33,17 @@ def test_nested() -> None:
 
 
 def test_double_nested() -> None:
-    @dcs.dataclass()
+    @dcs.dataclass_struct()
     class Nested1:
         x: float
         y: Annotated[bytes, 3]
 
-    @dcs.dataclass()
+    @dcs.dataclass_struct()
     class Nested2:
         nested1: Annotated[Nested1, dcs.PadBefore(12)]
         nested2: Annotated[Nested1, dcs.PadBefore(12)]
 
-    @dcs.dataclass()
+    @dcs.dataclass_struct()
     class Container:
         x: bool
         item1: Nested2
@@ -75,10 +75,13 @@ match that of container (expected '{container_size}' size and \
 '{nested_byteorder}' byteorder)"
 
     with pytest.raises(TypeError, match=f'^{escape(exp_msg)}$'):
-        @dcs.dataclass(size=nested_size, byteorder=nested_byteorder)
+        @dcs.dataclass_struct(size=nested_size, byteorder=nested_byteorder)
         class Nested:
             pass
 
-        @dcs.dataclass(size=container_size, byteorder=container_byteorder)
+        @dcs.dataclass_struct(
+            size=container_size,
+            byteorder=container_byteorder,
+        )
         class _:
             y: Nested

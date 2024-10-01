@@ -5,7 +5,7 @@ __version__ = metadata.version(__package__)
 from ._typing import Annotated
 from .dataclass import (
     DataclassStructProtocol,
-    dataclass,
+    dataclass_struct,
     get_struct_size,
     is_dataclass_struct,
 )
@@ -58,7 +58,7 @@ __all__ = (
     'BoolField',
     'Char',
     'CharField',
-    'dataclass',
+    'dataclass_struct',
     'DataclassStructProtocol',
     'F32',
     'F64',

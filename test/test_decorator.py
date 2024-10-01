@@ -8,7 +8,7 @@ import dataclasses_struct as dcs
 
 def test_no_parens_fails():
     with pytest.raises(TypeError):
-        @dcs.dataclass
+        @dcs.dataclass_struct
         class _:  # type: ignore
             pass
 
@@ -34,14 +34,14 @@ def test_no_parens_fails():
 )
 def test_invalid_decorator_args(kwargs):
     with pytest.raises(TypeError):
-        @dcs.dataclass(**kwargs)
+        @dcs.dataclass_struct(**kwargs)
         class _:
             pass
 
 
 @parametrize_all_sizes_and_byteorders()
 def test_valid_sizes_and_byteorders(size, byteorder) -> None:
-    @dcs.dataclass(size=size, byteorder=byteorder)
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
     class _:
         pass
 
@@ -57,7 +57,7 @@ def test_valid_sizes_and_byteorders(size, byteorder) -> None:
     )
 )
 def test_mode_char(size, byteorder, mode: str) -> None:
-    @dcs.dataclass(size=size, byteorder=byteorder)  # type: ignore
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)  # type: ignore
     class Test:
         pass
 
@@ -66,7 +66,7 @@ def test_mode_char(size, byteorder, mode: str) -> None:
 
 
 def test_default_mode_char_is_native() -> None:
-    @dcs.dataclass()
+    @dcs.dataclass_struct()
     class Test:
         pass
 
@@ -76,7 +76,7 @@ def test_default_mode_char_is_native() -> None:
 
 @parametrize_all_sizes_and_byteorders()
 def test_empty_class_has_zero_size(size, byteorder) -> None:
-    @dcs.dataclass(size=size, byteorder=byteorder)
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
     class Test:
         pass
 
@@ -84,7 +84,7 @@ def test_empty_class_has_zero_size(size, byteorder) -> None:
 
 
 def test_class_is_dataclass_struct() -> None:
-    @dcs.dataclass()
+    @dcs.dataclass_struct()
     class Test:
         pass
 
@@ -92,7 +92,7 @@ def test_class_is_dataclass_struct() -> None:
 
 
 def test_object_is_dataclass_struct() -> None:
-    @dcs.dataclass()
+    @dcs.dataclass_struct()
     class Test:
         pass
 
@@ -100,7 +100,7 @@ def test_object_is_dataclass_struct() -> None:
 
 
 def test_object_is_dataclass() -> None:
-    @dcs.dataclass()
+    @dcs.dataclass_struct()
     class Test:
         pass
 
@@ -108,7 +108,7 @@ def test_object_is_dataclass() -> None:
 
 
 def test_class_is_dataclass() -> None:
-    @dcs.dataclass()
+    @dcs.dataclass_struct()
     class Test:
         pass
 

@@ -3,7 +3,7 @@
   main: |
     import dataclasses_struct as dcs
 
-    @dcs.dataclass()
+    @dcs.dataclass_struct()
     class Test:
         x: int
 
@@ -17,7 +17,7 @@
   main: |
     import dataclasses_struct as dcs
 
-    @dcs.dataclass()
+    @dcs.dataclass_struct()
     class Test:
         x: int
 
@@ -30,7 +30,7 @@
   main: |
     import dataclasses_struct as dcs
 
-    @dcs.dataclass()
+    @dcs.dataclass_struct()
     class Test:
         x: int
 
@@ -44,7 +44,7 @@
   main: |
     import dataclasses_struct as dcs
 
-    @dcs.dataclass()
+    @dcs.dataclass_struct()
     class Test:
         x: int
 

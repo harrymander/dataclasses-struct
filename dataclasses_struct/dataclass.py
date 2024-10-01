@@ -346,7 +346,7 @@ def _make_class(
 
 
 @overload
-def dataclass(
+def dataclass_struct(
     *,
     size: Literal['native'] = 'native',
     byteorder: Literal['native'] = 'native',
@@ -356,7 +356,7 @@ def dataclass(
 
 
 @overload
-def dataclass(
+def dataclass_struct(
     *,
     size: Literal['std'],
     byteorder: Literal['native', 'big', 'little', 'network'] = 'native',
@@ -366,7 +366,7 @@ def dataclass(
 
 
 @dataclass_transform()
-def dataclass(
+def dataclass_struct(
     *,
     size: str = 'native',
     byteorder: str = 'native',

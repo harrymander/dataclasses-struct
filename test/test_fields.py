@@ -68,7 +68,7 @@ def parametrize_fields(
 
 @parametrize_fields(native_only_fields + common_fields, 'field_type', 'fmt')
 def test_native_size_field_has_correct_format(field_type, fmt) -> None:
-    @dcs.dataclass(byteorder='native', size='native')
+    @dcs.dataclass_struct(byteorder='native', size='native')
     class Test:
         field: field_type
 
@@ -78,7 +78,7 @@ def test_native_size_field_has_correct_format(field_type, fmt) -> None:
 @parametrize_fields(std_only_fields, 'field_type')
 def test_invalid_native_size_fields_fails(field_type) -> None:
     with pytest.raises(TypeError):
-        @dcs.dataclass(byteorder='native', size='native')
+        @dcs.dataclass_struct(byteorder='native', size='native')
         class _:
             field: field_type
 
@@ -88,7 +88,7 @@ def test_invalid_native_size_fields_fails(field_type) -> None:
 def test_valid_std_size_field_has_correct_format(
     byteorder, field_type, fmt
 ) -> None:
-    @dcs.dataclass(byteorder=byteorder, size='std')
+    @dcs.dataclass_struct(byteorder=byteorder, size='std')
     class Test:
         field: field_type
 
@@ -99,17 +99,17 @@ def test_valid_std_size_field_has_correct_format(
 @parametrize_std_byteorders()
 def test_invalid_std_size_fields_fails(byteorder, field_type) -> None:
     with pytest.raises(TypeError):
-        @dcs.dataclass(byteorder=byteorder, size='std')
+        @dcs.dataclass_struct(byteorder=byteorder, size='std')
         class _:
             field: field_type
 
 
 def test_builtin_int_is_int() -> None:
-    @dcs.dataclass(byteorder='native', size='native')
+    @dcs.dataclass_struct(byteorder='native', size='native')
     class Builtin:
         x: int
 
-    @dcs.dataclass(byteorder='native', size='native')
+    @dcs.dataclass_struct(byteorder='native', size='native')
     class Field:
         x: dcs.Int
 
@@ -118,11 +118,11 @@ def test_builtin_int_is_int() -> None:
 
 @parametrize_all_sizes_and_byteorders()
 def test_builtin_bool_is_bool(byteorder, size) -> None:
-    @dcs.dataclass(byteorder=byteorder, size=size)
+    @dcs.dataclass_struct(byteorder=byteorder, size=size)
     class Builtin:
         x: bool
 
-    @dcs.dataclass(byteorder=byteorder, size=size)
+    @dcs.dataclass_struct(byteorder=byteorder, size=size)
     class Field:
         x: dcs.Bool
 
@@ -131,11 +131,11 @@ def test_builtin_bool_is_bool(byteorder, size) -> None:
 
 @parametrize_all_sizes_and_byteorders()
 def test_builtin_float_is_f64(byteorder, size) -> None:
-    @dcs.dataclass(byteorder=byteorder, size=size)
+    @dcs.dataclass_struct(byteorder=byteorder, size=size)
     class Builtin:
         x: float
 
-    @dcs.dataclass(byteorder=byteorder, size=size)
+    @dcs.dataclass_struct(byteorder=byteorder, size=size)
     class Field:
         x: dcs.F64
 
@@ -144,11 +144,11 @@ def test_builtin_float_is_f64(byteorder, size) -> None:
 
 @parametrize_all_sizes_and_byteorders()
 def test_builtin_bytes_is_char(byteorder, size) -> None:
-    @dcs.dataclass(byteorder=byteorder, size=size)
+    @dcs.dataclass_struct(byteorder=byteorder, size=size)
     class Builtin:
         x: bytes
 
-    @dcs.dataclass(byteorder=byteorder, size=size)
+    @dcs.dataclass_struct(byteorder=byteorder, size=size)
     class Field:
         x: dcs.Char
 
@@ -170,14 +170,14 @@ class VanillaClassTest:
 )
 def test_invalid_field_types_fail(byteorder, size, field_type) -> None:
     with pytest.raises(TypeError):
-        @dcs.dataclass(byteorder=byteorder, size=size)
+        @dcs.dataclass_struct(byteorder=byteorder, size=size)
         class _:
             x: field_type
 
 
 @parametrize_all_sizes_and_byteorders()
 def test_valid_bytes_length_has_correct_format(size, byteorder) -> None:
-    @dcs.dataclass(size=size, byteorder=byteorder)
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
     class Test:
         field: Annotated[bytes, 3]
 
@@ -188,7 +188,7 @@ def test_valid_bytes_length_has_correct_format(size, byteorder) -> None:
 @parametrize_all_sizes_and_byteorders()
 def test_invalid_bytes_length_fails(size, byteorder, length: int) -> None:
     with pytest.raises(ValueError):
-        @dcs.dataclass(size=size, byteorder=byteorder)
+        @dcs.dataclass_struct(size=size, byteorder=byteorder)
         class _:
             x: Annotated[bytes, length]
 
@@ -223,7 +223,7 @@ for field_type, nbits, signed in (
 @pytest.mark.parametrize('field_type,default', std_int_boundary_vals)
 @parametrize_std_byteorders()
 def test_std_int_default(field_type, default, byteorder) -> None:
-    @dcs.dataclass(size='std', byteorder=byteorder)
+    @dcs.dataclass_struct(size='std', byteorder=byteorder)
     class Class:
         field: field_type = default
 
@@ -236,7 +236,7 @@ def test_std_int_default_out_of_range_fails(
     field_type, default, byteorder
 ) -> None:
     with pytest.raises(ValueError):
-        @dcs.dataclass(size='std', byteorder=byteorder)
+        @dcs.dataclass_struct(size='std', byteorder=byteorder)
         class _:
             x: field_type = default
 
@@ -246,7 +246,11 @@ def test_std_int_default_out_of_range_fails(
 def test_std_int_default_out_of_range_with_unvalidated_does_not_fail(
     field_type, default, byteorder
 ) -> None:
-    @dcs.dataclass(size='std', byteorder=byteorder, validate_defaults=False)
+    @dcs.dataclass_struct(
+        size='std',
+        byteorder=byteorder,
+        validate_defaults=False,
+    )
     class Class:
         x: field_type = default
 
@@ -280,7 +284,7 @@ for field_type, ctype_type, signed in (
 
 @pytest.mark.parametrize('field_type,default', native_int_boundary_vals)
 def test_native_int_default(field_type, default) -> None:
-    @dcs.dataclass(size='native', byteorder='native')
+    @dcs.dataclass_struct(size='native', byteorder='native')
     class Class:
         field: field_type = default
 
@@ -290,7 +294,7 @@ def test_native_int_default(field_type, default) -> None:
 @pytest.mark.parametrize('field_type,default', native_int_out_of_range_vals)
 def test_native_int_default_out_of_range_fails(field_type, default) -> None:
     with pytest.raises(ValueError):
-        @dcs.dataclass(size='native', byteorder='native')
+        @dcs.dataclass_struct(size='native', byteorder='native')
         class _:
             x: field_type = default
 
@@ -299,7 +303,11 @@ def test_native_int_default_out_of_range_fails(field_type, default) -> None:
 def test_native_int_default_out_of_range_with_unvalidated_does_not_fail(
     field_type, default
 ) -> None:
-    @dcs.dataclass(size='native', byteorder='native', validate_defaults=False)
+    @dcs.dataclass_struct(
+        size='native',
+        byteorder='native',
+        validate_defaults=False,
+    )
     class Class:
         x: field_type = default
 
@@ -325,7 +333,7 @@ def test_std_int_default_wrong_type_fails(
     int_type, byteorder, default
 ) -> None:
     with pytest.raises(TypeError):
-        @dcs.dataclass(size='std', byteorder=byteorder)
+        @dcs.dataclass_struct(size='std', byteorder=byteorder)
         class _:
             x: int_type = default
 
@@ -334,7 +342,7 @@ def test_std_int_default_wrong_type_fails(
 @parametrize_invalid_int_defaults
 def test_native_int_default_wrong_type_fails(int_type, default) -> None:
     with pytest.raises(TypeError):
-        @dcs.dataclass(size='std', byteorder='native')
+        @dcs.dataclass_struct(size='std', byteorder='native')
         class _:
             x: int_type = default
 
@@ -342,7 +350,7 @@ def test_native_int_default_wrong_type_fails(int_type, default) -> None:
 @parametrize_all_sizes_and_byteorders()
 @parametrize_fields(char_fields, 'char_field')
 def test_char_default(byteorder, size, char_field) -> None:
-    @dcs.dataclass(byteorder=byteorder, size=size)
+    @dcs.dataclass_struct(byteorder=byteorder, size=size)
     class Test:
         field: char_field = b'1'
 
@@ -353,7 +361,7 @@ def test_char_default(byteorder, size, char_field) -> None:
 @parametrize_fields(char_fields, 'field_type')
 def test_char_default_wrong_type_fails(byteorder, size, field_type) -> None:
     with pytest.raises(TypeError):
-        @dcs.dataclass(byteorder=byteorder, size=size)
+        @dcs.dataclass_struct(byteorder=byteorder, size=size)
         class _:
             x: field_type = 's'
 
@@ -362,7 +370,7 @@ def test_char_default_wrong_type_fails(byteorder, size, field_type) -> None:
 @pytest.mark.parametrize('c', (b'', b'ab'))
 def test_char_default_wrong_length_fails(byteorder, size, c: bytes) -> None:
     with pytest.raises(ValueError):
-        @dcs.dataclass(byteorder=byteorder, size=size)
+        @dcs.dataclass_struct(byteorder=byteorder, size=size)
         class _:
             x: dcs.Char = c
 
@@ -370,7 +378,7 @@ def test_char_default_wrong_length_fails(byteorder, size, c: bytes) -> None:
 @parametrize_all_sizes_and_byteorders()
 @parametrize_fields(char_fields, 'char_field')
 def test_bytes_array_default(byteorder, size, char_field) -> None:
-    @dcs.dataclass(byteorder=byteorder, size=size)
+    @dcs.dataclass_struct(byteorder=byteorder, size=size)
     class Test:
         field: Annotated[char_field, 10] = b'123'
 
@@ -380,7 +388,7 @@ def test_bytes_array_default(byteorder, size, char_field) -> None:
 @parametrize_all_sizes_and_byteorders()
 def test_bytes_array_default_too_long_fails(byteorder, size) -> None:
     with pytest.raises(ValueError):
-        @dcs.dataclass(byteorder=byteorder, size=size)
+        @dcs.dataclass_struct(byteorder=byteorder, size=size)
         class _:
             x: Annotated[bytes, 8] = b'123456789'
 
@@ -389,7 +397,7 @@ def test_bytes_array_default_too_long_fails(byteorder, size) -> None:
 @parametrize_fields(float_fields, 'float_field')
 @pytest.mark.parametrize('default', (10, 10.12))
 def test_float_default(size, byteorder, float_field, default) -> None:
-    @dcs.dataclass(byteorder=byteorder, size=size)
+    @dcs.dataclass_struct(byteorder=byteorder, size=size)
     class Test:
         field: float_field = default
 
@@ -403,7 +411,7 @@ def test_float_default_wrong_type_fails(
     byteorder, size, float_field, default
 ) -> None:
     with pytest.raises(TypeError):
-        @dcs.dataclass(byteorder=byteorder, size=size)
+        @dcs.dataclass_struct(byteorder=byteorder, size=size)
         class _:
             x: float_field = default  # type: ignore
 
@@ -411,7 +419,7 @@ def test_float_default_wrong_type_fails(
 @parametrize_all_sizes_and_byteorders()
 @parametrize_fields(bool_fields, 'bool_field')
 def test_bool_default(byteorder, size, bool_field) -> None:
-    @dcs.dataclass(byteorder=byteorder, size=size)
+    @dcs.dataclass_struct(byteorder=byteorder, size=size)
     class Test:
         field: bool_field = False
 
@@ -422,7 +430,7 @@ def test_bool_default(byteorder, size, bool_field) -> None:
 @pytest.mark.parametrize('default', ('wrong', '1.5', None, 'False'))
 def test_bool_default_wrong_type_fails(byteorder, size, default) -> None:
     with pytest.raises(TypeError):
-        @dcs.dataclass(byteorder=byteorder, size=size)
+        @dcs.dataclass_struct(byteorder=byteorder, size=size)
         class _:
             x: bool = default
 
@@ -430,7 +438,7 @@ def test_bool_default_wrong_type_fails(byteorder, size, default) -> None:
 @parametrize_all_sizes_and_byteorders()
 def test_invalid_annotated_fails(byteorder, size) -> None:
     with pytest.raises(TypeError):
-        @dcs.dataclass(byteorder=byteorder, size=size)
+        @dcs.dataclass_struct(byteorder=byteorder, size=size)
         class _:
             x: Annotated[int, dcs.I64]
 
@@ -438,6 +446,6 @@ def test_invalid_annotated_fails(byteorder, size) -> None:
 @parametrize_all_sizes_and_byteorders()
 def test_bytes_with_too_many_annotations_fails(byteorder, size) -> None:
     with pytest.raises(TypeError, match=r'^too many annotations: 12$'):
-        @dcs.dataclass(byteorder=byteorder, size=size)
+        @dcs.dataclass_struct(byteorder=byteorder, size=size)
         class _:
             x: Annotated[bytes, 1, 12]

@@ -16,14 +16,14 @@ from typing import Annotated  # use typing_extensions on Python <3.9, or import
                               # from dataclasses_struct
 import dataclasses_struct as dcs
 
-@dcs.dataclass()
+@dcs.dataclass_struct()
 class Test:
     x: int
     y: float
     z: dcs.UnsignedShort
     s: Annotated[bytes, 10]  # fixed-length byte array of length 10
 
-@dcs.dataclass()
+@dcs.dataclass_struct()
 class Container:
     test1: Test
     test2: Test
@@ -66,12 +66,12 @@ plugins = dataclasses_struct.ext.mypy_plugin
 
 ## Usage
 
-Use the `dataclass` decorator to convert a class into a [stdlib
+Use the `dataclass_struct` decorator to convert a class into a [stdlib
 `dataclass`](https://docs.python.org/3/library/dataclasses.html) with struct
 packing/unpacking functionality:
 
 ```python
-def dataclass(
+def dataclass_struct(
     *,
     size: str = 'native',
     byteorder: str = 'native',
@@ -113,13 +113,14 @@ allowable value range. For example,
 ```python3
 import dataclasses_struct as dcs
 
-@dcs.dataclass()
+@dcs.dataclass_struct()
 class Test:
     x: dcs.U8 = -1
 ```
 
 will raise a `ValueError`. This can be disabled by passing
-`validate_defaults=False` to the `dataclasses_struct.dataclass` decorator.
+`validate_defaults=False` to the `dataclasses_struct.dataclass_struct`
+decorator.
 
 ### Native size mode
 
@@ -132,7 +133,7 @@ In `native` size mode, integer type sizes follow those of the standard C integer
 types of the platform (`int`, `unsigned short` etc.).
 
 ```python
-@dcs.dataclass()  # defaults to size=`native`, byteorder=`native`
+@dcs.dataclass_struct()  # defaults to size=`native`, byteorder=`native`
 class NativeStruct:
     signed_char: dcs.SignedChar
     signed_short: dcs.Short
@@ -156,7 +157,7 @@ orders, it is appropriate for marshalling data across different platforms, which
 may have different alignment, byte ordering, and integer type sizes.
 
 ```python
-@dcs.dataclass()  # defaults to size=`native`, byteorder=`native`
+@dcs.dataclass_struct()  # defaults to size=`native`, byteorder=`native`
 class NativeStruct:
     int8_t: dcs.I8
     uint64_t: dcs.U64
@@ -225,7 +226,7 @@ field with the builtin `bytes` type or the `dataclasses_struct.Char` type. The
 field's unpacked Python representation will be a `bytes` of length 1.
 
 ```python
-@dcs.dataclass()
+@dcs.dataclass_struct()
 class Chars:
     char: dcs.Char = b'x'
     builtin: bytes = b'\x04'
@@ -239,7 +240,7 @@ specified length.
 ```python
 from typing import Annotated
 
-@dcs.dataclass()
+@dcs.dataclass_struct()
 class FixedLength:
     fixed: Annotated[bytes, 10]
 ```
