@@ -9,7 +9,9 @@
 
 struct test {
 #ifdef TEST_NATIVE_INTS
+    // TODO: test with native ints (int, long, short etc.)
 #else
+    // TODO: test with stdint types
 #endif
     double double_test;
     char str_test[13];
@@ -33,11 +35,10 @@ int main(const int argc, const char *argv[])
         return 1;
     }
 
-    if (fwrite(&t, sizeof(t), 1, fp) != 1) {
+    int ret = fwrite(&t, sizeof(t), 1, fp) != 1;
+    if (ret) {
         fprintf(stderr, "write error\n");
-        return 1;
     }
-
     fclose(fp);
-    return 0;
+    return ret;
 }
