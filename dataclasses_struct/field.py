@@ -1,6 +1,6 @@
 import abc
 import ctypes
-from typing import Generic, Literal, Tuple, Type, TypeVar, Union
+from typing import ClassVar, Generic, Literal, Tuple, Type, TypeVar, Union
 
 T = TypeVar('T')
 
@@ -82,7 +82,7 @@ class IntField(Field[int]):
 
 class StdIntField(IntField):
     is_native = False
-    _unsigned_formats = {
+    _unsigned_formats: ClassVar = {
         1: 'B',
         2: 'H',
         4: 'I',
