@@ -49,7 +49,7 @@ flake8 = "^7.0.0"
 [tool.pytest.ini_options]
 testpaths = ["test"]
 markers = [
-	"cc: marks a test as requiring a C compiler"
+    "cc: marks a test as requiring a C compiler"
 ]
 
 
@@ -64,11 +64,11 @@ target-version = "py38"
 
 [tool.ruff.lint]
 select = [
-	"E", "W", # pycodestyle errors and warnings
-	"F", # pyflakes
-	"I", # isort
+    "E", "W", # pycodestyle errors and warnings
+    "F", # pyflakes
+    "I", # isort
     "RUF", # ruff-specific
-	"UP", # pyupgrade
+    "UP", # pyupgrade
 ]
 
 
