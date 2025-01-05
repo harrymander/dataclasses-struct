@@ -133,7 +133,7 @@ In `native` size mode, integer type sizes follow those of the standard C integer
 types of the platform (`int`, `unsigned short` etc.).
 
 ```python
-@dcs.dataclass_struct()  # defaults to size=`native`, byteorder=`native`
+@dcs.dataclass_struct()  # defaults to size='native', byteorder='native'
 class NativeStruct:
     signed_char: dcs.SignedChar
     signed_short: dcs.Short
@@ -157,7 +157,7 @@ orders, it is appropriate for marshalling data across different platforms, which
 may have different alignment, byte ordering, and integer type sizes.
 
 ```python
-@dcs.dataclass_struct()  # defaults to size=`native`, byteorder=`native`
+@dcs.dataclass_struct()  # defaults to size='native', byteorder='native'
 class NativeStruct:
     int8_t: dcs.I8
     uint64_t: dcs.U64
