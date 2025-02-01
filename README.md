@@ -259,27 +259,27 @@ from based on the Python version.
 
 Pull requests are welcomed!
 
-This project uses [Poetry](https://python-poetry.org/) as its build system. To
-install all dependencies (including development dependencies) into a virtualenv
-for local development:
+This project uses [uv](https://docs.astral.sh/uv/) for packaging and dependency
+management. To install all dependencies (including development dependencies)
+into a virtualenv for local development:
 
 ```
-poetry install --with dev
+uv sync
 ```
 
 Uses `pytest` for testing:
 
 ```
-poetry run pytest
+uv run pytest
 ```
 
-(Omit the `poetry run` if the Poetry virtualenv is activated.)
+(You may omit the `uv run` if the virtualenv is activated.)
 
 Uses `ruff` and `flake8` for linting, which is enforced on pull requests:
 
 ```
-poetry run ruff check .
-poetry run flake8
+uv run ruff check
+uv run flake8 --exclude .venv
 ```
 
 See `pyproject.toml` for the list of enabled checks. I recommend installing the
@@ -293,4 +293,4 @@ pre-commit install
 This will help speed-up pull requests by reducing the chance of failing CI
 checks.
 
-PRs must also pass `mypy` checks (`poetry run mypy`).
+PRs must also pass `mypy` checks (`uv run mypy`).
