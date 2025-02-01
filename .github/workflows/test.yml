@@ -41,7 +41,7 @@ jobs:
 
       - name: Lint
         run: |
-          uv run --locked flake8 --exclude .venv
+          uv run --locked flake8
           uv run --locked ruff check
 
       - name: Python type checking

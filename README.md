@@ -279,7 +279,7 @@ Uses `ruff` and `flake8` for linting, which is enforced on pull requests:
 
 ```
 uv run ruff check
-uv run flake8 --exclude .venv
+uv run flake8
 ```
 
 See `pyproject.toml` for the list of enabled checks. I recommend installing the
