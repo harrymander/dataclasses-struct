@@ -6,9 +6,6 @@ readme = "README.md"
 authors = [
     { name = "Harry Mander", email = "harrymander96@gmail.com" }
 ]
-homepage = "https://github.com/harrymander/dataclasses-struct"
-repository = "https://github.com/harrymander/dataclasses-struct"
-documentation = "https://github.com/harrymander/dataclasses-struct/blob/main/README.md#usage"
 classifiers = [
     "Development Status :: 4 - Beta",
     "Programming Language :: Python",
@@ -33,6 +30,11 @@ requires-python = ">=3.8.1"
 dependencies = [
     "typing-extensions>=4.12.2 ; python_full_version < '3.11'",
 ]
+
+[project.urls]
+Homepage = "https://github.com/harrymander/dataclasses-struct"
+Repository = "https://github.com/harrymander/dataclasses-struct"
+Documentation = "https://github.com/harrymander/dataclasses-struct/blob/main/README.md#usage"
 
 [dependency-groups]
 dev = [
