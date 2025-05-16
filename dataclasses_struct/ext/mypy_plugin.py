@@ -5,7 +5,7 @@ from mypy.plugin import ClassDefContext
 from mypy.plugin import Plugin as BasePlugin
 from mypy.plugins.common import add_attribute_to_class, add_method_to_class
 from mypy.plugins.dataclasses import dataclass_class_maker_callback
-from mypy.types import TypeType, TypeVarType
+from mypy.types import TypeType, TypeVarId, TypeVarType
 
 DATACLASS_STRUCT_DECORATOR = 'dataclasses_struct.dataclass.dataclass'
 
@@ -15,7 +15,7 @@ def transform_dataclass_struct(ctx: ClassDefContext) -> bool:
     tvd = TypeVarType(
         'T',
         f'{ctx.cls.info.fullname}.T',
-        -1,
+        TypeVarId(TypeVarId.next_raw_id),
         [],
         ctx.api.named_type('builtins.object'),
         ctx.api.named_type('builtins.object'),
