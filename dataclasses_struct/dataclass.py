@@ -375,11 +375,11 @@ def dataclass_struct(
     is_native = size == 'native'
     if is_native:
         if byteorder != 'native':
-            raise TypeError("'native' size requires 'native' byteorder")
+            raise ValueError("'native' size requires 'native' byteorder")
     elif size != 'std':
-        raise TypeError(f'invalid size: {size}')
+        raise ValueError(f'invalid size: {size}')
     if byteorder not in ('native', 'big', 'little', 'network'):
-        raise TypeError(f'invalid byteorder: {byteorder}')
+        raise ValueError(f'invalid byteorder: {byteorder}')
 
     def decorator(cls: type) -> type:
         return _make_class(

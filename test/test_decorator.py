@@ -1,4 +1,5 @@
 import dataclasses
+import re
 
 import pytest
 from conftest import parametrize_all_sizes_and_byteorders
@@ -7,7 +8,8 @@ import dataclasses_struct as dcs
 
 
 def test_no_parens_fails():
-    with pytest.raises(TypeError):
+    msg = 'dataclass_struct() takes 0 positional arguments but 1 was given'
+    with pytest.raises(TypeError, match=rf'^{re.escape(msg)}$'):
         @dcs.dataclass_struct
         class _:  # type: ignore
             pass
@@ -33,7 +35,7 @@ def test_no_parens_fails():
     )
 )
 def test_invalid_decorator_args(kwargs):
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         @dcs.dataclass_struct(**kwargs)
         class _:
             pass
