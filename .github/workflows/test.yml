@@ -46,7 +46,7 @@ jobs:
 
       - name: Lint
         run: |
-          uv run flake8
+          uv run ruff format --check
           uv run ruff check
 
       - name: Python type checking

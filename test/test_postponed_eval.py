@@ -5,7 +5,7 @@ from dataclasses_struct import Annotated
 
 
 def test_postponed() -> None:
-    @dcs.dataclass_struct(size='std')
+    @dcs.dataclass_struct(size="std")
     class _:
         a: dcs.Char
         b: dcs.I8

@@ -2,12 +2,12 @@ from typing import Callable
 
 import pytest
 
-STD_BYTEORDERS = ('native', 'big', 'little', 'network')
-NATIVE_BYTEORDERS = ('native',)
+STD_BYTEORDERS = ("native", "big", "little", "network")
+NATIVE_BYTEORDERS = ("native",)
 
 ALL_VALID_SIZE_BYTEORDER_PAIRS = (
-    *(('native', e) for e in NATIVE_BYTEORDERS),
-    *(('std', e) for e in STD_BYTEORDERS)
+    *(("native", e) for e in NATIVE_BYTEORDERS),
+    *(("std", e) for e in STD_BYTEORDERS),
 )
 
 
@@ -15,7 +15,7 @@ ParametrizeDecorator = Callable[[Callable], pytest.MarkDecorator]
 
 
 def parametrize_std_byteorders(
-    argname: str = 'byteorder'
+    argname: str = "byteorder",
 ) -> ParametrizeDecorator:
     def mark(f) -> pytest.MarkDecorator:
         return pytest.mark.parametrize(argname, STD_BYTEORDERS)(f)
@@ -24,12 +24,12 @@ def parametrize_std_byteorders(
 
 
 def parametrize_all_sizes_and_byteorders(
-    size_argname: str = 'size', byteorder_argname: str = 'byteorder'
+    size_argname: str = "size", byteorder_argname: str = "byteorder"
 ) -> ParametrizeDecorator:
     def mark(f) -> pytest.MarkDecorator:
         return pytest.mark.parametrize(
-            ','.join((size_argname, byteorder_argname)),
-            ALL_VALID_SIZE_BYTEORDER_PAIRS
+            ",".join((size_argname, byteorder_argname)),
+            ALL_VALID_SIZE_BYTEORDER_PAIRS,
         )(f)
 
     return mark

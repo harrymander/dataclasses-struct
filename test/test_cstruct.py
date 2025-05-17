@@ -11,35 +11,40 @@ def run(*args: str) -> None:
     subprocess.run(args, check=True)
 
 
-if sys.platform.startswith('win'):
+if sys.platform.startswith("win"):
+
     def _compile_cstruct(outdir: Path, native: bool) -> Path:
-        exe_path = outdir / 'struct-tester.exe'
+        exe_path = outdir / "struct-tester.exe"
         run(
-            'cl.exe',
-            'test\\struct.c',
-            f'/Fo:{outdir}',
-            '/WX',
-            f'/{"D" if native else "U"}TEST_NATIVE_INTS',
-            '/link', f'/out:{exe_path}',
+            "cl.exe",
+            "test\\struct.c",
+            f"/Fo:{outdir}",
+            "/WX",
+            f"/{'D' if native else 'U'}TEST_NATIVE_INTS",
+            "/link",
+            f"/out:{exe_path}",
         )
         return exe_path
 
 else:
+
     def _compile_cstruct(outdir: Path, native: bool) -> Path:
-        exe_path = outdir / 'struct-tester'
+        exe_path = outdir / "struct-tester"
         run(
-            'cc',
-            '-o', str(exe_path),
-            'test/struct.c',
-            '-Wall', '-Werror',
-            f'-{"D" if native else "U"}TEST_NATIVE_INTS',
+            "cc",
+            "-o",
+            str(exe_path),
+            "test/struct.c",
+            "-Wall",
+            "-Werror",
+            f"-{'D' if native else 'U'}TEST_NATIVE_INTS",
         )
         return exe_path
 
 
 def _cstruct(tmp_path: Path, native: bool) -> Path:
     exe = _compile_cstruct(tmp_path, native)
-    outpath = tmp_path / 'struct'
+    outpath = tmp_path / "struct"
     run(str(exe), str(outpath))
     return outpath
 

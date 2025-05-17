@@ -25,10 +25,10 @@ else:
 
 
 __all__ = [
-    'Annotated',
-    'TypeGuard',
-    'dataclass_transform',
-    'get_args',
-    'get_origin',
-    'get_type_hints',
+    "Annotated",
+    "TypeGuard",
+    "dataclass_transform",
+    "get_args",
+    "get_origin",
+    "get_type_hints",
 ]

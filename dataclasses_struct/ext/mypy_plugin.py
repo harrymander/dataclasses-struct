@@ -7,25 +7,25 @@ from mypy.plugins.common import add_attribute_to_class, add_method_to_class
 from mypy.plugins.dataclasses import dataclass_class_maker_callback
 from mypy.types import TypeType, TypeVarId, TypeVarType
 
-DATACLASS_STRUCT_DECORATOR = 'dataclasses_struct.dataclass.dataclass_struct'
+DATACLASS_STRUCT_DECORATOR = "dataclasses_struct.dataclass.dataclass_struct"
 
 
 def transform_dataclass_struct(ctx: ClassDefContext) -> bool:
-    bytes_type = ctx.api.named_type('builtins.bytes')
+    bytes_type = ctx.api.named_type("builtins.bytes")
     tvd = TypeVarType(
-        'T',
-        f'{ctx.cls.info.fullname}.T',
+        "T",
+        f"{ctx.cls.info.fullname}.T",
         TypeVarId(-1),
         [],
-        ctx.api.named_type('builtins.object'),
-        ctx.api.named_type('builtins.object'),
+        ctx.api.named_type("builtins.object"),
+        ctx.api.named_type("builtins.object"),
     )
-    add_method_to_class(ctx.api, ctx.cls, 'pack', [], bytes_type)
+    add_method_to_class(ctx.api, ctx.cls, "pack", [], bytes_type)
     add_method_to_class(
         ctx.api,
         ctx.cls,
-        'from_packed',
-        [Argument(Var('data', bytes_type), bytes_type, None, ArgKind.ARG_POS)],
+        "from_packed",
+        [Argument(Var("data", bytes_type), bytes_type, None, ArgKind.ARG_POS)],
         tvd,
         self_type=TypeType(tvd),
         tvar_def=tvd,
@@ -34,9 +34,10 @@ def transform_dataclass_struct(ctx: ClassDefContext) -> bool:
     add_attribute_to_class(
         ctx.api,
         ctx.cls,
-        '__dataclass_struct__',
+        "__dataclass_struct__",
         ctx.api.named_type(
-            'dataclasses_struct.dataclass._DataclassStructInternal'),
+            "dataclasses_struct.dataclass._DataclassStructInternal"
+        ),
         is_classvar=True,
     )
 

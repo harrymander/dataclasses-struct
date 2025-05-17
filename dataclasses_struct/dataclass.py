@@ -37,22 +37,22 @@ def _get_padding_and_field(fields):
         elif isinstance(f, PadAfter):
             pad_after += f.size
         elif field is not None:
-            raise TypeError(f'too many annotations: {f}')
+            raise TypeError(f"too many annotations: {f}")
         else:
             field = f
 
     return pad_before, pad_after, field
 
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 _SIZE_BYTEORDER_MODE_CHAR: Dict[Tuple[str, str], str] = {
-    ('native', 'native'): '@',
-    ('std', 'native'): '=',
-    ('std', 'little'): '<',
-    ('std', 'big'): '>',
-    ('std', 'network'): '!',
+    ("native", "native"): "@",
+    ("std", "native"): "=",
+    ("std", "little"): "<",
+    ("std", "big"): ">",
+    ("std", "network"): "!",
 }
 _MODE_CHAR_SIZE_BYTEORDER: Dict[str, Tuple[str, str]] = {
     v: k for k, v in _SIZE_BYTEORDER_MODE_CHAR.items()
@@ -132,18 +132,20 @@ class DataclassStructProtocol(Protocol):
 
 
 @overload
-def is_dataclass_struct(obj: type) -> TypeGuard[Type[DataclassStructProtocol]]:
-    ...
+def is_dataclass_struct(
+    obj: type,
+) -> TypeGuard[Type[DataclassStructProtocol]]: ...
 
 
 @overload
-def is_dataclass_struct(obj: object) -> TypeGuard[DataclassStructProtocol]:
-    ...
+def is_dataclass_struct(obj: object) -> TypeGuard[DataclassStructProtocol]: ...
 
 
-def is_dataclass_struct(obj: Union[type, object]) -> Union[
+def is_dataclass_struct(
+    obj: Union[type, object],
+) -> Union[
     TypeGuard[DataclassStructProtocol],
-    TypeGuard[Type[DataclassStructProtocol]]
+    TypeGuard[Type[DataclassStructProtocol]],
 ]:
     """
     Returns True if obj is a class that has been decorated with
@@ -151,7 +153,7 @@ def is_dataclass_struct(obj: Union[type, object]) -> Union[
     """
     return (
         dataclasses.is_dataclass(obj)
-        and hasattr(obj, '__dataclass_struct__')
+        and hasattr(obj, "__dataclass_struct__")
         and isinstance(obj.__dataclass_struct__, _DataclassStructInternal)
     )
 
@@ -162,7 +164,7 @@ def get_struct_size(cls_or_obj) -> int:
     Accepts either a class or an instance of a dataclass_struct.
     """
     if not is_dataclass_struct(cls_or_obj):
-        raise TypeError(f'{cls_or_obj} is not a dataclass_struct')
+        raise TypeError(f"{cls_or_obj} is not a dataclass_struct")
     return cls_or_obj.__dataclass_struct__.size
 
 
@@ -171,19 +173,19 @@ class _BytesField(Field[bytes]):
 
     def __init__(self, n: int):
         if n < 1:
-            raise ValueError('n must be positive non-zero integer')
+            raise ValueError("n must be positive non-zero integer")
 
         self.n = n
 
     def format(self) -> str:
-        return f'{self.n}s'
+        return f"{self.n}s"
 
     def validate_default(self, val: bytes) -> None:
         if len(val) > self.n:
-            raise ValueError(f'bytes cannot be longer than {self.n} bytes')
+            raise ValueError(f"bytes cannot be longer than {self.n} bytes")
 
     def __repr__(self) -> str:
-        return f'{super().__repr__()}({self.n})'
+        return f"{super().__repr__()}({self.n})"
 
 
 class _NestedField(Field):
@@ -249,41 +251,43 @@ does not match that of container (expected '{exp_size}' size and \
         else:
             field = builtin_fields.get(type_)
             if field is None:
-                raise TypeError(f'type not supported: {field_type}')
+                raise TypeError(f"type not supported: {field_type}")
 
     if issubclass(type_, bytes) and isinstance(field, int):
         # Annotated[bytes, <positive non-zero integer>] is a byte array
         field = _BytesField(field)
     elif not isinstance(field, Field):
-        raise TypeError(f'invalid field annotation: {field}')
+        raise TypeError(f"invalid field annotation: {field}")
 
     if not issubclass(type_, field.field_type):
-        raise TypeError(f'type {type_} not supported for field: {field}')
+        raise TypeError(f"type {type_} not supported for field: {field}")
 
     if is_native:
         if not field.is_native:
             raise TypeError(
-                f'field {field} only supported in standard size mode'
+                f"field {field} only supported in standard size mode"
             )
     elif not field.is_std:
-        raise TypeError(f'field {field} only supported in native size mode')
+        raise TypeError(f"field {field} only supported in native size mode")
 
     if validate_defaults and hasattr(cls, name):
         val = getattr(cls, name)
         if not isinstance(val, field.field_type):
             raise TypeError(
-                'invalid type for field: expected '
-                f'{field.field_type} got {type(val)}'
+                "invalid type for field: expected "
+                f"{field.field_type} got {type(val)}"
             )
         field.validate_default(val)
 
     return (
-        ''.join((
-            (f'{pad_before}x' if pad_before else ''),
-            field.format(),
-            (f'{pad_after}x' if pad_after else ''),
-        )),
-        type_
+        "".join(
+            (
+                (f"{pad_before}x" if pad_before else ""),
+                field.format(),
+                (f"{pad_after}x" if pad_after else ""),
+            )
+        ),
+        type_,
     )
 
 
@@ -296,7 +300,7 @@ def pack(self) -> bytes:
 
     scope: Dict[str, Any] = {}
     exec(func, {}, scope)
-    return scope['pack']
+    return scope["pack"]
 
 
 def _make_unpack_method(cls: type) -> classmethod:
@@ -306,9 +310,9 @@ def from_packed(cls, data: bytes) -> cls_type:
     return cls.__dataclass_struct__.unpack(data)
 """
 
-    scope: Dict[str, Any] = {'cls_type': cls}
+    scope: Dict[str, Any] = {"cls_type": cls}
     exec(func, {}, scope)
-    return classmethod(scope['from_packed'])
+    return classmethod(scope["from_packed"])
 
 
 def _make_class(
@@ -331,16 +335,16 @@ def _make_class(
 
     setattr(
         cls,
-        '__dataclass_struct__',
+        "__dataclass_struct__",
         _DataclassStructInternal(
-            ''.join(struct_format),
+            "".join(struct_format),
             cls,
             list(cls_annotations.keys()),
             fieldtypes,
-        )
+        ),
     )
-    setattr(cls, 'pack', _make_pack_method())
-    setattr(cls, 'from_packed', _make_unpack_method(cls))
+    setattr(cls, "pack", _make_pack_method())
+    setattr(cls, "from_packed", _make_unpack_method(cls))
 
     return dataclasses.dataclass(cls)
 
@@ -348,38 +352,36 @@ def _make_class(
 @overload
 def dataclass_struct(
     *,
-    size: Literal['native'] = 'native',
-    byteorder: Literal['native'] = 'native',
+    size: Literal["native"] = "native",
+    byteorder: Literal["native"] = "native",
     validate_defaults: bool = True,
-) -> Callable[[type], type]:
-    ...
+) -> Callable[[type], type]: ...
 
 
 @overload
 def dataclass_struct(
     *,
-    size: Literal['std'],
-    byteorder: Literal['native', 'big', 'little', 'network'] = 'native',
+    size: Literal["std"],
+    byteorder: Literal["native", "big", "little", "network"] = "native",
     validate_defaults: bool = True,
-) -> Callable[[type], type]:
-    ...
+) -> Callable[[type], type]: ...
 
 
 @dataclass_transform()
 def dataclass_struct(
     *,
-    size: str = 'native',
-    byteorder: str = 'native',
+    size: str = "native",
+    byteorder: str = "native",
     validate_defaults: bool = True,
 ) -> Callable[[type], type]:
-    is_native = size == 'native'
+    is_native = size == "native"
     if is_native:
-        if byteorder != 'native':
+        if byteorder != "native":
             raise ValueError("'native' size requires 'native' byteorder")
-    elif size != 'std':
-        raise ValueError(f'invalid size: {size}')
-    if byteorder not in ('native', 'big', 'little', 'network'):
-        raise ValueError(f'invalid byteorder: {byteorder}')
+    elif size != "std":
+        raise ValueError(f"invalid size: {size}")
+    if byteorder not in ("native", "big", "little", "network"):
+        raise ValueError(f"invalid byteorder: {byteorder}")
 
     def decorator(cls: type) -> type:
         return _make_class(

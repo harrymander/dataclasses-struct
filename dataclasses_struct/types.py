@@ -1,4 +1,3 @@
-
 from . import field
 from ._typing import Annotated
 
@@ -19,16 +18,16 @@ I64 = Annotated[int, field.SignedStdIntField(8)]
 U64 = Annotated[int, field.UnsignedStdIntField(8)]
 
 # Native integer types
-SignedChar = Annotated[int, field.NativeIntField('b', 'byte')]
-UnsignedChar = Annotated[int, field.NativeIntField('B', 'ubyte')]
-Short = Annotated[int, field.NativeIntField('h', 'short')]
-UnsignedShort = Annotated[int, field.NativeIntField('H', 'ushort')]
-Int = Annotated[int, field.NativeIntField('i', 'int')]
-UnsignedInt = Annotated[int, field.NativeIntField('I', 'uint')]
-Long = Annotated[int, field.NativeIntField('l', 'long')]
-UnsignedLong = Annotated[int, field.NativeIntField('L', 'ulong')]
-LongLong = Annotated[int, field.NativeIntField('q', 'longlong')]
-UnsignedLongLong = Annotated[int, field.NativeIntField('Q', 'ulonglong')]
+SignedChar = Annotated[int, field.NativeIntField("b", "byte")]
+UnsignedChar = Annotated[int, field.NativeIntField("B", "ubyte")]
+Short = Annotated[int, field.NativeIntField("h", "short")]
+UnsignedShort = Annotated[int, field.NativeIntField("H", "ushort")]
+Int = Annotated[int, field.NativeIntField("i", "int")]
+UnsignedInt = Annotated[int, field.NativeIntField("I", "uint")]
+Long = Annotated[int, field.NativeIntField("l", "long")]
+UnsignedLong = Annotated[int, field.NativeIntField("L", "ulong")]
+LongLong = Annotated[int, field.NativeIntField("q", "longlong")]
+UnsignedLongLong = Annotated[int, field.NativeIntField("Q", "ulonglong")]
 
 # Native size types
 UnsignedSize = Annotated[int, field.SizeField(signed=False)]
@@ -47,11 +46,11 @@ class _Padding:
 
     def __init__(self, size: int):
         if size < 0:
-            raise ValueError('size must be non-negative')
+            raise ValueError("size must be non-negative")
         self.size = size
 
     def __repr__(self) -> str:
-        return f'{type(self).__name__}({self.size})'
+        return f"{type(self).__name__}({self.size})"
 
 
 class PadBefore(_Padding):

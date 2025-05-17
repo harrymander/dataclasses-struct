@@ -2,7 +2,7 @@ import abc
 import ctypes
 from typing import ClassVar, Generic, Literal, Tuple, Type, TypeVar, Union
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class Field(abc.ABC, Generic[T]):
@@ -11,32 +11,31 @@ class Field(abc.ABC, Generic[T]):
     field_type: Union[Type[T], Tuple[Type[T], ...]]
 
     @abc.abstractmethod
-    def format(self) -> str:
-        ...
+    def format(self) -> str: ...
 
     def validate_default(self, val: T) -> None:
         pass
 
     def __repr__(self) -> str:
-        return f'{type(self).__name__}'
+        return f"{type(self).__name__}"
 
 
 class BoolField(Field[bool]):
     field_type = bool
 
     def format(self) -> str:
-        return '?'
+        return "?"
 
 
 class CharField(Field[bytes]):
     field_type = bytes
 
     def format(self) -> str:
-        return 'c'
+        return "c"
 
     def validate_default(self, val: bytes) -> None:
         if len(val) != 1:
-            raise ValueError('value must be a single byte')
+            raise ValueError("value must be a single byte")
 
 
 class IntField(Field[int]):
@@ -50,7 +49,7 @@ class IntField(Field[int]):
     ):
         if signed and fmt.isupper():
             raise ValueError(
-                'signed integer should have lowercase format string'
+                "signed integer should have lowercase format string"
             )
 
         self.signed = signed
@@ -71,22 +70,22 @@ class IntField(Field[int]):
 
     def validate_default(self, val: int) -> None:
         if not (self.min_ <= val <= self.max_):
-            sign = 'signed' if self.signed else 'unsigned'
+            sign = "signed" if self.signed else "unsigned"
             n = self.size * 8
-            raise ValueError(f'value out of range for {n}-bit {sign} integer')
+            raise ValueError(f"value out of range for {n}-bit {sign} integer")
 
     def __repr__(self) -> str:
-        sign = 'signed' if self.signed else 'unsigned'
-        return f'{super().__repr__()}({sign}, {self.size * 8}-bit)'
+        sign = "signed" if self.signed else "unsigned"
+        return f"{super().__repr__()}({sign}, {self.size * 8}-bit)"
 
 
 class StdIntField(IntField):
     is_native = False
     _unsigned_formats: ClassVar = {
-        1: 'B',
-        2: 'H',
-        4: 'I',
-        8: 'Q',
+        1: "B",
+        2: "H",
+        4: "I",
+        8: "Q",
     }
 
     def __init__(self, signed: bool, size: Literal[1, 2, 4, 8]):
@@ -110,22 +109,22 @@ class Float32Field(Field[float]):
     field_type = (int, float)
 
     def format(self) -> str:
-        return 'f'
+        return "f"
 
 
 class Float64Field(Field[float]):
     field_type = (int, float)
 
     def format(self) -> str:
-        return 'd'
+        return "d"
 
 
 class NativeIntField(IntField):
     is_std = False
 
     def __init__(self, fmt: str, ctype_name: str):
-        size = ctypes.sizeof(getattr(ctypes, f'c_{ctype_name}'))
-        signed = not ctype_name.startswith('u')
+        size = ctypes.sizeof(getattr(ctypes, f"c_{ctype_name}"))
+        signed = not ctype_name.startswith("u")
         super().__init__(fmt, signed, size)
 
 
@@ -133,32 +132,32 @@ class SizeField(IntField):
     is_std = False
 
     def __init__(self, signed: bool):
-        fmt = 'n' if signed else 'N'
+        fmt = "n" if signed else "N"
         size = ctypes.sizeof(ctypes.c_ssize_t if signed else ctypes.c_size_t)
         super().__init__(fmt, signed, size)
 
     def validate_default(self, val: int) -> None:
         if not (self.min_ <= val <= self.max_):
-            sign = 'signed' if self.signed else 'unsigned'
-            raise ValueError(f'value out of range for {sign} size type')
+            sign = "signed" if self.signed else "unsigned"
+            raise ValueError(f"value out of range for {sign} size type")
 
 
 class PointerField(IntField):
     is_std = False
 
     def __init__(self):
-        super().__init__('P', False, ctypes.sizeof(ctypes.c_void_p))
+        super().__init__("P", False, ctypes.sizeof(ctypes.c_void_p))
 
     def format(self) -> str:
-        return 'P'
+        return "P"
 
     def validate_default(self, val: int) -> None:
         if not (self.min_ <= val <= self.max_):
-            raise ValueError('value out of range for system pointer')
+            raise ValueError("value out of range for system pointer")
 
 
 builtin_fields = {
-    int: NativeIntField('i', 'int'),
+    int: NativeIntField("i", "int"),
     float: Float64Field(),
     bool: BoolField(),
     bytes: CharField(),
