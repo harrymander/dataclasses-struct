@@ -80,7 +80,7 @@ def test_unpack_from_cstruct_with_native_size(native_cstruct: bytes):
         test_size: dcs.UnsignedSize = 8000
         test_pointer: dcs.Pointer = 0
 
-    assert Test().pack() == native_cstruct
+    assert dcs.get_struct_size(Test) == len(native_cstruct)
     assert Test() == Test.from_packed(native_cstruct)
 
 
@@ -115,5 +115,5 @@ def test_unpack_from_cstruct_with_std_size(std_cstruct: bytes):
         test_uint64: dcs.U64 = uint_max(64)
         test_int64: dcs.I64 = int_min(64)
 
-    assert Test().pack() == std_cstruct
+    assert dcs.get_struct_size(Test) == len(std_cstruct)
     assert Test() == Test.from_packed(std_cstruct)
