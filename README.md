@@ -275,11 +275,11 @@ uv run pytest
 
 (You may omit the `uv run` if the virtualenv is activated.)
 
-Uses `ruff` and `flake8` for linting, which is enforced on pull requests:
+Uses `ruff` for linting and formatting, which is enforced on pull requests:
 
 ```
+uv run ruff format
 uv run ruff check
-uv run flake8
 ```
 
 See `pyproject.toml` for the list of enabled checks. I recommend installing the
