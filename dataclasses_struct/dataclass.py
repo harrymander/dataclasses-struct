@@ -2,28 +2,21 @@ import dataclasses
 from collections.abc import Generator, Iterator
 from struct import Struct
 from typing import (
+    Annotated,
     Any,
     Callable,
-    Dict,
     Generic,
-    List,
     Literal,
     Protocol,
-    Tuple,
-    Type,
     TypeVar,
     Union,
-    overload,
-)
-
-from ._typing import (
-    Annotated,
-    TypeGuard,
-    dataclass_transform,
     get_args,
     get_origin,
     get_type_hints,
+    overload,
 )
+
+from ._typing import TypeGuard, dataclass_transform
 from .field import Field, builtin_fields
 from .types import PadAfter, PadBefore
 
@@ -47,23 +40,23 @@ def _get_padding_and_field(fields):
 T = TypeVar("T")
 
 
-_SIZE_BYTEORDER_MODE_CHAR: Dict[Tuple[str, str], str] = {
+_SIZE_BYTEORDER_MODE_CHAR: dict[tuple[str, str], str] = {
     ("native", "native"): "@",
     ("std", "native"): "=",
     ("std", "little"): "<",
     ("std", "big"): ">",
     ("std", "network"): "!",
 }
-_MODE_CHAR_SIZE_BYTEORDER: Dict[str, Tuple[str, str]] = {
+_MODE_CHAR_SIZE_BYTEORDER: dict[str, tuple[str, str]] = {
     v: k for k, v in _SIZE_BYTEORDER_MODE_CHAR.items()
 }
 
 
 class _DataclassStructInternal(Generic[T]):
     struct: Struct
-    cls: Type[T]
-    _fieldnames: List[str]
-    _fieldtypes: List[type]
+    cls: type[T]
+    _fieldnames: list[str]
+    _fieldtypes: list[type]
 
     @property
     def format(self) -> str:
@@ -81,15 +74,15 @@ class _DataclassStructInternal(Generic[T]):
         self,
         fmt: str,
         cls: type,
-        fieldnames: List[str],
-        fieldtypes: List[type],
+        fieldnames: list[str],
+        fieldtypes: list[type],
     ):
         self.struct = Struct(fmt)
         self.cls = cls
         self._fieldnames = fieldnames
         self._fieldtypes = fieldtypes
 
-    def _flattened_attrs(self, obj) -> List[Any]:
+    def _flattened_attrs(self, obj) -> list[Any]:
         """
         Returns a list of all attributes, including those of any nested structs
         """
@@ -126,7 +119,7 @@ class DataclassStructProtocol(Protocol):
     __dataclass_struct__: _DataclassStructInternal
 
     @classmethod
-    def from_packed(cls: Type[T], data: bytes) -> T: ...
+    def from_packed(cls: type[T], data: bytes) -> T: ...
 
     def pack(self) -> bytes: ...
 
@@ -134,7 +127,7 @@ class DataclassStructProtocol(Protocol):
 @overload
 def is_dataclass_struct(
     obj: type,
-) -> TypeGuard[Type[DataclassStructProtocol]]: ...
+) -> TypeGuard[type[DataclassStructProtocol]]: ...
 
 
 @overload
@@ -145,7 +138,7 @@ def is_dataclass_struct(
     obj: Union[type, object],
 ) -> Union[
     TypeGuard[DataclassStructProtocol],
-    TypeGuard[Type[DataclassStructProtocol]],
+    TypeGuard[type[DataclassStructProtocol]],
 ]:
     """
     Returns True if obj is a class that has been decorated with
@@ -189,9 +182,9 @@ class _BytesField(Field[bytes]):
 
 
 class _NestedField(Field):
-    field_type: Type[DataclassStructProtocol]
+    field_type: type[DataclassStructProtocol]
 
-    def __init__(self, cls: Type[DataclassStructProtocol]):
+    def __init__(self, cls: type[DataclassStructProtocol]):
         self.field_type = cls
 
     def format(self) -> str:
@@ -206,7 +199,7 @@ def _validate_and_parse_field(
     is_native: bool,
     validate_defaults: bool,
     mode: str,
-) -> Tuple[str, type]:
+) -> tuple[str, type]:
     """
     name is the name of the attribute, f is its type annotation.
     """
@@ -300,7 +293,7 @@ def pack(self) -> bytes:
     return self.__dataclass_struct__.pack(self)
 """
 
-    scope: Dict[str, Any] = {}
+    scope: dict[str, Any] = {}
     exec(func, {}, scope)
     return scope["pack"]
 
@@ -312,14 +305,14 @@ def from_packed(cls, data: bytes) -> cls_type:
     return cls.__dataclass_struct__.unpack(data)
 """
 
-    scope: Dict[str, Any] = {"cls_type": cls}
+    scope: dict[str, Any] = {"cls_type": cls}
     exec(func, {}, scope)
     return classmethod(scope["from_packed"])
 
 
 def _make_class(
     cls: type, mode: str, is_native: bool, validate_defaults: bool
-) -> Type[DataclassStructProtocol]:
+) -> type[DataclassStructProtocol]:
     cls_annotations = get_type_hints(cls, include_extras=True)
     struct_format = [mode]
     fieldtypes = []

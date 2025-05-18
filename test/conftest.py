@@ -1,4 +1,5 @@
-from typing import Callable, Iterable, List, Tuple, Type
+from collections.abc import Iterable
+from typing import Callable
 
 import pytest
 
@@ -15,7 +16,7 @@ ALL_VALID_SIZE_BYTEORDER_PAIRS = (
 
 ParametrizeDecorator = Callable[[Callable], pytest.MarkDecorator]
 
-TestFields = List[Tuple[Type, str]]
+TestFields = list[tuple[type, str]]
 native_only_int_fields: TestFields = [
     (dcs.SignedChar, "b"),
     (dcs.UnsignedChar, "B"),

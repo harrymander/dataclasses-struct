@@ -2,7 +2,7 @@ import ctypes
 import dataclasses
 import itertools
 from re import escape
-from typing import Tuple
+from typing import Annotated
 
 import pytest
 from conftest import (
@@ -19,7 +19,6 @@ from conftest import (
 )
 
 import dataclasses_struct as dcs
-from dataclasses_struct import Annotated
 
 
 def assert_same_format(t1, t2) -> None:
@@ -168,7 +167,7 @@ def test_invalid_bytes_length_fails(size, byteorder, length: int) -> None:
             x: Annotated[bytes, length]
 
 
-def int_min_max(nbits: int, signed: bool) -> Tuple[int, int]:
+def int_min_max(nbits: int, signed: bool) -> tuple[int, int]:
     if signed:
         exp = 2 ** (nbits - 1)
         return -exp, exp - 1

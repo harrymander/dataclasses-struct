@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from typing import Annotated
+
 import dataclasses_struct as dcs
-from dataclasses_struct import Annotated
 
 
 def test_postponed() -> None:

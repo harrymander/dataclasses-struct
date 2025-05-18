@@ -1,5 +1,6 @@
 import itertools
 import struct
+from typing import Annotated
 
 import pytest
 from conftest import (
@@ -15,7 +16,6 @@ from conftest import (
 )
 
 import dataclasses_struct as dcs
-from dataclasses_struct import Annotated
 from dataclasses_struct.dataclass import dataclass_struct
 
 

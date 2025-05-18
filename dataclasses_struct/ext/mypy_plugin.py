@@ -1,4 +1,4 @@
-from typing import Callable, Optional, Type
+from typing import Callable, Optional
 
 from mypy.nodes import ArgKind, Argument, Var
 from mypy.plugin import ClassDefContext
@@ -58,5 +58,5 @@ class Plugin(BasePlugin):
         return None
 
 
-def plugin(version: str) -> Type[Plugin]:
+def plugin(version: str) -> type[Plugin]:
     return Plugin

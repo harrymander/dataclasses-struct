@@ -1,5 +1,6 @@
+from typing import Annotated
+
 from . import field
-from ._typing import Annotated
 
 # Single char type
 Char = bytes

@@ -18,7 +18,7 @@ jobs:
     needs: pre-commit-checks
     strategy:
       matrix:
-        pyversion: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        pyversion: ["3.9", "3.10", "3.11", "3.12", "3.13"]
         os: ["Ubuntu", "Windows", "macOS"]
         include:
           - os: Windows

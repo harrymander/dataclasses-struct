@@ -13,7 +13,6 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: PyPy",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -26,7 +25,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Typing :: Typed",
 ]
-requires-python = ">=3.8.1"
+requires-python = ">=3.9.0"
 dependencies = [
     "typing-extensions>=4.12.2 ; python_full_version < '3.11'",
 ]
@@ -62,7 +61,6 @@ omit = ["dataclasses_struct/ext/**/*.py", "dataclasses_struct/sizes.py"]
 
 [tool.ruff]
 line-length = 79
-target-version = "py38"
 
 [tool.ruff.lint]
 select = [

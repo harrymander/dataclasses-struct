@@ -12,8 +12,8 @@ A simple Python package that combines
 unpacking Python dataclasses to fixed-length `bytes` representations.
 
 ```python
-from typing import Annotated  # use typing_extensions on Python <3.9, or import
-                              # from dataclasses_struct
+from typing import Annotated
+
 import dataclasses_struct as dcs
 
 @dcs.dataclass_struct()
@@ -249,11 +249,6 @@ class FixedLength:
 >>> FixedLength.from_packed(FixedLength(b'Hello, world!').pack())
 FixedLength(fixed=b'Hello, wor')
 ```
-
-Note that `Annotated` was added in Python 3.9. For earlier versions, import from
-`typing_extensions`. Alternatively for convenience, it can be imported from the
-`dataclasses_struct` module, which will select the correct library to import
-from based on the Python version.
 
 ## Development and contributing
 
