@@ -2,13 +2,20 @@ import ctypes
 import dataclasses
 import itertools
 from re import escape
-from typing import Iterable, List, Tuple, Type
+from typing import Tuple
 
 import pytest
 from conftest import (
     ALL_VALID_SIZE_BYTEORDER_PAIRS,
+    bool_fields,
+    char_fields,
+    common_fields,
+    float_fields,
+    native_only_int_fields,
     parametrize_all_sizes_and_byteorders,
+    parametrize_fields,
     parametrize_std_byteorders,
+    std_only_int_fields,
 )
 
 import dataclasses_struct as dcs
@@ -19,57 +26,9 @@ def assert_same_format(t1, t2) -> None:
     assert t1.__dataclass_struct__.format == t2.__dataclass_struct__.format
 
 
-TestFields = List[Tuple[Type, str]]
-native_only_fields: TestFields = [
-    (dcs.SignedChar, "b"),
-    (dcs.UnsignedChar, "B"),
-    (dcs.Short, "h"),
-    (dcs.UnsignedShort, "H"),
-    (int, "i"),
-    (dcs.Int, "i"),
-    (dcs.UnsignedInt, "I"),
-    (dcs.Long, "l"),
-    (dcs.UnsignedLong, "L"),
-    (dcs.LongLong, "q"),
-    (dcs.UnsignedLongLong, "Q"),
-    (dcs.SignedSize, "n"),
-    (dcs.UnsignedSize, "N"),
-    (dcs.Pointer, "P"),
-]
-std_only_fields: TestFields = [
-    (dcs.U8, "B"),
-    (dcs.U16, "H"),
-    (dcs.U32, "I"),
-    (dcs.U64, "Q"),
-    (dcs.I8, "b"),
-    (dcs.I16, "h"),
-    (dcs.I32, "i"),
-    (dcs.I64, "q"),
-]
-float_fields: TestFields = [(dcs.F32, "f"), (dcs.F64, "d"), (float, "d")]
-bool_fields: TestFields = [(dcs.Bool, "?"), (bool, "?")]
-char_fields: TestFields = [(dcs.Char, "c"), (bytes, "c")]
-common_fields: TestFields = float_fields + bool_fields + char_fields
-
-
-def parametrize_fields(
-    fields: TestFields, field_argname: str, format_argname=None
-):
-    fields_iter: Iterable
-    if format_argname:
-        argnames = ",".join((field_argname, format_argname))
-        fields_iter = fields
-    else:
-        argnames = field_argname
-        fields_iter = (field[0] for field in fields)
-
-    def mark(f):
-        return pytest.mark.parametrize(argnames, fields_iter)(f)
-
-    return mark
-
-
-@parametrize_fields(native_only_fields + common_fields, "field_type", "fmt")
+@parametrize_fields(
+    native_only_int_fields + common_fields, "field_type", "fmt"
+)
 def test_native_size_field_has_correct_format(field_type, fmt) -> None:
     @dcs.dataclass_struct(byteorder="native", size="native")
     class Test:
@@ -78,7 +37,7 @@ def test_native_size_field_has_correct_format(field_type, fmt) -> None:
     assert Test.__dataclass_struct__.format[1:] == fmt
 
 
-@parametrize_fields(std_only_fields, "field_type")
+@parametrize_fields(std_only_int_fields, "field_type")
 def test_invalid_native_size_fields_fails(field_type) -> None:
     with pytest.raises(
         TypeError,
@@ -90,7 +49,7 @@ def test_invalid_native_size_fields_fails(field_type) -> None:
             field: field_type
 
 
-@parametrize_fields(std_only_fields + common_fields, "field_type", "fmt")
+@parametrize_fields(std_only_int_fields + common_fields, "field_type", "fmt")
 @parametrize_std_byteorders()
 def test_valid_std_size_field_has_correct_format(
     byteorder, field_type, fmt
@@ -102,7 +61,7 @@ def test_valid_std_size_field_has_correct_format(
     assert Test.__dataclass_struct__.format[1:] == fmt
 
 
-@parametrize_fields(native_only_fields, "field_type")
+@parametrize_fields(native_only_int_fields, "field_type")
 @parametrize_std_byteorders()
 def test_invalid_std_size_fields_fails(byteorder, field_type) -> None:
     with pytest.raises(
@@ -344,7 +303,7 @@ def parametrize_invalid_int_defaults(f):
     )(f)
 
 
-@parametrize_fields(std_only_fields, "int_type")
+@parametrize_fields(std_only_int_fields, "int_type")
 @parametrize_std_byteorders()
 @parametrize_invalid_int_defaults
 def test_std_int_default_wrong_type_fails(
@@ -357,7 +316,7 @@ def test_std_int_default_wrong_type_fails(
             x: int_type = default
 
 
-@parametrize_fields(native_only_fields, "int_type")
+@parametrize_fields(native_only_int_fields, "int_type")
 @parametrize_invalid_int_defaults
 def test_native_int_default_wrong_type_fails(int_type, default) -> None:
     with pytest.raises(TypeError, match=r"^invalid type for field:"):

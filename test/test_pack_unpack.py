@@ -1,47 +1,174 @@
+import itertools
 import struct
 
 import pytest
-from conftest import parametrize_all_sizes_and_byteorders
+from conftest import (
+    bool_fields,
+    char_fields,
+    float_fields,
+    native_byteorders,
+    native_only_int_fields,
+    parametrize_all_sizes_and_byteorders,
+    parametrize_fields,
+    std_byteorders,
+    std_only_int_fields,
+)
 
 import dataclasses_struct as dcs
 from dataclasses_struct import Annotated
+from dataclasses_struct.dataclass import dataclass_struct
 
 
-def test_pack_unpack_nested() -> None:
-    @dcs.dataclass_struct()
+@pytest.mark.parametrize(
+    "size,byteorder,field_type",
+    [
+        *(
+            ("native", byteorder, field_type[0])
+            for byteorder, field_type in itertools.product(
+                native_byteorders, native_only_int_fields
+            )
+        ),
+        *(
+            ("std", byteorder, field_type[0])
+            for byteorder, field_type in itertools.product(
+                std_byteorders, std_only_int_fields
+            )
+        ),
+    ],
+)
+def test_pack_unpack_int(size, byteorder, field_type) -> None:
+    @dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: field_type
+
+    t = T(1)
+    packed = t.pack()
+    unpacked = T.from_packed(packed)
+    assert type(unpacked.x) is int
+    assert t == unpacked
+
+
+@parametrize_all_sizes_and_byteorders()
+@parametrize_fields(float_fields, "field_type")
+@pytest.mark.parametrize("value", (1.5, 2.0, 2))
+def test_pack_unpack_floats(size, byteorder, field_type, value) -> None:
+    @dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: field_type
+
+    t = T(value)
+    packed = t.pack()
+    unpacked = T.from_packed(packed)
+    assert type(unpacked.x) is float
+    assert t == unpacked
+
+
+@parametrize_all_sizes_and_byteorders()
+@parametrize_fields(char_fields, "field_type")
+def test_pack_unpack_char(size, byteorder, field_type) -> None:
+    @dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: field_type
+
+    t = T(b"x")
+    packed = t.pack()
+    unpacked = T.from_packed(packed)
+    assert type(unpacked.x) is bytes
+    assert t == unpacked
+
+
+@parametrize_all_sizes_and_byteorders()
+@parametrize_fields(bool_fields, "field_type")
+@pytest.mark.parametrize("value", (True, False))
+def test_pack_unpack_bool(size, byteorder, field_type, value) -> None:
+    @dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: field_type
+
+    t = T(value)
+    packed = t.pack()
+    unpacked = T.from_packed(packed)
+    assert type(unpacked.x) is bool
+    assert t == unpacked
+
+
+@parametrize_all_sizes_and_byteorders()
+def test_pack_unpack_bytes_exact_length(size, byteorder) -> None:
+    @dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: Annotated[bytes, 3]
+
+    t = T(b"123")
+    packed = t.pack()
+    unpacked = T.from_packed(packed)
+    assert type(unpacked.x) is bytes
+    assert t == unpacked
+
+
+@parametrize_all_sizes_and_byteorders()
+def test_packed_bytes_longer_than_length_is_truncated(size, byteorder) -> None:
+    @dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: Annotated[bytes, 3]
+
+    t = T(b"12345")
+    packed = t.pack()
+    assert len(packed) == 3
+    unpacked = T.from_packed(packed)
+    assert unpacked.x == b"123"
+
+
+@parametrize_all_sizes_and_byteorders()
+def test_packed_bytes_shorter_than_length_is_zero_padded(
+    size, byteorder
+) -> None:
+    @dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: Annotated[bytes, 5]
+
+    t = T(b"123")
+    packed = t.pack()
+    assert len(packed) == 5
+    unpacked = T.from_packed(packed)
+    assert unpacked.x == b"123\0\0"
+
+
+@parametrize_all_sizes_and_byteorders()
+def test_pack_unpack_nested(size, byteorder) -> None:
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
     class Nested:
         x: float
         y: Annotated[bytes, 3]
 
     assert dcs.get_struct_size(Nested) == struct.calcsize("@ d3b")
 
-    @dcs.dataclass_struct()
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
     class Container:
         x: dcs.F32
         item1: Annotated[Nested, dcs.PadBefore(10)]
         item2: Annotated[Nested, dcs.PadAfter(12)]
         y: bool
 
-    fmt = "@ f 10xq3b q3b12x ?"
-    assert dcs.get_struct_size(Container) == struct.calcsize(fmt)
-
     c = Container(1, Nested(2, b"123"), Nested(5, b"456"), False)
     unpacked = Container.from_packed(c.pack())
+    assert type(unpacked.item1) is Nested
+    assert type(unpacked.item2) is Nested
     assert c == unpacked
 
 
-def test_pack_unpack_double_nested() -> None:
-    @dcs.dataclass_struct()
+@parametrize_all_sizes_and_byteorders()
+def test_pack_unpack_double_nested(size, byteorder) -> None:
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
     class Nested1:
         x: float
         y: Annotated[bytes, 3]
 
-    @dcs.dataclass_struct()
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
     class Nested2:
         nested1: Annotated[Nested1, dcs.PadBefore(12)]
         nested2: Annotated[Nested1, dcs.PadBefore(12)]
 
-    @dcs.dataclass_struct()
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
     class Container:
         x: bool
         item1: Nested2
@@ -55,6 +182,12 @@ def test_pack_unpack_double_nested() -> None:
         2,
     )
     unpacked = Container.from_packed(c.pack())
+    assert type(unpacked.item1) is Nested2
+    assert type(unpacked.item1.nested1) is Nested1
+    assert type(unpacked.item1.nested2) is Nested1
+    assert type(unpacked.item2) is Nested2
+    assert type(unpacked.item2.nested1) is Nested1
+    assert type(unpacked.item2.nested2) is Nested1
     assert c == unpacked
 
 
