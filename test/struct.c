@@ -49,6 +49,11 @@ struct test {
     int64_t test_int64;
 #endif // TEST_NATIVE_INS
 };
+
+struct container {
+    struct test t1;
+    struct test t2;
+};
 #ifdef TEST_PACKED
 #pragma pack(pop)
 #endif // TEST_PACKED
@@ -60,7 +65,7 @@ int main(const int argc, const char *argv[])
         return 1;
     }
 
-    const struct test t = {
+    const struct test test = {
         .test_bool = true,
         .test_float = 1.5,
         .test_double = 2.5,
@@ -92,13 +97,15 @@ int main(const int argc, const char *argv[])
 #endif // TEST_NATIVE_INTS
     };
 
+    const struct container container = {test, test};
+
     FILE *fp = fopen(argv[1], "wb");
     if (!fp) {
         fprintf(stderr, "cannot open file: %s\n", strerror(errno));
         return 1;
     }
 
-    int ret = fwrite(&t, sizeof(t), 1, fp) != 1;
+    int ret = fwrite(&container, sizeof(container), 1, fp) != 1;
     if (ret) {
         fprintf(stderr, "write error\n");
     }

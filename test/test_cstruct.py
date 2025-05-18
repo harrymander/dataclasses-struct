@@ -80,8 +80,14 @@ def test_unpack_from_cstruct_with_native_size(native_cstruct: bytes):
         test_size: dcs.UnsignedSize = 8000
         test_pointer: dcs.Pointer = 0
 
-    assert len(Test().pack()) == len(native_cstruct)
-    assert Test() == Test.from_packed(native_cstruct)
+    @dcs.dataclass_struct(size="native")
+    class Container:
+        t1: Test
+        t2: Test
+
+    c = Container(Test(), Test())
+    assert len(c.pack()) == len(native_cstruct)
+    assert c == Container.from_packed(native_cstruct)
 
 
 @pytest.fixture
@@ -115,5 +121,11 @@ def test_unpack_from_cstruct_with_std_size(std_cstruct: bytes):
         test_uint64: dcs.U64 = uint_max(64)
         test_int64: dcs.I64 = int_min(64)
 
-    assert len(Test().pack()) == len(std_cstruct)
-    assert Test() == Test.from_packed(std_cstruct)
+    @dcs.dataclass_struct(size="std")
+    class Container:
+        t1: Test
+        t2: Test
+
+    c = Container(Test(), Test())
+    assert len(c.pack()) == len(std_cstruct)
+    assert c == Container.from_packed(std_cstruct)
