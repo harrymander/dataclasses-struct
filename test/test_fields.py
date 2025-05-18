@@ -509,10 +509,13 @@ match that of container (expected '{container_size}' size and \
             y: Nested
 
 
-@pytest.mark.parametrize("size", (-1,))
+@pytest.mark.parametrize("size", (-1, 1.0, "1"))
 @pytest.mark.parametrize("padding", (dcs.PadBefore, dcs.PadAfter))
 def test_invalid_padding_size_fails(size: int, padding: type) -> None:
-    with pytest.raises(ValueError, match=r"^size must be non-negative$"):
+    with pytest.raises(
+        ValueError,
+        match=r"^padding size must be non-negative int$",
+    ):
 
         @dcs.dataclass_struct()
         class _:
