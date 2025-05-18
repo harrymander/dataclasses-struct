@@ -389,12 +389,15 @@ def test_char_default_wrong_type_fails(byteorder, size, field_type) -> None:
 
 @parametrize_all_sizes_and_byteorders()
 @pytest.mark.parametrize("c", (b"", b"ab"))
-def test_char_default_wrong_length_fails(byteorder, size, c: bytes) -> None:
+@parametrize_fields(char_fields, "field_type")
+def test_char_default_wrong_length_fails(
+    field_type, byteorder, size, c: bytes
+) -> None:
     with pytest.raises(ValueError, match=r"^value must be a single byte$"):
 
         @dcs.dataclass_struct(byteorder=byteorder, size=size)
         class _:
-            x: dcs.Char = c
+            x: field_type = c
 
 
 @parametrize_all_sizes_and_byteorders()
