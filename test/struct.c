@@ -92,7 +92,7 @@ int main(const int argc, const char *argv[])
 #endif // TEST_NATIVE_INTS
     };
 
-    FILE *fp = fopen(argv[1], "w");
+    FILE *fp = fopen(argv[1], "wb");
     if (!fp) {
         fprintf(stderr, "cannot open file: %s\n", strerror(errno));
         return 1;
