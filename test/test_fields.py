@@ -196,12 +196,12 @@ def test_valid_bytes_length_has_correct_format(size, byteorder) -> None:
     assert Test.__dataclass_struct__.format[1:] == "3s"
 
 
-@pytest.mark.parametrize("length", (-1, 0))
+@pytest.mark.parametrize("length", (-1, 0, 1.0, "1"))
 @parametrize_all_sizes_and_byteorders()
 def test_invalid_bytes_length_fails(size, byteorder, length: int) -> None:
     with pytest.raises(
         ValueError,
-        match=r"^n must be positive non-zero integer$",
+        match=r"^bytes length must be positive non-zero int$",
     ):
 
         @dcs.dataclass_struct(size=size, byteorder=byteorder)

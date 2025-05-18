@@ -172,8 +172,8 @@ class _BytesField(Field[bytes]):
     field_type = bytes
 
     def __init__(self, n: int):
-        if n < 1:
-            raise ValueError("n must be positive non-zero integer")
+        if not isinstance(n, int) or n < 1:
+            raise ValueError("bytes length must be positive non-zero int")
 
         self.n = n
 
@@ -218,6 +218,8 @@ def _validate_and_parse_field(
         #     Annotated[<builtin type>, PadBefore(<size>), PadAfter(<size>)]
         # or:
         #     Annotated[<dcs.types type>, PadBefore(<size>), PadAfter(<size>)]
+        # or:
+        #     Annotated[bytes, <positive non-zero integer>]
         # which will expand to:
         #     Annotated[
         #         <builtin type associated with dcs.types type>,
@@ -253,13 +255,13 @@ does not match that of container (expected '{exp_size}' size and \
             if field is None:
                 raise TypeError(f"type not supported: {field_type}")
 
-    if issubclass(type_, bytes) and isinstance(field, int):
-        # Annotated[bytes, <positive non-zero integer>] is a byte array
-        field = _BytesField(field)
-    elif not isinstance(field, Field):
-        raise TypeError(f"invalid field annotation: {field}")
-
-    if not issubclass(type_, field.field_type):
+    if not isinstance(field, Field):
+        if issubclass(type_, bytes):
+            # Annotated[bytes, <positive non-zero integer>] is a byte array
+            field = _BytesField(field)
+        else:
+            raise TypeError(f"invalid field annotation: {field!r}")
+    elif not issubclass(type_, field.field_type):
         raise TypeError(f"type {type_} not supported for field: {field}")
 
     if is_native:
