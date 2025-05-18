@@ -1,11 +1,11 @@
 import subprocess
 import sys
 from pathlib import Path
-from typing import Annotated
 
 import pytest
 
 import dataclasses_struct as dcs
+from dataclasses_struct import Annotated
 
 pytestmark = pytest.mark.cc
 
