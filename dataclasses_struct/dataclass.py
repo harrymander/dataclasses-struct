@@ -372,8 +372,8 @@ def dataclass_struct(
 @dataclass_transform()
 def dataclass_struct(
     *,
-    size: str = "native",
-    byteorder: str = "native",
+    size: Literal["native", "std"] = "native",
+    byteorder: Literal["native", "big", "little", "network"] = "native",
     validate_defaults: bool = True,
 ) -> Callable[[type], type]:
     is_native = size == "native"
