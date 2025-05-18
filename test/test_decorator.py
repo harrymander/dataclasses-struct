@@ -145,3 +145,16 @@ def test_stdlib_dataclass_object_is_not_dataclass_struct() -> None:
         pass
 
     assert not dcs.is_dataclass_struct(Test())
+
+
+@pytest.mark.parametrize(
+    "kwarg,value",
+    [("slots", True), ("weakref_slot", True)],
+)
+def test_unsupported_dataclass_kwarg_fails(kwarg: str, value):
+    escaped = re.escape(kwarg)
+    with pytest.raises(
+        ValueError,
+        match=rf"^dataclass '{escaped}' keyword argument is not supported$",
+    ):
+        dcs.dataclass_struct(**{kwarg: value})

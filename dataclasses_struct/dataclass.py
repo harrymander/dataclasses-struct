@@ -1,4 +1,5 @@
 import dataclasses
+import sys
 from collections.abc import Generator, Iterator
 from struct import Struct
 from typing import (
@@ -8,6 +9,7 @@ from typing import (
     Generic,
     Literal,
     Protocol,
+    TypedDict,
     TypeVar,
     Union,
     get_args,
@@ -16,7 +18,7 @@ from typing import (
     overload,
 )
 
-from ._typing import TypeGuard, dataclass_transform
+from ._typing import TypeGuard, Unpack, dataclass_transform
 from .field import Field, builtin_fields
 from .types import PadAfter, PadBefore
 
@@ -311,7 +313,11 @@ def from_packed(cls, data: bytes) -> cls_type:
 
 
 def _make_class(
-    cls: type, mode: str, is_native: bool, validate_defaults: bool
+    cls: type,
+    mode: str,
+    is_native: bool,
+    validate_defaults: bool,
+    dataclass_kwargs,
 ) -> type[DataclassStructProtocol]:
     cls_annotations = get_type_hints(cls, include_extras=True)
     struct_format = [mode]
@@ -341,7 +347,27 @@ def _make_class(
     setattr(cls, "pack", _make_pack_method())  # noqa: B010
     setattr(cls, "from_packed", _make_unpack_method(cls))  # noqa: B010
 
-    return dataclasses.dataclass(cls)
+    return dataclasses.dataclass(cls, **dataclass_kwargs)
+
+
+class _DataclassKwargsPre310(TypedDict, total=False):
+    init: bool
+    repr: bool
+    eq: bool
+    order: bool
+    unsafe_hash: bool
+    frozen: bool
+
+
+if sys.version_info >= (3, 10):
+
+    class DataclassKwargs(_DataclassKwargsPre310, total=False):
+        match_args: bool
+        kw_only: bool
+else:
+
+    class DataclassKwargs(_DataclassKwargsPre310, total=False):
+        pass
 
 
 @overload
@@ -350,6 +376,7 @@ def dataclass_struct(
     size: Literal["native"] = "native",
     byteorder: Literal["native"] = "native",
     validate_defaults: bool = True,
+    **dataclass_kwargs: Unpack[DataclassKwargs],
 ) -> Callable[[type], type]: ...
 
 
@@ -359,6 +386,7 @@ def dataclass_struct(
     size: Literal["std"],
     byteorder: Literal["native", "big", "little", "network"] = "native",
     validate_defaults: bool = True,
+    **dataclass_kwargs: Unpack[DataclassKwargs],
 ) -> Callable[[type], type]: ...
 
 
@@ -368,6 +396,7 @@ def dataclass_struct(
     size: Literal["native", "std"] = "native",
     byteorder: Literal["native", "big", "little", "network"] = "native",
     validate_defaults: bool = True,
+    **dataclass_kwargs: Unpack[DataclassKwargs],
 ) -> Callable[[type], type]:
     is_native = size == "native"
     if is_native:
@@ -378,12 +407,18 @@ def dataclass_struct(
     if byteorder not in ("native", "big", "little", "network"):
         raise ValueError(f"invalid byteorder: {byteorder}")
 
+    for kwarg in ("slots", "weakref_slot"):
+        if dataclass_kwargs.get(kwarg):
+            msg = f"dataclass '{kwarg}' keyword argument is not supported"
+            raise ValueError(msg)
+
     def decorator(cls: type) -> type:
         return _make_class(
             cls,
             mode=_SIZE_BYTEORDER_MODE_CHAR[(size, byteorder)],
             is_native=is_native,
             validate_defaults=validate_defaults,
+            dataclass_kwargs=dataclass_kwargs,
         )
 
     return decorator

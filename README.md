@@ -76,6 +76,7 @@ def dataclass_struct(
     size: str = 'native',
     byteorder: str = 'native',
     validate_defaults: bool = True,
+    **dataclass_kwargs,
 ):
     ...
 ```
@@ -87,7 +88,10 @@ Decorated classes are transformed to a standard Python
 `__init__`, `__repr__`, `__eq__` etc. auto-generated. Additionally, two methods
 are added to the class: `pack`, a method for packing an instance of the class to
 `bytes`, and `from_packed`, a class method that returns a new instance of the
-class from its packed `bytes` representation.
+class from its packed `bytes` representation. The additional `dataclass_kwargs`
+keyword arguments will be passed through to the stdlib `dataclass` decorator
+(see the docs): all standard keyword arguments are supported except for `slots`
+and `weakref_slot`.
 
 A class or object can be check to see if it is a dataclass-struct using the
 `is_dataclass_struct` function. The `get_struct_size` function will return
