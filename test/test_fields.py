@@ -1,9 +1,12 @@
 import ctypes
 import dataclasses
+import itertools
+from re import escape
 from typing import Iterable, List, Tuple, Type
 
 import pytest
 from conftest import (
+    ALL_VALID_SIZE_BYTEORDER_PAIRS,
     parametrize_all_sizes_and_byteorders,
     parametrize_std_byteorders,
 )
@@ -476,3 +479,59 @@ def test_bytes_with_too_many_annotations_fails(byteorder, size) -> None:
         @dcs.dataclass_struct(byteorder=byteorder, size=size)
         class _:
             x: Annotated[bytes, 1, 12]
+
+
+@pytest.mark.parametrize(
+    "nested_size_byteorder,container_size_byteorder",
+    itertools.combinations(ALL_VALID_SIZE_BYTEORDER_PAIRS, 2),
+)
+def test_nested_dataclass_with_mismatched_size_and_byteorder_fails(
+    nested_size_byteorder, container_size_byteorder
+) -> None:
+    nested_size, nested_byteorder = nested_size_byteorder
+    container_size, container_byteorder = container_size_byteorder
+    exp_msg = f"byteorder and size of nested dataclass-struct does not \
+match that of container (expected '{container_size}' size and \
+'{container_byteorder}' byteorder, got '{nested_size}' size and \
+'{nested_byteorder}' byteorder)"
+
+    with pytest.raises(TypeError, match=f"^{escape(exp_msg)}$"):
+
+        @dcs.dataclass_struct(size=nested_size, byteorder=nested_byteorder)
+        class Nested:
+            pass
+
+        @dcs.dataclass_struct(
+            size=container_size,
+            byteorder=container_byteorder,
+        )
+        class _:
+            y: Nested
+
+
+@pytest.mark.parametrize("size", (-1,))
+@pytest.mark.parametrize("padding", (dcs.PadBefore, dcs.PadAfter))
+def test_invalid_padding_size_fails(size: int, padding: type) -> None:
+    with pytest.raises(ValueError, match=r"^size must be non-negative$"):
+
+        @dcs.dataclass_struct()
+        class _:
+            x: Annotated[int, padding(size)]
+
+
+def test_str_type_annotations() -> None:
+    @dcs.dataclass_struct(size="std")
+    class _:
+        a: "dcs.Char"
+        b: "dcs.I8"
+        c: "dcs.U8"
+        d: "dcs.Bool"
+        e: "dcs.I16"
+        f: "dcs.U16"
+        g: "dcs.I32"
+        h: "dcs.U32"
+        i: "dcs.I64"
+        j: "dcs.U64"
+        k: "dcs.F32"
+        l: "dcs.F64"  # noqa: E741
+        m: "Annotated[bytes, 10]"
