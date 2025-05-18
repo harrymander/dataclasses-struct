@@ -221,9 +221,9 @@ modes.
 
 #### Characters and bytes arrays
 
-In both size modes, a single-byte ASCII character can be packed  by annotating a
-field with the builtin `bytes` type or the `dataclasses_struct.Char` type. The
-field's unpacked Python representation will be a `bytes` of length 1.
+In both size modes, a single byte can be packed by annotating a field with the
+builtin `bytes` type or the `dataclasses_struct.Char` type. The field's
+unpacked Python representation will be a `bytes` of length 1.
 
 ```python
 @dcs.dataclass_struct()
