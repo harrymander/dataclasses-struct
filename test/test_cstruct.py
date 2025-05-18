@@ -56,7 +56,7 @@ def native_cstruct(tmp_path: Path) -> Path:
 
 @pytest.mark.xfail
 def test_unpack_from_cstruct_with_native_size(native_cstruct):
-    assert False, "TODO"
+    raise AssertionError("TODO")
 
 
 @pytest.fixture
@@ -66,4 +66,4 @@ def std_cstruct(tmp_path: Path) -> Path:
 
 @pytest.mark.xfail
 def test_unpack_from_cstruct_with_std_size(std_cstruct):
-    assert False, "TODO"
+    raise AssertionError("TODO")

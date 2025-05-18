@@ -335,7 +335,7 @@ def _make_class(
         struct_format.append(fmt)
         fieldtypes.append(type_)
 
-    setattr(
+    setattr(  # noqa: B010
         cls,
         "__dataclass_struct__",
         _DataclassStructInternal(
@@ -345,8 +345,8 @@ def _make_class(
             fieldtypes,
         ),
     )
-    setattr(cls, "pack", _make_pack_method())
-    setattr(cls, "from_packed", _make_unpack_method(cls))
+    setattr(cls, "pack", _make_pack_method())  # noqa: B010
+    setattr(cls, "from_packed", _make_unpack_method(cls))  # noqa: B010
 
     return dataclasses.dataclass(cls)
 

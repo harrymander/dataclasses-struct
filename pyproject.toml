@@ -66,6 +66,7 @@ target-version = "py38"
 
 [tool.ruff.lint]
 select = [
+    "B", # flake8-bugbear
     "E", "W", # pycodestyle errors and warnings
     "F", # pyflakes
     "I", # isort
