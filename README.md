@@ -81,7 +81,9 @@ def dataclass_struct(
     ...
 ```
 
-The `size` argument can be either `'native'` (the default) or `'std'`:
+The `size` argument can be either `'native'` (the default) or `'std'` and
+controls the size and alignment of fields. See below for more details on the
+different `size` and `byteorder` values.
 
 Decorated classes are transformed to a standard Python
 [dataclass](https://docs.python.org/3/library/dataclasses.html) with boilerplate
@@ -92,24 +94,6 @@ class from its packed `bytes` representation. The additional `dataclass_kwargs`
 keyword arguments will be passed through to the stdlib `dataclass` decorator
 (see the docs): all standard keyword arguments are supported except for `slots`
 and `weakref_slot`.
-
-A class or object can be check to see if it is a dataclass-struct using the
-`is_dataclass_struct` function. The `get_struct_size` function will return
-the size in bytes of the packed representation of a dataclass_struct class
-or an instance of one.
-
-An additional class attribute, `__dataclass_struct__`. The [`struct` format
-string](https://docs.python.org/3/library/struct.html#format-strings), packed
-size, and mode character can be accessed like so:
-
-```python
->>> Test.__dataclass_struct__.format
-'@cc??bBhHiIQqqNnPfdd100s4xqq2x3xq2x'
->>> Test.__dataclass_struct__.size
-234
->>> Test.__dataclass_struct__.mode
-'@'
-```
 
 Default attribute values will be validated against their expected type and
 allowable value range. For example,
@@ -126,18 +110,39 @@ will raise a `ValueError`. This can be disabled by passing
 `validate_defaults=False` to the `dataclasses_struct.dataclass_struct`
 decorator.
 
+A class or object can be check to see if it is a dataclass-struct using the
+`is_dataclass_struct` function. The `get_struct_size` function will return the
+size in bytes of the packed representation of a dataclass_struct class or an
+instance of one. An additional class attribute, `__dataclass_struct__`, is added
+to the decorated class that contains the packed size, [`struct` format
+string](https://docs.python.org/3/library/struct.html#format-strings), and
+`struct` mode.
+
+```python
+>>> dcs.is_dataclass_struct(Test)
+True
+>>> Test.__dataclass_struct__.format
+'@cc??bBhHiIQqqNnPfdd100s4xqq2x3xq2x'
+>>> dcs.get_struct_size(Test)
+234
+>>> Test.__dataclass_struct__.size
+234
+>>> Test.__dataclass_struct__.mode
+'@'
+```
+
 ### Native size mode
 
-In `native` mode, the struct is packed based on the platform and compiler on
-which Python was built: padding bytes may be added to maintain proper alignment
-of the fields and byte ordering (endianness) follows that of the platform. (The
-`byteorder` argument must also be `native`.)
+In `native` mode (the default), the struct is packed based on the platform and
+compiler on which Python was built: padding bytes may be added to maintain
+proper alignment of the fields and byte ordering (endianness) follows that of
+the platform. (The `byteorder` argument must also be `native`.)
 
 In `native` size mode, integer type sizes follow those of the standard C integer
 types of the platform (`int`, `unsigned short` etc.).
 
 ```python
-@dcs.dataclass_struct()  # defaults to size='native', byteorder='native'
+@dcs.dataclass_struct()
 class NativeStruct:
     signed_char: dcs.SignedChar
     signed_short: dcs.Short
@@ -150,18 +155,18 @@ class NativeStruct:
 In `std` mode, the struct is packed without any additional padding for
 alignment.
 
-The `std` size mode supports four different byte order settings: `'native'`,
-`'little'`, `'big'`, and `'network'`. The `'native'` setting uses the system
-byte order (similar to `native` size mode, but without alignment). The
+The `std` size mode supports four different `byteorder` values: `'native'` (the
+default), `'little'`, `'big'`, and `'network'`. The `'native'` setting uses the
+system byte order (similar to `native` size mode, but without alignment). The
 `'network'` setting is equivalent to `'big'`.
 
 The `std` size uses platform-independent integer sizes, similar to using the
-integer types from `stdint.h` in C. When used with any of the non-`native` byte
-orders, it is appropriate for marshalling data across different platforms, which
-may have different alignment, byte ordering, and integer type sizes.
+integer types from `stdint.h` in C. When used with `byteorder` set to
+`'little'`, `'big'`, or `'network'`, it is appropriate for marshalling data
+across different platforms.
 
 ```python
-@dcs.dataclass_struct()  # defaults to size='native', byteorder='native'
+@dcs.dataclass_struct(size="std", byteorder="native")
 class NativeStruct:
     int8_t: dcs.I8
     uint64_t: dcs.U64
