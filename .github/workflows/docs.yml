@@ -19,9 +19,8 @@ jobs:
           version: "0.7.6"
           enable-cache: true
           cache-dependency-glob: requirements-docs.txt
-          activate-environment: true
       - name: Install Python dependencies
-        run: uv pip install -r requirements-docs.txt
+        run: uv pip install --system -r requirements-docs.txt
       - name: Configure mkdocs for GitHub Pages
         run: |
           sed -i 's,^site_url: .*$,site_url: https://harrymander.xyz/dataclasses-struct/,g' mkdocs.yml
