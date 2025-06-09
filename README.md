@@ -99,7 +99,7 @@ all standard keyword arguments are supported except for `slots` and
 Default attribute values will be validated against their expected type and
 allowable value range. For example,
 
-```python3
+```python
 import dataclasses_struct as dcs
 
 @dcs.dataclass_struct()
@@ -110,19 +110,32 @@ class Test:
 will raise a `ValueError`. This can be disabled by passing
 `validate_defaults=False` to the decorator.
 
-A class or object can be check to see if it is a dataclass-struct using the
-`is_dataclass_struct` function. The `get_struct_size` function will return the
-size in bytes of the packed representation of a dataclass_struct class or an
-instance of one. An additional class attribute, `__dataclass_struct__`, is added
-to the decorated class that contains the packed size, [`struct` format
-string](https://docs.python.org/3/library/struct.html#format-strings), and
-`struct` mode.
+A class or object can be checked to see if it is a dataclass-struct using the
+`is_dataclass_struct` function.
+
 
 ```python
 >>> dcs.is_dataclass_struct(Test)
 True
+>>> t = Test(100)
+>>> dcs.is_dataclass_struct(t)
+True
+```
+
+The `get_struct_size` function will return the size in bytes of the packed
+representation of a dataclass-struct class or an instance of one.
+
+```python
 >>> dcs.get_struct_size(Test)
 234
+```
+
+An additional class attribute, `__dataclass_struct__`, is added to the decorated
+class that contains the packed size, [`struct` format
+string](https://docs.python.org/3/library/struct.html#format-strings), and
+`struct` mode.
+
+```python
 >>> Test.__dataclass_struct__.size
 234
 >>> Test.__dataclass_struct__.format
