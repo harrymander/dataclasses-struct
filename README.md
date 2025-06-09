@@ -261,6 +261,9 @@ It is also available as
 [`std::float16_t`](https://en.cppreference.com/w/cpp/types/floating-point.html)
 in C++23.
 
+Note that floating point fields are always packed and unpacked using the IEEE
+754 format, regardless of the underlying format used by the platform.
+
 #### Boolean
 
 The builtin `bool` type or `dataclasses_struct.Bool` type can be used to
