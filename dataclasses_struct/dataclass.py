@@ -401,6 +401,7 @@ def dataclass_struct(
     validate_defaults: bool = True,
     **dataclass_kwargs: Unpack[DataclassKwargs],
 ) -> Callable[[type], type]:
+    """Create a dataclass struct."""
     is_native = size == "native"
     if is_native:
         if byteorder != "native":

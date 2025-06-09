@@ -45,6 +45,7 @@ dev = [
 ]
 docs = [
     "mkdocs-material>=9.6.14",
+    "mkdocstrings[python]>=0.29.1",
 ]
 
 [build-system]

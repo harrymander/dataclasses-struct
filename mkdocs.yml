@@ -1,4 +1,8 @@
 site_name: dataclasses-struct
+nav:
+  - index.md
+  - usage.md
+  - api-reference.md
 repo_url: https://github.com/harrymander/dataclasses-struct
 theme:
   name: material
@@ -21,6 +25,9 @@ theme:
        toggle:
          icon: material/brightness-4
          name: Switch to system preference
+plugins:
+  - search
+  - mkdocstrings
 markdown_extensions:
   - attr_list
   - md_in_html
@@ -31,3 +38,5 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+watch:
+  - dataclasses_struct

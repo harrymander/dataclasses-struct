@@ -1,6 +1,6 @@
 # Usage
 
-Use the `dataclass_struct` decorator to convert a class into a [stdlib
+Use the [`dataclass_struct`][dataclasses_struct.dataclass_struct] decorator to convert a class into a [stdlib
 `dataclass`](https://docs.python.org/3/library/dataclasses.html) with struct
 packing/unpacking functionality:
 
