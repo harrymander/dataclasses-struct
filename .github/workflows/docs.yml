@@ -42,6 +42,10 @@ jobs:
       pages: write
       id-token: write
     environment:
+      # The current branch must have access to the github-pages environment.
+      # See 'Deployment branches and tags' settings for 'github-pages'
+      # environment in
+      # github.com/harrymander/dataclasses-struct/settings/environments
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
