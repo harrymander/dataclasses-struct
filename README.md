@@ -104,7 +104,7 @@ import dataclasses_struct as dcs
 
 @dcs.dataclass_struct()
 class Test:
-    x: dcs.U8 = -1
+    x: dcs.UnsignedChar = -1
 ```
 
 will raise a `ValueError`. This can be disabled by passing
