@@ -11,6 +11,13 @@ A simple Python package that combines
 [`struct`](https://docs.python.org/3/library/struct.html) for packing and
 unpacking Python dataclasses to fixed-length `bytes` representations.
 
+1. [Example](#example)
+2. [Installation](#installation)
+3. [Usage](#usage)
+4. [Development and contributing](#development-and-contributing)
+
+## Example
+
 ```python
 from typing import Annotated
 
@@ -65,6 +72,16 @@ plugins = dataclasses_struct.ext.mypy_plugin
 ```
 
 ## Usage
+
+1. [Native size mode](#native-size-mode)
+2. [Standard size mode](#standard-size-mode)
+3. [Supported type annotations](#supported-type-annotations)
+   1. [Native integer types](#native-integer-types)
+   2. [Standard integer types](#standard-integer-types)
+   3. [Floating point types](#floating-point-types)
+   4. [Boolean](#boolean)
+   5. [Characters and bytes arrays](#characters-and-bytes-arrays)
+   6. [Nested structs](#nested-structs)
 
 Use the `dataclass_struct` decorator to convert a class into a [stdlib
 `dataclass`](https://docs.python.org/3/library/dataclasses.html) with struct
