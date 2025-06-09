@@ -38,8 +38,9 @@ SignedSize = Annotated[int, field.SizeField(signed=True)]
 Pointer = Annotated[int, field.PointerField()]
 
 # Floating point types
-F32 = Annotated[float, field.Float32Field()]
-F64 = Annotated[float, field.Float64Field()]
+F16 = Annotated[float, field.FloatingPointField("e")]
+F32 = Annotated[float, field.FloatingPointField("f")]
+F64 = Annotated[float, field.FloatingPointField("d")]
 
 
 class _Padding:

@@ -105,18 +105,14 @@ class UnsignedStdIntField(StdIntField):
         super().__init__(False, size)
 
 
-class Float32Field(Field[float]):
+class FloatingPointField(Field[float]):
     field_type = (int, float)
 
-    def format(self) -> str:
-        return "f"
-
-
-class Float64Field(Field[float]):
-    field_type = (int, float)
+    def __init__(self, format: str):
+        self._format = format
 
     def format(self) -> str:
-        return "d"
+        return self._format
 
 
 class NativeIntField(IntField):
@@ -158,7 +154,7 @@ class PointerField(IntField):
 
 builtin_fields = {
     int: NativeIntField("i", "int"),
-    float: Float64Field(),
+    float: FloatingPointField("d"),
     bool: BoolField(),
     bytes: CharField(),
 }

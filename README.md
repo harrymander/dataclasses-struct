@@ -248,9 +248,18 @@ Supported in both size modes. The native Python type is `float`.
 
 | Type annotation                      | Equivalent C type           |
 | ------------------------------------ | --------------------------- |
+| `F16`                                | Extension type (see below)  |
 | `F32`                                | `float`                     |
 | `F64`                                | `double`                    |
 | `float` (builtin alias to `F64`)     | `double`                    |
+
+`F16` is a half precision floating point. Some compilers provide support for it
+on certain platforms (e.g.
+[GCC](https://gcc.gnu.org/onlinedocs/gcc/Half-Precision.html),
+[Clang](https://clang.llvm.org/docs/LanguageExtensions.html#half-precision-floating-point)).
+It is also available as
+[`std::float16_t`](https://en.cppreference.com/w/cpp/types/floating-point.html)
+in C++23.
 
 #### Boolean
 

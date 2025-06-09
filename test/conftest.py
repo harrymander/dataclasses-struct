@@ -43,7 +43,12 @@ std_only_int_fields: TestFields = [
     (dcs.I32, "i"),
     (dcs.I64, "q"),
 ]
-float_fields: TestFields = [(dcs.F32, "f"), (dcs.F64, "d"), (float, "d")]
+float_fields: TestFields = [
+    (dcs.F16, "e"),
+    (dcs.F32, "f"),
+    (dcs.F64, "d"),
+    (float, "d"),
+]
 bool_fields: TestFields = [(dcs.Bool, "?"), (bool, "?")]
 char_fields: TestFields = [(dcs.Char, "c"), (bytes, "c")]
 common_fields: TestFields = float_fields + bool_fields + char_fields

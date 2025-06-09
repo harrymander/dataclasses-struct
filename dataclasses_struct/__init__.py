@@ -11,8 +11,7 @@ from .dataclass import (
 from .field import (
     BoolField,
     CharField,
-    Float32Field,
-    Float64Field,
+    FloatingPointField,
     IntField,
     NativeIntField,
     PointerField,
@@ -22,6 +21,7 @@ from .field import (
     UnsignedStdIntField,
 )
 from .types import (
+    F16,
     F32,
     F64,
     I8,
@@ -52,6 +52,7 @@ from .types import (
 )
 
 __all__ = (
+    "F16",
     "F32",
     "F64",
     "I8",
@@ -67,8 +68,7 @@ __all__ = (
     "Char",
     "CharField",
     "DataclassStructProtocol",
-    "Float32Field",
-    "Float64Field",
+    "FloatingPointField",
     "Int",
     "IntField",
     "Long",
