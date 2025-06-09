@@ -272,6 +272,29 @@ class FixedLength:
 FixedLength(fixed=b'Hello, wor')
 ```
 
+#### Nested structs
+
+Classes decorated with `dataclass_struct` can be used as fields in other
+classes, as long as they have the same `size` and `byteorder` settings.
+
+```python
+@dcs.dataclass_struct()
+class Vector2d:
+    x: float
+    y: float
+
+@dcs.dataclass_struct()
+class Vectors:
+    direction: Vector2d
+    velocity: Vector2d
+
+# Will raise TypeError:
+@dcs.dataclass_struct(size="std")
+class VectorsStd:
+    direction: Vector2d
+    velocity: Vector2d
+```
+
 ## Development and contributing
 
 Pull requests are welcomed!
