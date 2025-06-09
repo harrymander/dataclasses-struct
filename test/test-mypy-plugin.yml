@@ -3,7 +3,7 @@
   main: |
     import dataclasses_struct as dcs
 
-    @dcs.dataclass()
+    @dcs.dataclass_struct()
     class Test:
         x: int
 
@@ -17,7 +17,7 @@
   main: |
     import dataclasses_struct as dcs
 
-    @dcs.dataclass()
+    @dcs.dataclass_struct()
     class Test:
         x: int
 
@@ -30,13 +30,13 @@
   main: |
     import dataclasses_struct as dcs
 
-    @dcs.dataclass()
+    @dcs.dataclass_struct()
     class Test:
         x: int
 
     reveal_type(Test.__dataclass_struct__.size)  # N: Revealed type is "builtins.int"
     reveal_type(Test.__dataclass_struct__.format)  # N: Revealed type is "builtins.str"
-    reveal_type(Test.__dataclass_struct__.endianness)  # N: Revealed type is "builtins.str"
+    reveal_type(Test.__dataclass_struct__.mode)  # N: Revealed type is "builtins.str"
 
 
 - case: test_from_packed_returns_instance
@@ -44,7 +44,7 @@
   main: |
     import dataclasses_struct as dcs
 
-    @dcs.dataclass()
+    @dcs.dataclass_struct()
     class Test:
         x: int
 

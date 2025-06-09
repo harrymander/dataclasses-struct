@@ -1,14 +1,11 @@
-[tool.poetry]
+[project]
 name = "dataclasses-struct"
 version = "0.8.4"
 description = "Converting dataclasses to and from fixed-length binary data using struct"
-authors = ["Harry Mander <harrymander96@gmail.com>"]
-license = "MIT"
 readme = "README.md"
-homepage = "https://github.com/harrymander/dataclasses-struct"
-repository = "https://github.com/harrymander/dataclasses-struct"
-documentation = "https://github.com/harrymander/dataclasses-struct/blob/main/README.md#usage"
-packages = [{include = "dataclasses_struct"}]
+authors = [
+    { name = "Harry Mander", email = "harrymander96@gmail.com" }
+]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Programming Language :: Python",
@@ -16,7 +13,6 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: PyPy",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -29,48 +25,49 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Typing :: Typed",
 ]
-
-[tool.poetry.dependencies]
-python = "^3.8.1"
-typing-extensions = "^4.5.0"
-
-[tool.poetry.group.dev.dependencies]
-mypy = [
-    { version = "^1.15.0", python = ">=3.9,<4.0.0" },
-    { version = "^1.14.1", python = "<3.9" },
+requires-python = ">=3.9.0"
+dependencies = [
+    "typing-extensions>=4.12.2 ; python_full_version < '3.11'",
 ]
-pytest = "^7.2.2"
-pytest-cov = "^4.0.0"
-pytest-mypy-plugins = "^1.10.1"
-ruff = "^0.2.2"
-flake8 = "^7.0.0"
+
+[project.urls]
+Homepage = "https://github.com/harrymander/dataclasses-struct"
+Repository = "https://github.com/harrymander/dataclasses-struct"
+Documentation = "https://github.com/harrymander/dataclasses-struct/blob/main/README.md#usage"
+
+[dependency-groups]
+dev = [
+    "mypy>=1.16.0",
+    "pytest>=8.3.4",
+    "pytest-cov>=5.0.0",
+    "pytest-mypy-plugins>=3.1.2",
+    "ruff>=0.9.4",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 
 [tool.pytest.ini_options]
 testpaths = ["test"]
 markers = [
-	"cc: marks a test as requiring a C compiler"
+    "cc: marks a test as requiring a C compiler"
 ]
-
 
 [tool.coverage.run]
 source = ["dataclasses_struct/"]
-omit = ["dataclasses_struct/ext/**/*.py", "dataclasses_struct/sizes.py"]
-
+omit = ["dataclasses_struct/ext/**/*.py", "dataclasses_struct/_typing.py"]
 
 [tool.ruff]
 line-length = 79
-target-version = "py38"
 
 [tool.ruff.lint]
 select = [
-	"E", "W", # pycodestyle errors and warnings
-	"F", # pyflakes
-	"I", # isort
-	"UP", # pyupgrade
+    "B", # flake8-bugbear
+    "E", "W", # pycodestyle errors and warnings
+    "F", # pyflakes
+    "I", # isort
+    "RUF", # ruff-specific
+    "UP", # pyupgrade
 ]
-
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"

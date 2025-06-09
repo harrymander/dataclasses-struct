@@ -2,15 +2,23 @@ name: Tests
 
 on:
   push:
-    branches: ["main"]
+    branches: ["*"]
   pull_request:
-    branches: ["main"]
+    branches: ["*"]
 
 jobs:
+  pre-commit-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Run pre-commit checks
+        uses: pre-commit/action@v3.0.1
   tests:
+    needs: pre-commit-checks
     strategy:
       matrix:
-        pyversion: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        pyversion: ["3.9", "3.10", "3.11", "3.12", "3.13"]
         os: ["Ubuntu", "Windows", "macOS"]
         include:
           - os: Windows
@@ -24,57 +32,35 @@ jobs:
     defaults:
       run:
         shell: bash
+    env:
+      UV_LOCKED: true
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-
-      - name: Specify Poetry dependency
-        run: echo 'poetry==1.8.2' > requirements.txt
 
       - name: Set up Python ${{ matrix.pyversion }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.pyversion }}
-          cache: 'pip'
 
-      - name: Install Poetry
-        run: pip install -r requirements.txt
-
-      - name: Configure Poetry
-        run: poetry config virtualenvs.in-project true
-
-      - name: Restore virtualenv cache
-        uses: actions/cache/restore@v4
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
         with:
-          path: ./.venv
-          key: ${{ matrix.image }}-py${{ matrix.pyversion }}-venv-${{ hashFiles('**/poetry.lock') }}
+          version: "0.7.5"
+          enable-cache: true
 
-      - name: Install dependencies
-        run: poetry install -vvv --with dev --no-interaction --no-root
-
-      - name: Save virtualenv cache
-        uses: actions/cache/save@v4
-        with:
-          path: ./.venv
-          key: ${{ matrix.image }}-py${{ matrix.pyversion }}-venv-${{ hashFiles('**/poetry.lock') }}
-
-      - name: Install package
-        run: poetry install -vvv --no-interaction --only-root
-
-      - name: Lint
-        run: |
-          poetry run flake8 --exclude .venv &&
-          poetry run ruff check --exclude .venv .
+      - name: Install Python dependencies
+        run: uv sync
 
       - name: Python type checking
-        run: poetry run mypy
+        run: uv run mypy
 
       - name: Configure MSVC
         uses: ilammy/msvc-dev-cmd@v1
         if: matrix.os == 'Windows'
 
       - name: Run tests
-        run: poetry run pytest --cov --cov-report=xml
+        run: uv run pytest --color=yes --cov --cov-report=xml
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4
