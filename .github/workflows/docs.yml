@@ -1,0 +1,36 @@
+name: Build and deploy docs
+on:
+  # TODO: run on main and pull requests
+  push:
+    branches: [docs]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.7.6"
+          enable-cache: true
+          cache-dependency-glob: requirements-docs.txt
+          activate-environment: true
+      - name: Install Python dependencies
+        run: uv pip install -r requirements-docs.txt
+      - name: Configure mkdocs for GitHub Pages
+        run: |
+          sed -i 's,^site_url: .*$,site_url: https://harrymander.xyz/dataclasses-struct/,g' mkdocs.yml
+      - name: Build site
+        run: mkdocs build --strict --site-dir site
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        id: deployment
+        with:
+          path: site/
+
+  # TODO: deploy to GitHub pages
