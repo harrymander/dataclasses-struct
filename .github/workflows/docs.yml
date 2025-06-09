@@ -24,6 +24,10 @@ jobs:
       - name: Configure mkdocs for GitHub Pages
         run: |
           sed -i 's,^site_url: .*$,site_url: https://harrymander.xyz/dataclasses-struct/,g' mkdocs.yml
+          if git diff --quiet mkdocs.yml; then
+            echo "mkdocs.yml was not modified!"
+            exit 1
+          fi
       - name: Build site
         run: mkdocs build --strict --site-dir site
       - name: Upload artifact
