@@ -24,7 +24,8 @@ jobs:
       - name: Configure mkdocs for GitHub Pages
         run: |
           sed -i 's,^site_url: .*$,site_url: https://harrymander.xyz/dataclasses-struct/,g' mkdocs.yml
-          if git diff --quiet mkdocs.yml; then
+          diff=$(git diff mkdocs.yml)
+          if [ -z "$diff" ]; then
             echo "mkdocs.yml was not modified!"
             exit 1
           fi
