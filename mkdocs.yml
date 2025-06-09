@@ -1,4 +1,5 @@
 site_name: dataclasses-struct
+site_url: https://dataclasses-struct.readthedocs.io
 nav:
   - index.md
   - usage.md
