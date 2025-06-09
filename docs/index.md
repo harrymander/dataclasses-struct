@@ -36,32 +36,40 @@ import dataclasses_struct as dcs
 
 @dcs.dataclass_struct()
 class Test:
-    x: int
-    y: float
-    z: dcs.UnsignedShort
-    s: Annotated[bytes, 10]  # fixed-length byte array of length 10
+    x: int # (1)!
+    y: float # (2)!
+    z: dcs.UnsignedShort # (3)!
+    s: Annotated[bytes, 10] # (4)!
 
 @dcs.dataclass_struct()
 class Container:
-    test1: Test
+    test1: Test # (5)!
     test2: Test
 ```
 
+1. Equivalent to `int` in C.
+2. Equivalent to `double` in C, i.e. a double precision floating point.
+3. Equivalent to `unsigned short` in C.
+4. Equivalent to `char[10]` in C, i.e. a fixed-length byte array of length 10.
+   Values shorter than the size are padded with zeros and values longer than the
+   size are truncated.
+5. Classes decorated with `dataclass_struct` can be nested in other classes, as
+   long as they have the same `std` and `byteorder` args.
+
+Instances of decorated classes have a `pack` method that returns the packed
+representation of the object in `bytes`:
+
 ```python
->>> dcs.is_dataclass_struct(Test)
-True
 >>> t1 = Test(100, -0.25, 0xff, b'12345')
->>> dcs.is_dataclass_struct(t1)
-True
->>> t1
-Test(x=100, y=-0.25, z=255, s=b'12345')
 >>> packed = t1.pack()
 >>> packed
 b'd\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xd0\xbf\xff\x0012345\x00\x00\x00\x00\x00'
+```
+
+Decorated classes have an `unpack` class method that takes the packed
+representation returns an instance of the class:
+
+```python
 >>> Test.from_packed(packed)
 Test(x=100, y=-0.25, z=255, s=b'12345\x00\x00\x00\x00\x00')
->>> t2 = Test(1, 100, 12, b'hello, world')
->>> c = Container(t1, t2)
->>> Container.from_packed(c.pack())
-Container(test1=Test(x=100, y=-0.25, z=255, s=b'12345\x00\x00\x00\x00\x00'), test2=Test(x=1, y=100.0, z=12, s=b'hello, wor'))
 ```
