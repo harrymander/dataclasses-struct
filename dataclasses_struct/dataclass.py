@@ -185,7 +185,7 @@ def is_dataclass_struct(
     )
 
 
-def get_struct_size(cls_or_obj) -> int:
+def get_struct_size(cls_or_obj: object) -> int:
     """Get the size of the packed representation of the struct in bytes.
 
     Args:
