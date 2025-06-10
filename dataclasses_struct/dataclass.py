@@ -129,7 +129,7 @@ class DataclassStructProtocol(Protocol):
 
         Args:
             data: The packed representation of the class as returned by
-                [`dataclasses_struct.DataclassStructProtocol.pack`][].
+                [`pack`][dataclasses_struct.DataclassStructProtocol.pack].
 
         Returns:
             An instance of the class unpacked from `data`.
@@ -145,7 +145,7 @@ class DataclassStructProtocol(Protocol):
         Returns:
             The packed representation. Can be used to instantiate a new object
                 with
-                [`dataclasses_struct.DataclassStructProtocol.from_packed`][].
+                [`from_packed`][dataclasses_struct.DataclassStructProtocol.from_packed].
 
         Raises:
             struct.error: If any of the fields are out of range or the wrong
@@ -177,7 +177,8 @@ def is_dataclass_struct(
 
     Returns:
         `True` if obj is a class that has been decorated with
-            [`dataclasses_struct.dataclass_struct`][] or is an instance of one.
+            [`dataclass_struct`][dataclasses_struct.dataclass_struct] or is an
+            instance of one.
     """
     return (
         dataclasses.is_dataclass(obj)
@@ -191,7 +192,8 @@ def get_struct_size(cls_or_obj: object) -> int:
 
     Args:
         cls_or_obj: A class that has been decorated with
-            [`dataclasses_struct.dataclass_struct`][] or an instance of one.
+            [`dataclass_struct`][dataclasses_struct.dataclass_struct] or an
+            instance of one.
 
     Returns:
         The size of the packed representation in bytes.
