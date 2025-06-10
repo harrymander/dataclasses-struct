@@ -443,7 +443,16 @@ def dataclass_struct(
 ) -> Callable[[type], type]:
     """Create a dataclass struct.
 
-    Should be used as a decorator on a class.
+    Should be used as a decorator on a class:
+
+    ```python
+    import dataclasses_struct as dcs
+
+    @dcs.dataclass_struct()
+    class A:
+        data: dcs.Pointer
+        size: dcs.UnsignedSize
+    ```
 
     The allowed `size` and `byteorder` argument combinations are as as follows.
 
