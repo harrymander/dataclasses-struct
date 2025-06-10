@@ -453,7 +453,7 @@ def dataclass_struct(
     | `"std"`    | `"native"`  | Standard integer sizes and system endianness, no alignment/padding. |
     | `"std"`    | `"little"`  | Standard integer sizes and little endian, no alignment/padding.     |
     | `"std"`    | `"big"`     | Standard integer sizes and big endian, no alignment/padding.        |
-    | `"std"`    | `"network"` | Equivalent to `endian="big"`.                                       |
+    | `"std"`    | `"network"` | Equivalent to `byteorder="big"`.                                    |
 
     Args:
         size: The size mode.
