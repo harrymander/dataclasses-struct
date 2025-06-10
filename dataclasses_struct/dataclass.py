@@ -119,11 +119,38 @@ class _DataclassStructInternal(Generic[T]):
 
 class DataclassStructProtocol(Protocol):
     __dataclass_struct__: _DataclassStructInternal
+    """
+    Internal data used by the library for packing and unpacking structs.
+    """
 
     @classmethod
-    def from_packed(cls: type[T], data: bytes) -> T: ...
+    def from_packed(cls: type[T], data: bytes) -> T:
+        """Return an instance of the class from its packed representation.
 
-    def pack(self) -> bytes: ...
+        Args:
+            data: The packed representation of the class as returned by
+                [`dataclasses_struct.DataclassStructProtocol.pack`][].
+
+        Returns: An instance of the class unpacked from `data`.
+
+        Raises:
+            struct.error: If `data` is the wrong length.
+        """
+        ...
+
+    def pack(self) -> bytes:
+        """Return the packed representation in `bytes` of the object.
+
+        Returns:
+            The packed representation. Can be used to instantiate a new object
+                with
+                [`dataclasses_struct.DataclassStructProtocol.from_packed`][].
+
+        Raises:
+            struct.error: If any of the fields are out of range or the wrong
+                type.
+        """
+        ...
 
 
 @overload
@@ -142,9 +169,14 @@ def is_dataclass_struct(
     TypeGuard[DataclassStructProtocol],
     TypeGuard[type[DataclassStructProtocol]],
 ]:
-    """
-    Returns True if obj is a class that has been decorated with
-    dataclasses_struct.dataclass or an instance of one.
+    """Determine whether a type or object is a dataclass-struct.
+
+    Args:
+        obj: A class or object.
+
+    Returns:
+        `True` if obj is a class that has been decorated with
+            [`dataclasses_struct.dataclass_struct`][] or is an instance of one.
     """
     return (
         dataclasses.is_dataclass(obj)
@@ -154,9 +186,17 @@ def is_dataclass_struct(
 
 
 def get_struct_size(cls_or_obj) -> int:
-    """
-    Returns the size of the packed representation of the struct in bytes.
-    Accepts either a class or an instance of a dataclass_struct.
+    """Get the size of the packed representation of the struct in bytes.
+
+    Args:
+        cls_or_obj: A class that has been decorated with
+            [`dataclasses_struct.dataclass_struct`][] or an instance of one.
+
+    Returns:
+        The size of the packed representation in bytes.
+
+    Raises:
+        TypeError: if `cls_or_obj` is not a dataclass-struct.
     """
     if not is_dataclass_struct(cls_or_obj):
         raise TypeError(f"{cls_or_obj} is not a dataclass_struct")
@@ -401,7 +441,39 @@ def dataclass_struct(
     validate_defaults: bool = True,
     **dataclass_kwargs: Unpack[DataclassKwargs],
 ) -> Callable[[type], type]:
-    """Create a dataclass struct."""
+    """Create a dataclass struct.
+
+    Should be used as a decorator on a class.
+
+    The allowed `size` and `byteorder` argument combinations are as as follows.
+
+    | `size`     | `byteorder` | Notes                                                               |
+    | ---------- | ----------- | ------------------------------------------------------------------  |
+    | `"native"` | `"native"`  | The default. Native alignment and padding.                          |
+    | `"std"`    | `"native"`  | Standard integer sizes and system endianness, no alignment/padding. |
+    | `"std"`    | `"little"`  | Standard integer sizes and little endian, no alignment/padding.     |
+    | `"std"`    | `"big"`     | Standard integer sizes and big endian, no alignment/padding.        |
+    | `"std"`    | `"network"` | Equivalent to `endian="big"`.                                       |
+
+    Args:
+        size: The size mode.
+        byteorder: The byte order of the generated struct. If `size="native"`,
+            only `"native"` is allowed.
+        validate_defaults: Whether to validate the default values of any
+            fields.
+        dataclass_kwargs: Any additional keyword arguments to pass to the
+            [stdlib
+            `dataclass`](https://docs.python.org/3/library/dataclasses.html#dataclasses.dataclass)
+            decorator. The `slots` and `weakref_slot` keyword arguments are not
+            supported.
+
+    Raises:
+        ValueError: If the `size` and `byteorder` args are invalid or if
+            `validate_defaults=True` and any of the fields' default values are
+            invalid for their type.
+        TypeError: If any of the fields' type annotations are invalid or
+            not supported.
+    """  # noqa: E501
     is_native = size == "native"
     if is_native:
         if byteorder != "native":
