@@ -82,6 +82,7 @@ plugins = dataclasses_struct.ext.mypy_plugin
    4. [Boolean](#boolean)
    5. [Characters and bytes arrays](#characters-and-bytes-arrays)
    6. [Nested structs](#nested-structs)
+   7. [Manual padding](#manual-padding)
 
 Use the `dataclass_struct` decorator to convert a class into a [stdlib
 `dataclass`](https://docs.python.org/3/library/dataclasses.html) with struct
@@ -322,6 +323,36 @@ class Vectors:
 class VectorsStd:
     direction: Vector2d
     velocity: Vector2d
+```
+
+#### Manual padding
+
+Padding can be manually controlled by annotating a type with `PadBefore` or
+`PadAfter`:
+
+```python
+@dcs.dataclass_struct()
+class WithPadding:
+    # 4 padding bytes will be added before this field
+    pad_before: Annotated[int, dcs.PadBefore(4)]
+
+    # 2 padding bytes will be added before this field
+    pad_after: Annotated[int, dcs.PadAfter(2)]
+
+    # 3 padding bytes will be added before this field and 2 after
+    pad_before_and_after: Annotated[int, dcs.PadBefore(3), dcs.PadAfter(2)]
+```
+
+A `b'\x00'` will be inserted into the packed representation for each padding
+byte.
+
+```python
+>>> padded = WithPadding(100, 200, 300)
+>>> packed = padded.pack()
+>>> packed
+b'\x00\x00\x00\x00d\x00\x00\x00\xc8\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00,\x01\x00\x00\x00\x00'
+>>> WithPadding.from_packed(packed)
+WithPadding(pad_before=100, pad_after=200, pad_before_and_after=300)
 ```
 
 ## Development and contributing
