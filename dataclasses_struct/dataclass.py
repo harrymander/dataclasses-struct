@@ -2,12 +2,14 @@ import dataclasses
 import sys
 from collections.abc import Generator, Iterator
 from struct import Struct
+from types import GenericAlias
 from typing import (
     Annotated,
     Any,
     Callable,
     Generic,
     Literal,
+    Optional,
     Protocol,
     TypedDict,
     TypeVar,
@@ -23,7 +25,7 @@ from .field import Field, builtin_fields
 from .types import PadAfter, PadBefore
 
 
-def _get_padding_and_field(fields):
+def _get_padding_and_field(fields) -> tuple[int, int, Any]:
     pad_before = pad_after = 0
     field = None
     for f in fields:
@@ -58,7 +60,7 @@ class _DataclassStructInternal(Generic[T]):
     struct: Struct
     cls: type[T]
     _fieldnames: list[str]
-    _fieldtypes: list[type]
+    _fields: list[tuple[Field[Any], type]]
 
     @property
     def format(self) -> str:
@@ -77,33 +79,57 @@ class _DataclassStructInternal(Generic[T]):
         fmt: str,
         cls: type,
         fieldnames: list[str],
-        fieldtypes: list[type],
+        fields: list[tuple[Field[Any], type]],
     ):
         self.struct = Struct(fmt)
         self.cls = cls
         self._fieldnames = fieldnames
-        self._fieldtypes = fieldtypes
+        self._fields = fields
 
     def _flattened_attrs(self, obj) -> list[Any]:
         """
         Returns a list of all attributes, including those of any nested structs
         """
-        attrs = []
+        attrs: list[Any] = []
         for fieldname in self._fieldnames:
             attr = getattr(obj, fieldname)
-            if is_dataclass_struct(attr):
-                attrs.extend(attr.__dataclass_struct__._flattened_attrs(attr))
-            else:
-                attrs.append(attr)
+            _DataclassStructInternal._flatten_attrs_recursively(attrs, attr)
+
         return attrs
+
+    @staticmethod
+    def _flatten_attrs_recursively(attrs, attr) -> None:
+        if is_dataclass_struct(attr):
+            attrs.extend(attr.__dataclass_struct__._flattened_attrs(attr))
+        elif isinstance(attr, list):
+            for sub_attr in attr:
+                _DataclassStructInternal._flatten_attrs_recursively(
+                    attrs, sub_attr
+                )
+        else:
+            attrs.append(attr)
 
     def pack(self, obj: T) -> bytes:
         return self.struct.pack(*self._flattened_attrs(obj))
 
     def _arg_generator(self, args: Iterator) -> Generator:
-        for fieldtype in self._fieldtypes:
+        for field, fieldtype in self._fields:
             if is_dataclass_struct(fieldtype):
                 yield fieldtype.__dataclass_struct__._init_from_args(args)
+            elif isinstance(field, _FixedSizeArrayField):
+                value_type = get_args(fieldtype)[0]
+                arg_array = []
+                for _ in range(0, field.n):
+                    if is_dataclass_struct(value_type):
+                        arg_array.append(
+                            value_type.__dataclass_struct__._init_from_args(
+                                args
+                            )
+                        )
+                    else:
+                        arg_array.append(value_type(next(args)))
+
+                yield arg_array
             else:
                 yield fieldtype(next(args))
 
@@ -194,18 +220,55 @@ class _NestedField(Field):
         return self.field_type.__dataclass_struct__.format[1:]
 
 
-def _validate_and_parse_field(
-    cls: type,
-    name: str,
-    field_type: type,
-    is_native: bool,
-    validate_defaults: bool,
-    mode: str,
-) -> tuple[str, type]:
-    """
-    name is the name of the attribute, f is its type annotation.
-    """
+class _FixedSizeArrayField(Field[list[T]]):
+    field_type: GenericAlias
 
+    def __init__(self, cls: GenericAlias, n: int):
+        if not isinstance(n, int) or n < 1:
+            raise ValueError(
+                "fixed size array length must be positive non-zero int"
+            )
+
+        if len(get_args(cls)) != 1:
+            raise ValueError
+
+        self.field_type = cls
+        self.n = n
+
+    def format(self) -> str:
+        value_type, _, _, _ = _resolve_field(
+            get_args(self.field_type)[0], None
+        )
+
+        if is_dataclass_struct(value_type):
+            return value_type.__dataclass_struct__.format[1:] * self.n
+        elif isinstance(value_type, Field):
+            return value_type.format() * self.n
+        else:
+            type_ = builtin_fields.get(value_type)
+            if type_ is None:
+                raise ValueError(
+                    "fixed size array value type is not a dataclass struct or "
+                    f"a builtin type: {value_type}"
+                )
+
+            return type_.format() * self.n
+
+    def validate_default(self, val: list[T]) -> None:
+        if len(val) > self.n:
+            raise ValueError(
+                f"fixed size array cannot be longer than {self.n} elements"
+            )
+
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}({self.n})"
+
+
+def _resolve_field(
+    field_type: type,
+    mode: Optional[str],
+) -> tuple[Field[Any], type, int, int]:
+    field: Optional[Union[Field[Any], Any]] = None
     if get_origin(field_type) == Annotated:
         # The types defined in .types (e.g. U32, F32, etc.) are of the form:
         #     Annotated[<builtin type>, Field(<field args>)]
@@ -231,13 +294,12 @@ def _validate_and_parse_field(
         # nested dataclass-structs
         pad_before = pad_after = 0
         type_ = field_type
-        field = None
 
     if field is None:
         # Must be either a nested type or one of the supported builtins
         if is_dataclass_struct(type_):
             nested_mode = type_.__dataclass_struct__.mode
-            if nested_mode != mode:
+            if mode is not None and nested_mode != mode:
                 size, byteorder = _MODE_CHAR_SIZE_BYTEORDER[nested_mode]
                 exp_size, exp_byteorder = _MODE_CHAR_SIZE_BYTEORDER[mode]
                 msg = (
@@ -254,13 +316,33 @@ def _validate_and_parse_field(
                 raise TypeError(f"type not supported: {field_type}")
 
     if not isinstance(field, Field):
-        if issubclass(type_, bytes):
+        if type(type_) is GenericAlias:
+            field = _FixedSizeArrayField(type_, field)
+        elif issubclass(type_, bytes):
             # Annotated[bytes, <positive non-zero integer>] is a byte array
             field = _BytesField(field)
         else:
             raise TypeError(f"invalid field annotation: {field!r}")
-    elif not issubclass(type_, field.field_type):
+    elif not isinstance(field.field_type, GenericAlias) and not issubclass(
+        type_, field.field_type
+    ):
         raise TypeError(f"type {type_} not supported for field: {field}")
+
+    return field, type_, pad_before, pad_after
+
+
+def _validate_and_parse_field(
+    cls: type,
+    name: str,
+    field_type: type,
+    is_native: bool,
+    validate_defaults: bool,
+    mode: str,
+) -> tuple[str, Field, type]:
+    """
+    name is the name of the attribute, f is its type annotation.
+    """
+    field, type_, pad_before, pad_after = _resolve_field(field_type, mode)
 
     if is_native:
         if not field.is_native:
@@ -272,7 +354,9 @@ def _validate_and_parse_field(
 
     if validate_defaults and hasattr(cls, name):
         val = getattr(cls, name)
-        if not isinstance(val, field.field_type):
+        if not isinstance(field.field_type, GenericAlias) and not isinstance(
+            val, field.field_type
+        ):
             raise TypeError(
                 "invalid type for field: expected "
                 f"{field.field_type} got {type(val)}"
@@ -287,6 +371,7 @@ def _validate_and_parse_field(
                 (f"{pad_after}x" if pad_after else ""),
             )
         ),
+        field,
         type_,
     )
 
@@ -324,9 +409,9 @@ def _make_class(
 ) -> type[DataclassStructProtocol]:
     cls_annotations = get_type_hints(cls, include_extras=True)
     struct_format = [mode]
-    fieldtypes = []
+    fields = []
     for name, field in cls_annotations.items():
-        fmt, type_ = _validate_and_parse_field(
+        fmt, field, type_ = _validate_and_parse_field(
             cls,
             name=name,
             field_type=field,
@@ -335,7 +420,7 @@ def _make_class(
             mode=mode,
         )
         struct_format.append(fmt)
-        fieldtypes.append(type_)
+        fields.append((field, type_))
 
     setattr(  # noqa: B010
         cls,
@@ -344,7 +429,7 @@ def _make_class(
             "".join(struct_format),
             cls,
             list(cls_annotations.keys()),
-            fieldtypes,
+            fields,
         ),
     )
     setattr(cls, "pack", _make_pack_method())  # noqa: B010
