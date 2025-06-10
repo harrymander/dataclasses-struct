@@ -131,7 +131,8 @@ class DataclassStructProtocol(Protocol):
             data: The packed representation of the class as returned by
                 [`dataclasses_struct.DataclassStructProtocol.pack`][].
 
-        Returns: An instance of the class unpacked from `data`.
+        Returns:
+            An instance of the class unpacked from `data`.
 
         Raises:
             struct.error: If `data` is the wrong length.
