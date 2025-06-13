@@ -114,24 +114,44 @@ class _DataclassStructInternal(Generic[T]):
 
     def _arg_generator(self, args: Iterator) -> Generator:
         for field, fieldtype in self._fields:
-            if is_dataclass_struct(fieldtype):
-                yield fieldtype.__dataclass_struct__._init_from_args(args)
-            elif isinstance(field, _FixedSizeArrayField):
-                value_type = get_args(fieldtype)[0]
-                arg_array = []
-                for _ in range(0, field.n):
-                    if is_dataclass_struct(value_type):
-                        arg_array.append(
-                            value_type.__dataclass_struct__._init_from_args(
-                                args
+            yield from _DataclassStructInternal._generate_args_recursively(
+                args, field, fieldtype
+            )
+
+    @staticmethod
+    def _generate_args_recursively(
+        args: Iterator, field, fieldtype
+    ) -> Generator:
+        if field is None:
+            field, _, _, _ = _resolve_field(fieldtype, None)
+
+        if is_dataclass_struct(fieldtype):
+            yield fieldtype.__dataclass_struct__._init_from_args(args)
+        elif isinstance(field, _FixedSizeArrayField):
+            value_type = get_args(fieldtype)[0]
+            if isinstance(value_type, GenericAlias):
+                value_type = get_args(value_type)[0]
+
+            arg_array = []
+            for _ in range(0, field.n):
+                if is_dataclass_struct(value_type):
+                    arg_array.append(
+                        value_type.__dataclass_struct__._init_from_args(args)
+                    )
+                elif get_origin(value_type) == Annotated:
+                    arg_array.extend(
+                        list(
+                            _DataclassStructInternal._generate_args_recursively(
+                                args, None, value_type
                             )
                         )
-                    else:
-                        arg_array.append(value_type(next(args)))
+                    )
+                else:
+                    arg_array.append(value_type(next(args)))
 
-                yield arg_array
-            else:
-                yield fieldtype(next(args))
+            yield arg_array
+        else:
+            yield fieldtype(next(args))
 
     def _init_from_args(self, args: Iterator) -> T:
         """
