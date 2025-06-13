@@ -193,6 +193,19 @@ def test_invalid_array_length_fails(size, byteorder, length: int) -> None:
             x: Annotated[list[int], length]
 
 
+@parametrize_all_sizes_and_byteorders()
+def test_unannotated_array_fails(size, byteorder) -> None:
+    with pytest.raises(
+        TypeError,
+        match=r"^list types must be marked as a fixed size using Annotated, "
+        r"ex: Annotated\[list\[int\], 5\]$",
+    ):
+
+        @dcs.dataclass_struct(size=size, byteorder=byteorder)
+        class _:
+            x: list[int]
+
+
 def int_min_max(nbits: int, signed: bool) -> tuple[int, int]:
     if signed:
         exp = 2 ** (nbits - 1)

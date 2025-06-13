@@ -334,7 +334,16 @@ def _resolve_field(
         else:
             field = builtin_fields.get(type_)
             if field is None:
-                raise TypeError(f"type not supported: {field_type}")
+                if (
+                    _is_generic_alias(type(type_))
+                    and get_origin(type_) is list
+                ):
+                    raise TypeError(
+                        "list types must be marked as a fixed size using "
+                        "Annotated, ex: Annotated[list[int], 5]"
+                    )
+                else:
+                    raise TypeError(f"type not supported: {field_type}")
 
     if not isinstance(field, Field):
         if _is_generic_alias(type(type_)):
