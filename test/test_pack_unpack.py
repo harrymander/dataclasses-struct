@@ -191,6 +191,37 @@ def test_pack_unpack_double_nested(size, byteorder) -> None:
     assert c == unpacked
 
 
+@parametrize_all_sizes_and_byteorders()
+def test_pack_unpack_array_of_primatives(size, byteorder) -> None:
+    @dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: Annotated[list[int], 5]
+
+    t = T([1, 2, 3, 4, 5])
+    packed = t.pack()
+    unpacked = T.from_packed(packed)
+    assert isinstance(unpacked.x, list)
+    assert t == unpacked
+
+
+@parametrize_all_sizes_and_byteorders()
+def test_pack_unpack_array_of_dataclass_struct(size, byteorder) -> None:
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
+    class Nested:
+        x: float
+        y: float
+
+    @dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: Annotated[list[Nested], 2]
+
+    t = T([Nested(1.0, 2.0), Nested(3.0, 4.0)])
+    packed = t.pack()
+    unpacked = T.from_packed(packed)
+    assert isinstance(unpacked.x, list)
+    assert t == unpacked
+
+
 def assert_true_has_correct_padding(
     packed: bytes,
     expected_num_before: int,
