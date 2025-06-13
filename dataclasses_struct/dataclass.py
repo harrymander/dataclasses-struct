@@ -128,7 +128,7 @@ class _DataclassStructInternal(Generic[T]):
 
         if is_dataclass_struct(fieldtype):
             yield fieldtype.__dataclass_struct__._init_from_args(args)
-        elif isinstance(field, _FixedSizeArrayField):
+        elif isinstance(field, _FixedLengthArrayField):
             value_type = get_args(fieldtype)[0]
             if _is_generic_alias(type(value_type)):
                 value_type = get_args(value_type)[0]
@@ -241,13 +241,13 @@ class _NestedField(Field):
         return self.field_type.__dataclass_struct__.format[1:]
 
 
-class _FixedSizeArrayField(Field[list[T]]):
+class _FixedLengthArrayField(Field[list[T]]):
     field_type: GenericAlias
 
     def __init__(self, cls: GenericAlias, n: int):
         if not isinstance(n, int) or n < 1:
             raise ValueError(
-                "fixed size array length must be positive non-zero int"
+                "fixed-length array length must be positive non-zero int"
             )
 
         if len(get_args(cls)) != 1:
@@ -269,8 +269,8 @@ class _FixedSizeArrayField(Field[list[T]]):
             type_ = builtin_fields.get(value_type)
             if type_ is None:
                 raise ValueError(
-                    "fixed size array value type is not a dataclass struct or "
-                    f"a builtin type: {value_type}"
+                    "fixed-length array value type is not a dataclass struct "
+                    f"or a builtin type: {value_type}"
                 )
 
             return type_.format() * self.n
@@ -278,7 +278,7 @@ class _FixedSizeArrayField(Field[list[T]]):
     def validate_default(self, val: list[T]) -> None:
         if len(val) > self.n:
             raise ValueError(
-                f"fixed size array cannot be longer than {self.n} elements"
+                f"fixed-length array cannot be longer than {self.n} elements"
             )
 
     def __repr__(self) -> str:
@@ -339,7 +339,7 @@ def _resolve_field(
                     and get_origin(type_) is list
                 ):
                     raise TypeError(
-                        "list types must be marked as a fixed size using "
+                        "list types must be marked as a fixed-length using "
                         "Annotated, ex: Annotated[list[int], 5]"
                     )
                 else:
@@ -348,7 +348,7 @@ def _resolve_field(
     if not isinstance(field, Field):
         if _is_generic_alias(type(type_)):
             if get_origin(type_) is list:
-                field = _FixedSizeArrayField(type_, field)
+                field = _FixedLengthArrayField(type_, field)
             else:
                 raise TypeError(
                     f"Generic type not supported: {type_}. "

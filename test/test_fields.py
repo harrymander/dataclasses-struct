@@ -185,7 +185,7 @@ def test_invalid_bytes_length_fails(size, byteorder, length: int) -> None:
 def test_invalid_array_length_fails(size, byteorder, length: int) -> None:
     with pytest.raises(
         ValueError,
-        match=r"^fixed size array length must be positive non-zero int$",
+        match=r"^fixed-length array length must be positive non-zero int$",
     ):
 
         @dcs.dataclass_struct(size=size, byteorder=byteorder)
@@ -197,7 +197,7 @@ def test_invalid_array_length_fails(size, byteorder, length: int) -> None:
 def test_unannotated_array_fails(size, byteorder) -> None:
     with pytest.raises(
         TypeError,
-        match=r"^list types must be marked as a fixed size using Annotated, "
+        match=r"^list types must be marked as a fixed-length using Annotated, "
         r"ex: Annotated\[list\[int\], 5\]$",
     ):
 
