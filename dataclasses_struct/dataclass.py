@@ -1,5 +1,6 @@
 import dataclasses
 import sys
+import typing
 from collections.abc import Generator, Iterator
 from struct import Struct
 from types import GenericAlias
@@ -129,7 +130,7 @@ class _DataclassStructInternal(Generic[T]):
             yield fieldtype.__dataclass_struct__._init_from_args(args)
         elif isinstance(field, _FixedSizeArrayField):
             value_type = get_args(fieldtype)[0]
-            if isinstance(value_type, GenericAlias):
+            if _is_generic_alias(type(value_type)):
                 value_type = get_args(value_type)[0]
 
             arg_array = []
@@ -336,8 +337,14 @@ def _resolve_field(
                 raise TypeError(f"type not supported: {field_type}")
 
     if not isinstance(field, Field):
-        if type(type_) is GenericAlias:
-            field = _FixedSizeArrayField(type_, field)
+        if _is_generic_alias(type(type_)):
+            if get_origin(type_) is list:
+                field = _FixedSizeArrayField(type_, field)
+            else:
+                raise TypeError(
+                    f"Generic type not supported: {type_}. "
+                    "Currently only list is supported."
+                )
         elif issubclass(type_, bytes):
             # Annotated[bytes, <positive non-zero integer>] is a byte array
             field = _BytesField(field)
@@ -456,6 +463,10 @@ def _make_class(
     setattr(cls, "from_packed", _make_unpack_method(cls))  # noqa: B010
 
     return dataclasses.dataclass(cls, **dataclass_kwargs)
+
+
+def _is_generic_alias(type_: type) -> bool:
+    return type_ is GenericAlias or type_ is typing._GenericAlias  # type: ignore[attr-defined]
 
 
 class _DataclassKwargsPre310(TypedDict, total=False):

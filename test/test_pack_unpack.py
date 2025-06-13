@@ -1,6 +1,6 @@
 import itertools
 import struct
-from typing import Annotated
+from typing import Annotated, List  # noqa: UP035
 
 import pytest
 from conftest import (
@@ -252,6 +252,19 @@ def test_pack_unpack_2d_array_of_dataclass_struct(size, byteorder) -> None:
             [Nested(7.0, 8.0), Nested(9.0, 10.0), Nested(11.0, 12.0)],
         ]
     )
+    packed = t.pack()
+    unpacked = T.from_packed(packed)
+    assert isinstance(unpacked.x, list)
+    assert t == unpacked
+
+
+@parametrize_all_sizes_and_byteorders()
+def test_pack_unpack_list(size, byteorder) -> None:
+    @dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: Annotated[List[int], 5]  # noqa: UP006
+
+    t = T([1, 2, 3, 4, 5])
     packed = t.pack()
     unpacked = T.from_packed(packed)
     assert isinstance(unpacked.x, list)
