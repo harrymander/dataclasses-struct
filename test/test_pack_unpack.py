@@ -222,6 +222,42 @@ def test_pack_unpack_array_of_dataclass_struct(size, byteorder) -> None:
     assert t == unpacked
 
 
+@parametrize_all_sizes_and_byteorders()
+def test_pack_unpack_2d_array_of_primatives(size, byteorder) -> None:
+    @dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: Annotated[list[Annotated[list[int], 3]], 2]
+
+    t = T([[1, 2, 3], [4, 5, 6]])
+    packed = t.pack()
+    unpacked = T.from_packed(packed)
+    assert isinstance(unpacked.x, list)
+    assert t == unpacked
+
+
+@parametrize_all_sizes_and_byteorders()
+def test_pack_unpack_2d_array_of_dataclass_struct(size, byteorder) -> None:
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
+    class Nested:
+        x: float
+        y: float
+
+    @dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: Annotated[list[Annotated[list[Nested], 3]], 2]
+
+    t = T(
+        [
+            [Nested(1.0, 2.0), Nested(3.0, 4.0), Nested(5.0, 6.0)],
+            [Nested(7.0, 8.0), Nested(9.0, 10.0), Nested(11.0, 12.0)],
+        ]
+    )
+    packed = t.pack()
+    unpacked = T.from_packed(packed)
+    assert isinstance(unpacked.x, list)
+    assert t == unpacked
+
+
 def assert_true_has_correct_padding(
     packed: bytes,
     expected_num_before: int,
