@@ -1,3 +1,4 @@
+import sys
 from collections.abc import Iterable
 from typing import Callable
 
@@ -90,3 +91,9 @@ def parametrize_all_sizes_and_byteorders(
         )(f)
 
     return mark
+
+
+skipif_kw_only_not_supported = pytest.mark.skipif(
+    sys.version_info < (3, 10),
+    reason="kw_only added in Python 3.10",
+)

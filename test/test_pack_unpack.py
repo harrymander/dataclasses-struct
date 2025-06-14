@@ -1,6 +1,5 @@
 import itertools
 import struct
-import sys
 from typing import Annotated
 
 import pytest
@@ -12,6 +11,7 @@ from conftest import (
     native_only_int_fields,
     parametrize_all_sizes_and_byteorders,
     parametrize_fields,
+    skipif_kw_only_not_supported,
     std_byteorders,
     std_only_int_fields,
 )
@@ -296,12 +296,6 @@ def test_unpack_padding(size, byteorder) -> None:
         b"\x00" + (b"\x00" * 4) + b"\x01" + (b"\x00" * 7)
     )
     assert unpacked == Test(False, True)
-
-
-skipif_kw_only_not_supported = pytest.mark.skipif(
-    sys.version_info < (3, 10),
-    reason="kw_only added in Python 3.10",
-)
 
 
 @skipif_kw_only_not_supported
