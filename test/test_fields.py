@@ -193,6 +193,24 @@ def test_unannotated_list_fails(size, byteorder) -> None:
             x: list[int]
 
 
+@parametrize_all_sizes_and_byteorders()
+def test_annotated_list_with_invalid_arg_type_fails(size, byteorder) -> None:
+    with pytest.raises(TypeError, match=r"^type not supported:"):
+
+        @dcs.dataclass_struct(size=size, byteorder=byteorder)
+        class _:
+            x: Annotated[list[str], 5]
+
+
+@parametrize_all_sizes_and_byteorders()
+def test_annotated_list_without_arg_type_fails(size, byteorder) -> None:
+    with pytest.raises(TypeError, match=r"^invalid field annotation:"):
+
+        @dcs.dataclass_struct(size=size, byteorder=byteorder)
+        class _:
+            x: Annotated[list, 5]
+
+
 def int_min_max(nbits: int, signed: bool) -> tuple[int, int]:
     if signed:
         exp = 2 ** (nbits - 1)
