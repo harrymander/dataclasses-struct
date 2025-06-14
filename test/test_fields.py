@@ -12,6 +12,7 @@ from conftest import (
     common_fields,
     float_fields,
     native_only_int_fields,
+    parametrize_all_list_types,
     parametrize_all_sizes_and_byteorders,
     parametrize_fields,
     parametrize_std_byteorders,
@@ -165,6 +166,57 @@ def test_invalid_bytes_length_fails(size, byteorder, length: int) -> None:
         @dcs.dataclass_struct(size=size, byteorder=byteorder)
         class _:
             x: Annotated[bytes, length]
+
+
+@pytest.mark.parametrize("length", (-1, 0, 1.0, "1"))
+@parametrize_all_sizes_and_byteorders()
+@parametrize_all_list_types()
+def test_invalid_array_length_fails(
+    size, byteorder, length: int, list_type
+) -> None:
+    with pytest.raises(
+        ValueError,
+        match=r"^fixed-length array length must be positive non-zero int$",
+    ):
+
+        @dcs.dataclass_struct(size=size, byteorder=byteorder)
+        class _:
+            x: Annotated[list_type[int], length]
+
+
+@parametrize_all_sizes_and_byteorders()
+@parametrize_all_list_types()
+def test_unannotated_list_fails(size, byteorder, list_type) -> None:
+    with pytest.raises(
+        TypeError,
+        match=r"^list types must be marked as a fixed-length using Annotated, "
+        r"ex: Annotated\[list\[int\], 5\]$",
+    ):
+
+        @dcs.dataclass_struct(size=size, byteorder=byteorder)
+        class _:
+            x: list_type[int]
+
+
+@parametrize_all_sizes_and_byteorders()
+@parametrize_all_list_types()
+def test_annotated_list_with_invalid_arg_type_fails(
+    size, byteorder, list_type
+) -> None:
+    with pytest.raises(TypeError, match=r"^type not supported:"):
+
+        @dcs.dataclass_struct(size=size, byteorder=byteorder)
+        class _:
+            x: Annotated[list_type[str], 5]
+
+
+@parametrize_all_sizes_and_byteorders()
+def test_annotated_list_without_arg_type_fails(size, byteorder) -> None:
+    with pytest.raises(TypeError, match=r"^invalid field annotation:"):
+
+        @dcs.dataclass_struct(size=size, byteorder=byteorder)
+        class _:
+            x: Annotated[list, 5]
 
 
 def int_min_max(nbits: int, signed: bool) -> tuple[int, int]:
@@ -381,6 +433,25 @@ def test_bytes_array_default_too_long_fails(byteorder, size) -> None:
 
 
 @parametrize_all_sizes_and_byteorders()
+@parametrize_all_list_types()
+@pytest.mark.parametrize("default", ([], [1, 2, 3], [1, 2, 3, 4, 5]))
+def test_fixed_length_array_default_wrong_size_fails(
+    byteorder, size, list_type, default
+) -> None:
+    with pytest.raises(
+        ValueError,
+        match=r"^fixed-length array cannot have a different length than the "
+        r"fixed length of 4 elements. Array actually had "
+        + str(len(default))
+        + r" elements.$",
+    ):
+
+        @dcs.dataclass_struct(byteorder=byteorder, size=size)
+        class _:
+            x: Annotated[list_type[int], 4] = default
+
+
+@parametrize_all_sizes_and_byteorders()
 @parametrize_fields(float_fields, "float_field")
 @pytest.mark.parametrize("default", (10, 10.12))
 def test_float_default(size, byteorder, float_field, default) -> None:
@@ -468,6 +539,35 @@ match that of container (expected '{container_size}' size and \
         )
         class _:
             y: Nested
+
+
+@pytest.mark.parametrize(
+    "nested_size_byteorder,container_size_byteorder",
+    itertools.combinations(ALL_VALID_SIZE_BYTEORDER_PAIRS, 2),
+)
+@parametrize_all_list_types()
+def test_list_of_dataclass_structs_with_mismatched_size_and_byteorder_fails(
+    nested_size_byteorder, container_size_byteorder, list_type
+) -> None:
+    nested_size, nested_byteorder = nested_size_byteorder
+    container_size, container_byteorder = container_size_byteorder
+    exp_msg = f"byteorder and size of nested dataclass-struct does not \
+match that of container (expected '{container_size}' size and \
+'{container_byteorder}' byteorder, got '{nested_size}' size and \
+'{nested_byteorder}' byteorder)"
+
+    with pytest.raises(TypeError, match=f"^{escape(exp_msg)}$"):
+
+        @dcs.dataclass_struct(size=nested_size, byteorder=nested_byteorder)
+        class Nested:
+            pass
+
+        @dcs.dataclass_struct(
+            size=container_size,
+            byteorder=container_byteorder,
+        )
+        class _:
+            y: Annotated[list_type[Nested], 2]
 
 
 @pytest.mark.parametrize("size", (-1, 1.0, "1"))

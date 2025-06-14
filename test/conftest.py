@@ -1,5 +1,5 @@
 from collections.abc import Iterable
-from typing import Callable
+from typing import Callable, List  # noqa: UP035
 
 import pytest
 
@@ -87,6 +87,16 @@ def parametrize_all_sizes_and_byteorders(
         return pytest.mark.parametrize(
             ",".join((size_argname, byteorder_argname)),
             ALL_VALID_SIZE_BYTEORDER_PAIRS,
+        )(f)
+
+    return mark
+
+
+def parametrize_all_list_types() -> ParametrizeDecorator:
+    def mark(f) -> pytest.MarkDecorator:
+        return pytest.mark.parametrize(
+            "list_type",
+            [list, List],  # noqa: UP006
         )(f)
 
     return mark

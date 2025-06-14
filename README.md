@@ -82,7 +82,8 @@ plugins = dataclasses_struct.ext.mypy_plugin
    4. [Boolean](#boolean)
    5. [Characters and bytes arrays](#characters-and-bytes-arrays)
    6. [Nested structs](#nested-structs)
-   7. [Manual padding](#manual-padding)
+   7. [Fixed-length arrays](#fixed-length-arrays)
+   8. [Manual padding](#manual-padding)
 
 Use the `dataclass_struct` decorator to convert a class into a [stdlib
 `dataclass`](https://docs.python.org/3/library/dataclasses.html) with struct
@@ -323,6 +324,61 @@ class Vectors:
 class VectorsStd:
     direction: Vector2d
     velocity: Vector2d
+```
+
+#### Fixed-length arrays
+
+Fixed-length arrays can be represented by annotating a `list` field with
+`typing.Annotated` and a positive length.
+
+```python
+from typing import Annotated
+
+@dcs.dataclass_struct()
+class FixedLength:
+    fixed: Annotated[list[int], 5]
+```
+
+```python
+>>> FixedLength.from_packed(FixedLength([1, 2, 3, 4, 5]).pack())
+FixedLength(fixed=[1, 2, 3, 4, 5])
+```
+
+The values stored in fixed-length arrays can also be classes
+decorated with `dataclass_struct`.
+
+```python
+from typing import Annotated
+
+@dcs.dataclass_struct()
+class Vector2d:
+    x: float
+    y: float
+
+@dcs.dataclass_struct()
+class FixedLength:
+    fixed: Annotated[list[Vector2d], 3]
+```
+
+```python
+>>> FixedLength.from_packed(FixedLength([Vector2d(1.0, 2.0), Vector2d(3.0, 4.0), Vector2d(5.0, 6.0)]).pack())
+FixedLength(fixed=[Vector2d(x=1.0, y=2.0), Vector2d(x=3.0, y=4.0), Vector2d(x=5.0, y=6.0)])
+```
+
+Fixed-length arrays can also be multi-dimensional by nesting Annotated
+`list` types.
+
+```python
+from typing import Annotated
+
+@dcs.dataclass_struct()
+class TwoDimArray:
+    fixed: Annotated[list[Annotated[list[int], 2]], 3]
+```
+
+```python
+>>> TwoDimArray.from_packed(TwoDimArray([[1, 2], [3, 4], [5, 6]]).pack())
+TwoDimArray(fixed=[[1, 2], [3, 4], [5, 6]])
 ```
 
 #### Manual padding

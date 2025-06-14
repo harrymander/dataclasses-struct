@@ -1,6 +1,7 @@
 import abc
 import ctypes
-from typing import ClassVar, Generic, Literal, TypeVar, Union
+from types import GenericAlias
+from typing import Any, ClassVar, Generic, Literal, TypeVar, Union
 
 T = TypeVar("T")
 
@@ -8,7 +9,7 @@ T = TypeVar("T")
 class Field(abc.ABC, Generic[T]):
     is_native: bool = True
     is_std: bool = True
-    field_type: Union[type[T], tuple[type[T], ...]]
+    field_type: Union[type[T], tuple[type[T], ...], GenericAlias]
 
     @abc.abstractmethod
     def format(self) -> str: ...
@@ -152,7 +153,7 @@ class PointerField(IntField):
             raise ValueError("value out of range for system pointer")
 
 
-builtin_fields = {
+builtin_fields: dict[type[Any], Field[Any]] = {
     int: NativeIntField("i", "int"),
     float: FloatingPointField("d"),
     bool: BoolField(),

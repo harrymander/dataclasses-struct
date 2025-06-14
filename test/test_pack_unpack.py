@@ -9,6 +9,7 @@ from conftest import (
     float_fields,
     native_byteorders,
     native_only_int_fields,
+    parametrize_all_list_types,
     parametrize_all_sizes_and_byteorders,
     parametrize_fields,
     std_byteorders,
@@ -191,6 +192,119 @@ def test_pack_unpack_double_nested(size, byteorder) -> None:
     assert c == unpacked
 
 
+@parametrize_all_sizes_and_byteorders()
+@parametrize_all_list_types()
+def test_pack_unpack_array_of_primitives(size, byteorder, list_type) -> None:
+    @dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: Annotated[list_type[int], 5]
+
+    t = T([1, 2, 3, 4, 5])
+    packed = t.pack()
+    unpacked = T.from_packed(packed)
+    assert isinstance(unpacked.x, list)
+    assert t == unpacked
+
+
+@parametrize_all_sizes_and_byteorders()
+@parametrize_all_list_types()
+@pytest.mark.parametrize(
+    "value_type", (dcs.Int, dcs.I8, dcs.I16, dcs.I32, dcs.I64)
+)
+def test_pack_unpack_array_of_annotated_int_types(
+    size, byteorder, list_type, value_type
+) -> None:
+    @dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: Annotated[list_type[value_type], 5]
+
+    t = T([1, 2, 3, 4, 5])
+    packed = t.pack()
+    unpacked = T.from_packed(packed)
+    assert isinstance(unpacked.x, list)
+    assert t == unpacked
+
+
+@parametrize_all_sizes_and_byteorders()
+@parametrize_all_list_types()
+@pytest.mark.parametrize("value_type", (dcs.F16, dcs.F32, dcs.F64))
+def test_pack_unpack_array_of_annotated_float_types(
+    size, byteorder, list_type, value_type
+) -> None:
+    @dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: Annotated[list_type[value_type], 5]
+
+    t = T([1.0, 2.0, 3.0, 4.0, 5.0])
+    packed = t.pack()
+    unpacked = T.from_packed(packed)
+    assert isinstance(unpacked.x, list)
+    assert t == unpacked
+
+
+@parametrize_all_sizes_and_byteorders()
+@parametrize_all_list_types()
+def test_pack_unpack_array_of_dataclass_struct(
+    size, byteorder, list_type
+) -> None:
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
+    class Nested:
+        x: float
+        y: float
+
+    @dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: Annotated[list_type[Nested], 2]
+
+    t = T([Nested(1.0, 2.0), Nested(3.0, 4.0)])
+    packed = t.pack()
+    unpacked = T.from_packed(packed)
+    assert isinstance(unpacked.x, list)
+    assert t == unpacked
+
+
+@parametrize_all_sizes_and_byteorders()
+@parametrize_all_list_types()
+def test_pack_unpack_2d_array_of_primitives(
+    size, byteorder, list_type
+) -> None:
+    @dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: Annotated[list_type[Annotated[list_type[int], 3]], 2]
+
+    t = T([[1, 2, 3], [4, 5, 6]])
+    packed = t.pack()
+    unpacked = T.from_packed(packed)
+    assert isinstance(unpacked.x, list)
+    assert t == unpacked
+
+
+@parametrize_all_sizes_and_byteorders()
+@parametrize_all_list_types()
+def test_pack_unpack_2d_array_of_dataclass_struct(
+    size, byteorder, list_type
+) -> None:
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
+    class Nested:
+        x: float
+        y: float
+
+    @dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: Annotated[list_type[Annotated[list_type[Nested], 3]], 2]
+
+    t = T(
+        [
+            [Nested(1.0, 2.0), Nested(3.0, 4.0), Nested(5.0, 6.0)],
+            [Nested(7.0, 8.0), Nested(9.0, 10.0), Nested(11.0, 12.0)],
+        ]
+    )
+    packed = t.pack()
+    unpacked = T.from_packed(packed)
+    assert isinstance(unpacked.x, list)
+    assert t == unpacked
+
+
 def assert_true_has_correct_padding(
     packed: bytes,
     expected_num_before: int,
@@ -282,6 +396,33 @@ def test_pack_padding_with_bytes(size, byteorder) -> None:
 
     t = Test(b"1234")
     assert t.pack() == b"\x00\x001234\x00\x00\x00"
+
+
+@parametrize_all_sizes_and_byteorders()
+@parametrize_all_list_types()
+def test_pack_padding_with_fixed_size_array(
+    size, byteorder, list_type
+) -> None:
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
+    class Test:
+        a: Annotated[list_type[bool], dcs.PadBefore(2), 4, dcs.PadAfter(3)]
+
+    t = Test([True, True, False, True])
+    assert t.pack() == b"\x00\x00\x01\x01\x00\x01\x00\x00\x00"
+
+
+@parametrize_all_sizes_and_byteorders()
+@parametrize_all_list_types()
+def test_pack_unpack_list_of_byte_arrays(size, byteorder, list_type) -> None:
+    @dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: Annotated[list_type[Annotated[bytes, 5]], 4]
+
+    t = T([b"", b"1234", b"123456", b"12345"])
+    packed = t.pack()
+    unpacked = T.from_packed(packed)
+    assert isinstance(unpacked.x, list)
+    assert unpacked == T([b"\0" * 5, b"1234\0", b"12345", b"12345"])
 
 
 @parametrize_all_sizes_and_byteorders()
