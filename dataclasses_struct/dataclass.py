@@ -10,7 +10,6 @@ from typing import (
     Callable,
     Generic,
     Literal,
-    Optional,
     Protocol,
     TypedDict,
     TypeVar,
@@ -87,26 +86,24 @@ class _DataclassStructInternal(Generic[T]):
         self._fieldnames = fieldnames
         self._fields = fields
 
-    def _flattened_attrs(self, obj) -> list[Any]:
+    def _flattened_attrs(self, outer_self: T) -> list[Any]:
         """
-        Returns a list of all attributes, including those of any nested structs
+        Returns a list of all attributes of `outer_self`, including those of
+        any nested structs.
         """
         attrs: list[Any] = []
         for fieldname in self._fieldnames:
-            attr = getattr(obj, fieldname)
-            _DataclassStructInternal._flatten_attrs_recursively(attrs, attr)
-
+            attr = getattr(outer_self, fieldname)
+            self._flatten_attr(attrs, attr)
         return attrs
 
     @staticmethod
-    def _flatten_attrs_recursively(attrs, attr) -> None:
+    def _flatten_attr(attrs: list[Any], attr: object) -> None:
         if is_dataclass_struct(attr):
             attrs.extend(attr.__dataclass_struct__._flattened_attrs(attr))
         elif isinstance(attr, list):
             for sub_attr in attr:
-                _DataclassStructInternal._flatten_attrs_recursively(
-                    attrs, sub_attr
-                )
+                _DataclassStructInternal._flatten_attr(attrs, sub_attr)
         else:
             attrs.append(attr)
 
@@ -121,38 +118,23 @@ class _DataclassStructInternal(Generic[T]):
 
     @staticmethod
     def _generate_args_recursively(
-        args: Iterator, field, fieldtype
+        args: Iterator,
+        field: Field[Any],
+        field_type: type,
     ) -> Generator:
-        if field is None:
-            field, _, _, _ = _resolve_field(fieldtype, None)
-
-        if is_dataclass_struct(fieldtype):
-            yield fieldtype.__dataclass_struct__._init_from_args(args)
+        if is_dataclass_struct(field_type):
+            yield field_type.__dataclass_struct__._init_from_args(args)
         elif isinstance(field, _FixedLengthArrayField):
-            value_type = get_args(fieldtype)[0]
-            if _is_generic_alias(type(value_type)):
-                value_type = get_args(value_type)[0]
-
-            arg_array = []
-            for _ in range(0, field.n):
-                if is_dataclass_struct(value_type):
-                    arg_array.append(
-                        value_type.__dataclass_struct__._init_from_args(args)
+            items: list = []
+            for _ in range(field.n):
+                items.extend(
+                    _DataclassStructInternal._generate_args_recursively(
+                        args, field.item_field, field.item_type
                     )
-                elif get_origin(value_type) == Annotated:
-                    arg_array.extend(
-                        list(
-                            _DataclassStructInternal._generate_args_recursively(
-                                args, None, value_type
-                            )
-                        )
-                    )
-                else:
-                    arg_array.append(value_type(next(args)))
-
-            yield arg_array
+                )
+            yield items
         else:
-            yield fieldtype(next(args))
+            yield field_type(next(args))
 
     def _init_from_args(self, args: Iterator) -> T:
         """
@@ -241,39 +223,22 @@ class _NestedField(Field):
         return self.field_type.__dataclass_struct__.format[1:]
 
 
-class _FixedLengthArrayField(Field[list[T]]):
-    field_type: GenericAlias
+class _FixedLengthArrayField(Field[list]):
+    field_type = list
 
-    def __init__(self, cls: GenericAlias, n: object):
+    def __init__(self, item_type_annotation: Any, mode: str, n: object):
         if not isinstance(n, int) or n < 1:
             raise ValueError(
                 "fixed-length array length must be positive non-zero int"
             )
 
-        if len(get_args(cls)) != 1:
-            raise ValueError
-
-        self.field_type = cls
+        self.item_field, self.item_type = _resolve_field(
+            item_type_annotation, mode
+        )[:2]
         self.n = n
 
     def format(self) -> str:
-        value_type, _, _, _ = _resolve_field(
-            get_args(self.field_type)[0], None
-        )
-
-        if is_dataclass_struct(value_type):
-            return value_type.__dataclass_struct__.format[1:] * self.n
-        elif isinstance(value_type, Field):
-            return value_type.format() * self.n
-        else:
-            type_ = builtin_fields.get(value_type)
-            if type_ is None:
-                raise ValueError(
-                    "fixed-length array value type is not a dataclass struct "
-                    f"or a builtin type: {value_type}"
-                )
-
-            return type_.format() * self.n
+        return self.item_field.format() * self.n
 
     def validate_default(self, val: list[T]) -> None:
         if len(val) > self.n:
@@ -282,11 +247,11 @@ class _FixedLengthArrayField(Field[list[T]]):
             )
 
     def __repr__(self) -> str:
-        return f"{super().__repr__()}({self.n})"
+        return f"{super().__repr__()}({self.item_field!r}, {self.n})"
 
 
-def _validate_modes_match(mode: Optional[str], nested_mode: str) -> None:
-    if mode is not None and nested_mode != mode:
+def _validate_modes_match(mode: str, nested_mode: str) -> None:
+    if mode != nested_mode:
         size, byteorder = _MODE_CHAR_SIZE_BYTEORDER[nested_mode]
         exp_size, exp_byteorder = _MODE_CHAR_SIZE_BYTEORDER[mode]
         msg = (
@@ -300,7 +265,7 @@ def _validate_modes_match(mode: Optional[str], nested_mode: str) -> None:
 
 def _resolve_field(
     annotation: Any,
-    mode: Optional[str],
+    mode: str,
 ) -> tuple[Field[Any], type, int, int]:
     """
     Returns 4-tuple of:
@@ -368,7 +333,11 @@ def _resolve_field(
     elif isinstance(annotation_arg, Field):
         field = annotation_arg
     elif get_origin(type_) is list:
-        field = _FixedLengthArrayField(type_, annotation_arg)
+        item_annotations = get_args(type_)
+        assert len(item_annotations) == 1
+        field = _FixedLengthArrayField(
+            item_annotations[0], mode, annotation_arg
+        )
     elif issubclass(type_, bytes):
         field = _BytesField(annotation_arg)
     else:
