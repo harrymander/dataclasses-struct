@@ -208,6 +208,23 @@ def test_pack_unpack_array_of_primitives(size, byteorder, list_type) -> None:
 
 @parametrize_all_sizes_and_byteorders()
 @parametrize_all_list_types()
+@pytest.mark.parametrize("value_type", (dcs.Int, dcs.I16))
+def test_pack_unpack_array_of_annotated_types(
+    size, byteorder, list_type, value_type
+) -> None:
+    @dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: Annotated[list_type[value_type], 5]
+
+    t = T([1, 2, 3, 4, 5])
+    packed = t.pack()
+    unpacked = T.from_packed(packed)
+    assert isinstance(unpacked.x, list)
+    assert t == unpacked
+
+
+@parametrize_all_sizes_and_byteorders()
+@parametrize_all_list_types()
 def test_pack_unpack_array_of_dataclass_struct(
     size, byteorder, list_type
 ) -> None:
