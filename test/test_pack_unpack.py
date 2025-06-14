@@ -396,7 +396,7 @@ def test_pack_padding_with_bytes(size, byteorder) -> None:
 
 @parametrize_all_sizes_and_byteorders()
 @parametrize_all_list_types()
-def test_pack_padding_with_fixed_size_array(
+def test_pack_unpack_with_padding_around_fixed_size_array(
     size, byteorder, list_type
 ) -> None:
     @dcs.dataclass_struct(size=size, byteorder=byteorder)
@@ -404,7 +404,35 @@ def test_pack_padding_with_fixed_size_array(
         a: Annotated[list_type[bool], dcs.PadBefore(2), 4, dcs.PadAfter(3)]
 
     t = Test([True, True, False, True])
-    assert t.pack() == b"\x00\x00\x01\x01\x00\x01\x00\x00\x00"
+    packed = t.pack()
+    assert packed == b"\x00\x00\x01\x01\x00\x01\x00\x00\x00"
+    assert Test.from_packed(packed) == t
+
+
+@parametrize_all_sizes_and_byteorders()
+@parametrize_all_list_types()
+def test_pack_unpack_fixed_size_array_with_padding(
+    size, byteorder, list_type
+) -> None:
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
+    class Test:
+        a: Annotated[
+            list_type[Annotated[bytes, dcs.PadBefore(2), dcs.PadAfter(3)]], 4
+        ]
+
+    items = [b"1", b"2", b"3", b"4"]
+    t = Test(items)
+    packed = t.pack()
+
+    exp_packed_bytes: list[int] = []
+    for i in items:
+        exp_packed_bytes.extend(0 for _ in range(2))
+        exp_packed_bytes.append(i[0])
+        exp_packed_bytes.extend(0 for _ in range(3))
+
+    exp_packed = bytes(exp_packed_bytes)
+    assert packed == exp_packed
+    assert Test.from_packed(packed) == t
 
 
 @parametrize_all_sizes_and_byteorders()

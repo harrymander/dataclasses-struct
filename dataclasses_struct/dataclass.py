@@ -40,6 +40,16 @@ def _separate_padding_from_annotation_args(args) -> tuple[int, int, object]:
     return pad_before, pad_after, extra_arg
 
 
+def _format_str_with_padding(fmt: str, pad_before: int, pad_after: int) -> str:
+    return "".join(
+        (
+            (f"{pad_before}x" if pad_before else ""),
+            fmt,
+            (f"{pad_after}x" if pad_after else ""),
+        )
+    )
+
+
 T = TypeVar("T")
 
 
@@ -231,15 +241,20 @@ class _FixedLengthArrayField(Field[list]):
                 "fixed-length array length must be positive non-zero int"
             )
 
-        self.item_field, self.item_type = _resolve_field(
-            item_type_annotation, mode
-        )[:2]
+        self.item_field, self.item_type, self.pad_before, self.pad_after = (
+            _resolve_field(item_type_annotation, mode)
+        )
         self.n = n
         self.is_native = self.item_field.is_native
         self.is_std = self.item_field.is_std
 
     def format(self) -> str:
-        return self.item_field.format() * self.n
+        fmt = _format_str_with_padding(
+            self.item_field.format(),
+            self.pad_before,
+            self.pad_after,
+        )
+        return fmt * self.n
 
     def __repr__(self) -> str:
         return f"{super().__repr__()}({self.item_field!r}, {self.n})"
@@ -371,13 +386,7 @@ def _validate_and_parse_field(
         field.validate_default(val)
 
     return (
-        "".join(
-            (
-                (f"{pad_before}x" if pad_before else ""),
-                field.format(),
-                (f"{pad_after}x" if pad_after else ""),
-            )
-        ),
+        _format_str_with_padding(field.format(), pad_before, pad_after),
         field,
         type_,
     )
