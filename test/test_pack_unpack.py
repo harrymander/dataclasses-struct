@@ -192,7 +192,7 @@ def test_pack_unpack_double_nested(size, byteorder) -> None:
 
 
 @parametrize_all_sizes_and_byteorders()
-def test_pack_unpack_array_of_primatives(size, byteorder) -> None:
+def test_pack_unpack_array_of_primitives(size, byteorder) -> None:
     @dataclass_struct(size=size, byteorder=byteorder)
     class T:
         x: Annotated[list[int], 5]
@@ -223,7 +223,7 @@ def test_pack_unpack_array_of_dataclass_struct(size, byteorder) -> None:
 
 
 @parametrize_all_sizes_and_byteorders()
-def test_pack_unpack_2d_array_of_primatives(size, byteorder) -> None:
+def test_pack_unpack_2d_array_of_primitives(size, byteorder) -> None:
     @dataclass_struct(size=size, byteorder=byteorder)
     class T:
         x: Annotated[list[Annotated[list[int], 3]], 2]
