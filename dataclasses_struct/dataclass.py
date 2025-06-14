@@ -235,6 +235,8 @@ class _FixedLengthArrayField(Field[list]):
             item_type_annotation, mode
         )[:2]
         self.n = n
+        self.is_native = self.item_field.is_native
+        self.is_std = self.item_field.is_std
 
     def format(self) -> str:
         return self.item_field.format() * self.n

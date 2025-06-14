@@ -12,6 +12,7 @@ from conftest import (
     parametrize_all_list_types,
     parametrize_all_sizes_and_byteorders,
     parametrize_fields,
+    parametrize_std_byteorders,
     std_byteorders,
     std_only_int_fields,
 )
@@ -192,12 +193,15 @@ def test_pack_unpack_double_nested(size, byteorder) -> None:
     assert c == unpacked
 
 
-@parametrize_all_sizes_and_byteorders()
+@parametrize_std_byteorders()
 @parametrize_all_list_types()
-def test_pack_unpack_array_of_primitives(size, byteorder, list_type) -> None:
-    @dataclass_struct(size=size, byteorder=byteorder)
+@parametrize_fields(std_only_int_fields, "int_type")
+def test_pack_unpack_array_of_std_int_types(
+    byteorder, list_type, int_type
+) -> None:
+    @dataclass_struct(size="std", byteorder=byteorder)
     class T:
-        x: Annotated[list_type[int], 5]
+        x: Annotated[list_type[int_type], 5]
 
     t = T([1, 2, 3, 4, 5])
     packed = t.pack()
@@ -206,17 +210,12 @@ def test_pack_unpack_array_of_primitives(size, byteorder, list_type) -> None:
     assert t == unpacked
 
 
-@parametrize_all_sizes_and_byteorders()
 @parametrize_all_list_types()
-@pytest.mark.parametrize(
-    "value_type", (dcs.Int, dcs.I8, dcs.I16, dcs.I32, dcs.I64)
-)
-def test_pack_unpack_array_of_annotated_int_types(
-    size, byteorder, list_type, value_type
-) -> None:
-    @dataclass_struct(size=size, byteorder=byteorder)
+@parametrize_fields(native_only_int_fields, "int_type")
+def test_pack_unpack_array_of_native_int_types(list_type, int_type) -> None:
+    @dataclass_struct()
     class T:
-        x: Annotated[list_type[value_type], 5]
+        x: Annotated[list_type[int_type], 5]
 
     t = T([1, 2, 3, 4, 5])
     packed = t.pack()
@@ -228,7 +227,7 @@ def test_pack_unpack_array_of_annotated_int_types(
 @parametrize_all_sizes_and_byteorders()
 @parametrize_all_list_types()
 @parametrize_fields(float_fields, "float_type")
-def test_pack_unpack_array_of_annotated_float_types(
+def test_pack_unpack_array_of_float_types(
     size, byteorder, list_type, float_type
 ) -> None:
     @dataclass_struct(size=size, byteorder=byteorder)
@@ -263,12 +262,9 @@ def test_pack_unpack_array_of_dataclass_struct(
     assert t == unpacked
 
 
-@parametrize_all_sizes_and_byteorders()
 @parametrize_all_list_types()
-def test_pack_unpack_2d_array_of_primitives(
-    size, byteorder, list_type
-) -> None:
-    @dataclass_struct(size=size, byteorder=byteorder)
+def test_pack_unpack_2d_array_of_primitives(list_type) -> None:
+    @dataclass_struct()
     class T:
         x: Annotated[list_type[Annotated[list_type[int], 3]], 2]
 
