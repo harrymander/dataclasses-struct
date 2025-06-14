@@ -376,6 +376,20 @@ def test_pack_padding_with_fixed_size_array(
 
 
 @parametrize_all_sizes_and_byteorders()
+@parametrize_all_list_types()
+def test_pack_unpack_list_of_byte_arrays(size, byteorder, list_type) -> None:
+    @dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: Annotated[list_type[Annotated[bytes, 5]], 4]
+
+    t = T([b"", b"1234", b"123456", b"12345"])
+    packed = t.pack()
+    unpacked = T.from_packed(packed)
+    assert isinstance(unpacked.x, list)
+    assert unpacked == T([b"\0" * 5, b"1234\0", b"12345", b"12345"])
+
+
+@parametrize_all_sizes_and_byteorders()
 def test_unpack_padding(size, byteorder) -> None:
     @dcs.dataclass_struct(size=size, byteorder=byteorder)
     class Test:
