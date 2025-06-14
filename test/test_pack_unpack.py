@@ -227,13 +227,13 @@ def test_pack_unpack_array_of_annotated_int_types(
 
 @parametrize_all_sizes_and_byteorders()
 @parametrize_all_list_types()
-@pytest.mark.parametrize("value_type", (dcs.F16, dcs.F32, dcs.F64))
+@parametrize_fields(float_fields, "float_type")
 def test_pack_unpack_array_of_annotated_float_types(
-    size, byteorder, list_type, value_type
+    size, byteorder, list_type, float_type
 ) -> None:
     @dataclass_struct(size=size, byteorder=byteorder)
     class T:
-        x: Annotated[list_type[value_type], 5]
+        x: Annotated[list_type[float_type], 5]
 
     t = T([1.0, 2.0, 3.0, 4.0, 5.0])
     packed = t.pack()
