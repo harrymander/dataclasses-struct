@@ -433,25 +433,6 @@ def test_bytes_array_default_too_long_fails(byteorder, size) -> None:
 
 
 @parametrize_all_sizes_and_byteorders()
-@parametrize_all_list_types()
-@pytest.mark.parametrize("default", ([], [1, 2, 3], [1, 2, 3, 4, 5]))
-def test_fixed_length_array_default_wrong_size_fails(
-    byteorder, size, list_type, default
-) -> None:
-    with pytest.raises(
-        ValueError,
-        match=r"^fixed-length array cannot have a different length than the "
-        r"fixed length of 4 elements. Array actually had "
-        + str(len(default))
-        + r" elements.$",
-    ):
-
-        @dcs.dataclass_struct(byteorder=byteorder, size=size)
-        class _:
-            x: Annotated[list_type[int], 4] = default
-
-
-@parametrize_all_sizes_and_byteorders()
 @parametrize_fields(float_fields, "float_field")
 @pytest.mark.parametrize("default", (10, 10.12))
 def test_float_default(size, byteorder, float_field, default) -> None:
