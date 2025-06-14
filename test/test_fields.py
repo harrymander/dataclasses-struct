@@ -146,19 +146,6 @@ def test_invalid_field_types_fail(byteorder, size, field_type) -> None:
 
 
 @parametrize_all_sizes_and_byteorders()
-def test_invalid_annotated_field_types_fail(byteorder, size) -> None:
-    with pytest.raises(
-        TypeError,
-        match=r"^Generic type not supported: set\[int\]. "
-        r"Currently only list is supported.",
-    ):
-
-        @dcs.dataclass_struct(byteorder=byteorder, size=size)
-        class _:
-            x: Annotated[set[int], 5]
-
-
-@parametrize_all_sizes_and_byteorders()
 def test_valid_bytes_length_has_correct_format(size, byteorder) -> None:
     @dcs.dataclass_struct(size=size, byteorder=byteorder)
     class Test:

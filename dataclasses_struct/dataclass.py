@@ -26,20 +26,20 @@ from .field import Field, builtin_fields
 from .types import PadAfter, PadBefore
 
 
-def _get_padding_and_field(fields) -> tuple[int, int, Any]:
+def _separate_padding_from_annotation_args(args) -> tuple[int, int, object]:
     pad_before = pad_after = 0
-    field = None
-    for f in fields:
-        if isinstance(f, PadBefore):
-            pad_before += f.size
-        elif isinstance(f, PadAfter):
-            pad_after += f.size
-        elif field is not None:
-            raise TypeError(f"too many annotations: {f}")
+    extra_arg = None  # should be Field or integer for bytes/list types
+    for arg in args:
+        if isinstance(arg, PadBefore):
+            pad_before += arg.size
+        elif isinstance(arg, PadAfter):
+            pad_after += arg.size
+        elif extra_arg is not None:
+            raise TypeError(f"too many annotations: {arg}")
         else:
-            field = f
+            extra_arg = arg
 
-    return pad_before, pad_after, field
+    return pad_before, pad_after, extra_arg
 
 
 T = TypeVar("T")
@@ -213,7 +213,7 @@ def get_struct_size(cls_or_obj) -> int:
 class _BytesField(Field[bytes]):
     field_type = bytes
 
-    def __init__(self, n: int):
+    def __init__(self, n: object):
         if not isinstance(n, int) or n < 1:
             raise ValueError("bytes length must be positive non-zero int")
 
@@ -244,7 +244,7 @@ class _NestedField(Field):
 class _FixedLengthArrayField(Field[list[T]]):
     field_type: GenericAlias
 
-    def __init__(self, cls: GenericAlias, n: int):
+    def __init__(self, cls: GenericAlias, n: object):
         if not isinstance(n, int) or n < 1:
             raise ValueError(
                 "fixed-length array length must be positive non-zero int"
@@ -285,84 +285,94 @@ class _FixedLengthArrayField(Field[list[T]]):
         return f"{super().__repr__()}({self.n})"
 
 
+def _validate_modes_match(mode: Optional[str], nested_mode: str) -> None:
+    if mode is not None and nested_mode != mode:
+        size, byteorder = _MODE_CHAR_SIZE_BYTEORDER[nested_mode]
+        exp_size, exp_byteorder = _MODE_CHAR_SIZE_BYTEORDER[mode]
+        msg = (
+            "byteorder and size of nested dataclass-struct does not "
+            f"match that of container (expected '{exp_size}' size and "
+            f"'{exp_byteorder}' byteorder, got '{size}' size and "
+            f"'{byteorder}' byteorder)"
+        )
+        raise TypeError(msg)
+
+
 def _resolve_field(
-    field_type: type,
+    annotation: Any,
     mode: Optional[str],
 ) -> tuple[Field[Any], type, int, int]:
-    field: Optional[Union[Field[Any], Any]] = None
-    if get_origin(field_type) == Annotated:
-        # The types defined in .types (e.g. U32, F32, etc.) are of the form:
-        #     Annotated[<builtin type>, Field(<field args>)]
-        # Alternatively, accept annotations of the form:
-        #     Annotated[<builtin type>, PadBefore(<size>), PadAfter(<size>)]
-        # or:
-        #     Annotated[<dcs.types type>, PadBefore(<size>), PadAfter(<size>)]
-        # or:
-        #     Annotated[bytes, <positive non-zero integer>]
-        # which will expand to:
-        #     Annotated[
-        #         <builtin type associated with dcs.types type>,
-        #         Field(<field args>),
-        #         PadBefore(<size>),
-        #         PadAfter(<size>),
-        #     ]
-        # PadBefore and PadAfter are optional and may be repeated or in
-        # different orders
-        type_, *fields = get_args(field_type)
-        pad_before, pad_after, field = _get_padding_and_field(fields)
-    else:
-        # Accept type annotations without Annotated e.g. builtin types or
-        # nested dataclass-structs
-        pad_before = pad_after = 0
-        type_ = field_type
+    """
+    Returns 4-tuple of:
+    * field
+    * type
+    * number of padding bytes before
+    * number of padding bytes after
 
-    if field is None:
+    Valid type annotations are:
+
+    1. <bool | int | float | bytes> | Annotated[<bool | int | float | bytes>, <padding>]
+
+       Supported builtin types.
+
+    2. Annotated[<bool | int | float | bytes>, Field(...), <padding>]
+
+       (These are the types defined in dataclasses_struct.types e.g. U32, F32).
+
+    3. <dataclasses_struct class> | Annotated[<dataclasses_struct class>, <padding>]
+
+       Must have the same size and byteorder as the container.
+
+    4. Annotated[bytes, <n>, <padding>]
+
+       Where <n> is >0.
+
+    5. Annotated[list[<type>], <n>, <padding>]
+
+       Where <n> is >0 and <type> is one of the above.
+
+    <padding> is an optional mixture of PadBefore and PadAfter annotations,
+    which may be repeated. E.g.
+
+      Annotated[int, PadBefore(5), PadAfter(2), PadBefore(3)]
+    """  # noqa: E501
+
+    if get_origin(annotation) == Annotated:
+        type_, *args = get_args(annotation)
+        pad_before, pad_after, annotation_arg = (
+            _separate_padding_from_annotation_args(args)
+        )
+    else:
+        pad_before = pad_after = 0
+        type_ = annotation
+        annotation_arg = None
+
+    field: Field[Any]
+    if annotation_arg is None:
+        if get_origin(type_) is list:
+            msg = (
+                "list types must be marked as a fixed-length using "
+                "Annotated, ex: Annotated[list[int], 5]"
+            )
+            raise TypeError(msg)
+
         # Must be either a nested type or one of the supported builtins
         if is_dataclass_struct(type_):
-            nested_mode = type_.__dataclass_struct__.mode
-            if mode is not None and nested_mode != mode:
-                size, byteorder = _MODE_CHAR_SIZE_BYTEORDER[nested_mode]
-                exp_size, exp_byteorder = _MODE_CHAR_SIZE_BYTEORDER[mode]
-                msg = (
-                    "byteorder and size of nested dataclass-struct does not "
-                    f"match that of container (expected '{exp_size}' size and "
-                    f"'{exp_byteorder}' byteorder, got '{size}' size and "
-                    f"'{byteorder}' byteorder)"
-                )
-                raise TypeError(msg)
+            _validate_modes_match(mode, type_.__dataclass_struct__.mode)
             field = _NestedField(type_)
         else:
-            field = builtin_fields.get(type_)
-            if field is None:
-                if (
-                    _is_generic_alias(type(type_))
-                    and get_origin(type_) is list
-                ):
-                    raise TypeError(
-                        "list types must be marked as a fixed-length using "
-                        "Annotated, ex: Annotated[list[int], 5]"
-                    )
-                else:
-                    raise TypeError(f"type not supported: {field_type}")
-
-    if not isinstance(field, Field):
-        if _is_generic_alias(type(type_)):
-            if get_origin(type_) is list:
-                field = _FixedLengthArrayField(type_, field)
-            else:
-                raise TypeError(
-                    f"Generic type not supported: {type_}. "
-                    "Currently only list is supported."
-                )
-        elif issubclass(type_, bytes):
-            # Annotated[bytes, <positive non-zero integer>] is a byte array
-            field = _BytesField(field)
-        else:
-            raise TypeError(f"invalid field annotation: {field!r}")
-    elif not isinstance(field.field_type, GenericAlias) and not issubclass(
-        type_, field.field_type
-    ):
-        raise TypeError(f"type {type_} not supported for field: {field}")
+            opt_field = builtin_fields.get(type_)
+            if opt_field is None:
+                raise TypeError(f"type not supported: {annotation}")
+            field = opt_field
+    elif isinstance(annotation_arg, Field):
+        field = annotation_arg
+    elif get_origin(type_) is list:
+        field = _FixedLengthArrayField(type_, annotation_arg)
+    elif issubclass(type_, bytes):
+        field = _BytesField(annotation_arg)
+    else:
+        raise TypeError(f"invalid field annotation: {annotation!r}")
 
     return field, type_, pad_before, pad_after
 
@@ -375,9 +385,6 @@ def _validate_and_parse_field(
     validate_defaults: bool,
     mode: str,
 ) -> tuple[str, Field, type]:
-    """
-    name is the name of the attribute, f is its type annotation.
-    """
     field, type_, pad_before, pad_after = _resolve_field(field_type, mode)
 
     if is_native:
