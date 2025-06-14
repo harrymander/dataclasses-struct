@@ -208,8 +208,10 @@ def test_pack_unpack_array_of_primitives(size, byteorder, list_type) -> None:
 
 @parametrize_all_sizes_and_byteorders()
 @parametrize_all_list_types()
-@pytest.mark.parametrize("value_type", (dcs.Int, dcs.I16))
-def test_pack_unpack_array_of_annotated_types(
+@pytest.mark.parametrize(
+    "value_type", (dcs.Int, dcs.I8, dcs.I16, dcs.I32, dcs.I64)
+)
+def test_pack_unpack_array_of_annotated_int_types(
     size, byteorder, list_type, value_type
 ) -> None:
     @dataclass_struct(size=size, byteorder=byteorder)
@@ -217,6 +219,23 @@ def test_pack_unpack_array_of_annotated_types(
         x: Annotated[list_type[value_type], 5]
 
     t = T([1, 2, 3, 4, 5])
+    packed = t.pack()
+    unpacked = T.from_packed(packed)
+    assert isinstance(unpacked.x, list)
+    assert t == unpacked
+
+
+@parametrize_all_sizes_and_byteorders()
+@parametrize_all_list_types()
+@pytest.mark.parametrize("value_type", (dcs.F16, dcs.F32, dcs.F64))
+def test_pack_unpack_array_of_annotated_float_types(
+    size, byteorder, list_type, value_type
+) -> None:
+    @dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: Annotated[list_type[value_type], 5]
+
+    t = T([1.0, 2.0, 3.0, 4.0, 5.0])
     packed = t.pack()
     unpacked = T.from_packed(packed)
     assert isinstance(unpacked.x, list)
