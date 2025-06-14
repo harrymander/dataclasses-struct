@@ -12,6 +12,7 @@ from conftest import (
     common_fields,
     float_fields,
     native_only_int_fields,
+    parametrize_all_list_types,
     parametrize_all_sizes_and_byteorders,
     parametrize_fields,
     parametrize_std_byteorders,
@@ -422,6 +423,25 @@ def test_bytes_array_default_too_long_fails(byteorder, size) -> None:
         @dcs.dataclass_struct(byteorder=byteorder, size=size)
         class _:
             x: Annotated[bytes, 8] = b"123456789"
+
+
+@parametrize_all_sizes_and_byteorders()
+@parametrize_all_list_types()
+@pytest.mark.parametrize("default", ([], [1, 2, 3], [1, 2, 3, 4, 5]))
+def test_fixed_length_array_default_wrong_size_fails(
+    byteorder, size, list_type, default
+) -> None:
+    with pytest.raises(
+        ValueError,
+        match=r"^fixed-length array cannot have a different length than the "
+        r"fixed length of 4 elements. Array actually had "
+        + str(len(default))
+        + r" elements.$",
+    ):
+
+        @dcs.dataclass_struct(byteorder=byteorder, size=size)
+        class _:
+            x: Annotated[list_type[int], 4] = default
 
 
 @parametrize_all_sizes_and_byteorders()

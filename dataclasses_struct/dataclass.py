@@ -240,9 +240,11 @@ class _FixedLengthArrayField(Field[list]):
         return self.item_field.format() * self.n
 
     def validate_default(self, val: list[T]) -> None:
-        if len(val) > self.n:
+        if len(val) != self.n:
             raise ValueError(
-                f"fixed-length array cannot be longer than {self.n} elements"
+                "fixed-length array cannot have a different length than the "
+                f"fixed length of {self.n} elements. Array actually had "
+                f"{len(val)} elements."
             )
 
     def __repr__(self) -> str:
