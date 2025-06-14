@@ -365,6 +365,16 @@ def test_pack_padding_with_bytes(size, byteorder) -> None:
 
 
 @parametrize_all_sizes_and_byteorders()
+def test_pack_padding_with_fixed_size_array(size, byteorder) -> None:
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
+    class Test:
+        a: Annotated[list[bool], dcs.PadBefore(2), 4, dcs.PadAfter(3)]
+
+    t = Test([True, True, False, True])
+    assert t.pack() == b"\x00\x00\x01\x01\x00\x01\x00\x00\x00"
+
+
+@parametrize_all_sizes_and_byteorders()
 def test_unpack_padding(size, byteorder) -> None:
     @dcs.dataclass_struct(size=size, byteorder=byteorder)
     class Test:
