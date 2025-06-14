@@ -16,6 +16,7 @@ from conftest import (
     parametrize_all_sizes_and_byteorders,
     parametrize_fields,
     parametrize_std_byteorders,
+    skipif_kw_only_not_supported,
     std_only_int_fields,
 )
 
@@ -608,3 +609,19 @@ def test_str_type_annotations() -> None:
         k: "dcs.F32"
         l: "dcs.F64"  # noqa: E741
         m: "Annotated[bytes, 10]"
+
+
+@skipif_kw_only_not_supported
+def test_kw_only_marker() -> None:
+    from dataclasses import KW_ONLY  # type: ignore
+
+    @dcs.dataclass_struct()
+    class T:
+        arg1: int
+        arg2: int
+        _: KW_ONLY
+        kwarg1: float
+        kwarg2: bool
+
+    with pytest.raises(TypeError):
+        T(1, 2, 1.2, False)  # type: ignore
