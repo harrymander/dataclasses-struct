@@ -23,6 +23,16 @@ from ._typing import TypeGuard, Unpack, dataclass_transform
 from .field import Field, builtin_fields
 from .types import PadAfter, PadBefore
 
+if sys.version_info >= (3, 10):
+    from dataclasses import KW_ONLY as _KW_ONLY_MARKER
+else:
+    # Placeholder for KW_ONLY on Python 3.9
+
+    class _KW_ONLY_MARKER_TYPE:
+        pass
+
+    _KW_ONLY_MARKER = _KW_ONLY_MARKER_TYPE()
+
 
 def _separate_padding_from_annotation_args(args) -> tuple[int, int, object]:
     pad_before = pad_after = 0
@@ -434,6 +444,10 @@ def _make_class(
     struct_format = [mode]
     fields = []
     for name, field in cls_annotations.items():
+        if field is _KW_ONLY_MARKER:
+            # KW_ONLY is handled by stdlib dataclass, nothing to do on our end.
+            continue
+
         fmt, field, type_ = _validate_and_parse_field(
             cls,
             name=name,
