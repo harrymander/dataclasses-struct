@@ -514,6 +514,34 @@ match that of container (expected '{container_size}' size and \
             y: Nested
 
 
+@pytest.mark.parametrize(
+    "nested_size_byteorder,container_size_byteorder",
+    itertools.combinations(ALL_VALID_SIZE_BYTEORDER_PAIRS, 2),
+)
+def test_list_of_dataclass_structs_with_mismatched_size_and_byteorder_fails(
+    nested_size_byteorder, container_size_byteorder
+) -> None:
+    nested_size, nested_byteorder = nested_size_byteorder
+    container_size, container_byteorder = container_size_byteorder
+    exp_msg = f"byteorder and size of nested dataclass-struct does not \
+match that of container (expected '{container_size}' size and \
+'{container_byteorder}' byteorder, got '{nested_size}' size and \
+'{nested_byteorder}' byteorder)"
+
+    with pytest.raises(TypeError, match=f"^{escape(exp_msg)}$"):
+
+        @dcs.dataclass_struct(size=nested_size, byteorder=nested_byteorder)
+        class Nested:
+            pass
+
+        @dcs.dataclass_struct(
+            size=container_size,
+            byteorder=container_byteorder,
+        )
+        class _:
+            y: Annotated[list[Nested], 2]
+
+
 @pytest.mark.parametrize("size", (-1, 1.0, "1"))
 @pytest.mark.parametrize("padding", (dcs.PadBefore, dcs.PadAfter))
 def test_invalid_padding_size_fails(size: int, padding: type) -> None:
