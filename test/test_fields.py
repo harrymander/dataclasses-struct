@@ -181,7 +181,7 @@ def test_invalid_array_length_fails(size, byteorder, length: int) -> None:
 
 
 @parametrize_all_sizes_and_byteorders()
-def test_unannotated_array_fails(size, byteorder) -> None:
+def test_unannotated_list_fails(size, byteorder) -> None:
     with pytest.raises(
         TypeError,
         match=r"^list types must be marked as a fixed-length using Annotated, "
