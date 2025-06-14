@@ -1,5 +1,6 @@
 import itertools
 import struct
+import sys
 from typing import Annotated
 
 import pytest
@@ -460,3 +461,42 @@ def test_unpack_padding(size, byteorder) -> None:
         b"\x00" + (b"\x00" * 4) + b"\x01" + (b"\x00" * 7)
     )
     assert unpacked == Test(False, True)
+
+
+skipif_kw_only_not_supported = pytest.mark.skipif(
+    sys.version_info < (3, 10),
+    reason="kw_only added in Python 3.10",
+)
+
+
+@skipif_kw_only_not_supported
+def test_pack_unpack_with_kw_only() -> None:
+    @dataclass_struct(kw_only=True)  # type: ignore
+    class KwOnly:
+        x: int
+        y: bool
+        z: float
+
+    kw_only = KwOnly(z=-5.0, x=12, y=True)
+    packed = kw_only.pack()
+    unpacked = KwOnly.from_packed(packed)
+    assert unpacked == kw_only
+
+
+@skipif_kw_only_not_supported
+def test_pack_unpack_with_nested_kw_only() -> None:
+    @dataclass_struct(kw_only=True)  # type: ignore
+    class KwOnly:
+        x: int
+        y: bool
+        z: float
+
+    @dataclass_struct()
+    class Container:
+        a: KwOnly
+        b: KwOnly
+
+    c = Container(KwOnly(y=True, z=-5.0, x=12), KwOnly(z=0.25, x=100, y=False))
+    packed = c.pack()
+    unpacked = Container.from_packed(packed)
+    assert unpacked == c

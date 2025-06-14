@@ -149,7 +149,14 @@ class _DataclassStructInternal(Generic[T]):
         """
         Returns an instance of self.cls, consuming args
         """
-        return self.cls(*self._arg_generator(args))
+        return self.cls(
+            **{
+                fieldname: arg
+                for fieldname, arg in zip(
+                    self._fieldnames, self._arg_generator(args)
+                )
+            }
+        )
 
     def unpack(self, data: bytes) -> T:
         return self._init_from_args(iter(self.struct.unpack(data)))
