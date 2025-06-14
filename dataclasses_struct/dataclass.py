@@ -1,6 +1,5 @@
 import dataclasses
 import sys
-import typing
 from collections.abc import Generator, Iterator
 from struct import Struct
 from types import GenericAlias
@@ -448,17 +447,6 @@ def _make_class(
     setattr(cls, "from_packed", _make_unpack_method(cls))  # noqa: B010
 
     return dataclasses.dataclass(cls, **dataclass_kwargs)
-
-
-def _is_generic_alias(type_: type) -> bool:
-    """
-    Check if the given type is either kind of GenericAlias (public vs internal
-    to typing).
-
-    This is needed since types like list use GenericAlias, while
-    types like typing.List use _GenericAlias.
-    """
-    return type_ is GenericAlias or type_ is typing._GenericAlias  # type: ignore[attr-defined]
 
 
 class _DataclassKwargsPre310(TypedDict, total=False):
