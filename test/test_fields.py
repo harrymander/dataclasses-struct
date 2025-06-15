@@ -364,3 +364,20 @@ def test_kw_only_marker() -> None:
 
     with pytest.raises(TypeError):
         T(1, 2, 1.2, False)  # type: ignore
+
+
+def test_no_init() -> None:
+    @dcs.dataclass_struct(init=False)
+    class T:
+        x: int = 123
+        y: int = 456
+
+    t = T()
+    assert t.x == 123
+    assert t.y == 456
+
+    t.x = 1000
+    t.y = 2000
+    unpacked = T.from_packed(t.pack())
+    assert unpacked.x == 1000
+    assert unpacked.y == 2000
