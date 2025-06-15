@@ -74,11 +74,18 @@ _MODE_CHAR_SIZE_BYTEORDER: dict[str, tuple[str, str]] = {
 }
 
 
+@dataclasses.dataclass
+class _FieldInfo:
+    name: str
+    field: Field[Any]
+    type_: type
+    init: bool
+
+
 class _DataclassStructInternal(Generic[T]):
     struct: Struct
     cls: type[T]
-    _fieldnames: list[str]
-    _fields: list[tuple[Field[Any], type]]
+    _fields: list[_FieldInfo]
 
     @property
     def format(self) -> str:
@@ -96,12 +103,10 @@ class _DataclassStructInternal(Generic[T]):
         self,
         fmt: str,
         cls: type,
-        fieldnames: list[str],
-        fields: list[tuple[Field[Any], type]],
+        fields: list[_FieldInfo],
     ):
         self.struct = Struct(fmt)
         self.cls = cls
-        self._fieldnames = fieldnames
         self._fields = fields
 
     def _flattened_attrs(self, outer_self: T) -> list[Any]:
@@ -110,8 +115,8 @@ class _DataclassStructInternal(Generic[T]):
         any nested structs.
         """
         attrs: list[Any] = []
-        for fieldname in self._fieldnames:
-            attr = getattr(outer_self, fieldname)
+        for field in self._fields:
+            attr = getattr(outer_self, field.name)
             self._flatten_attr(attrs, attr)
         return attrs
 
@@ -129,9 +134,9 @@ class _DataclassStructInternal(Generic[T]):
         return self.struct.pack(*self._flattened_attrs(obj))
 
     def _arg_generator(self, args: Iterator) -> Generator:
-        for field, fieldtype in self._fields:
+        for field in self._fields:
             yield from _DataclassStructInternal._generate_args_recursively(
-                args, field, fieldtype
+                args, field.field, field.type_
             )
 
     @staticmethod
@@ -158,14 +163,19 @@ class _DataclassStructInternal(Generic[T]):
         """
         Returns an instance of self.cls, consuming args
         """
-        return self.cls(
-            **{
-                fieldname: arg
-                for fieldname, arg in zip(
-                    self._fieldnames, self._arg_generator(args)
-                )
-            }
-        )
+        kwargs = {}
+        no_init_args = {}
+
+        for field, arg in zip(self._fields, self._arg_generator(args)):
+            if field.init:
+                kwargs[field.name] = arg
+            else:
+                no_init_args[field.name] = arg
+
+        obj = self.cls(**kwargs)
+        for name, arg in no_init_args.items():
+            setattr(obj, name, arg)
+        return obj
 
     def unpack(self, data: bytes) -> T:
         return self._init_from_args(iter(self.struct.unpack(data)))
@@ -374,12 +384,15 @@ def _resolve_field(
 
 def _validate_and_parse_field(
     cls: type,
+    *,
     name: str,
     field_type: type,
     is_native: bool,
     validate_defaults: bool,
     mode: str,
-) -> tuple[str, Field, type]:
+    init: bool,
+) -> tuple[str, _FieldInfo]:
+    """Returns format string and info."""
     field, type_, pad_before, pad_after = _resolve_field(field_type, mode)
 
     if is_native:
@@ -401,8 +414,7 @@ def _validate_and_parse_field(
 
     return (
         _format_str_with_padding(field.format(), pad_before, pad_after),
-        field,
-        type_,
+        _FieldInfo(name, field, type_, init),
     )
 
 
@@ -439,32 +451,29 @@ def _make_class(
 ) -> type[DataclassStructProtocol]:
     cls_annotations = get_type_hints(cls, include_extras=True)
     struct_format = [mode]
-    fields = []
+    fields: list[_FieldInfo] = []
+    init = dataclass_kwargs.get("init", True)
     for name, field in cls_annotations.items():
         if field is _KW_ONLY_MARKER:
             # KW_ONLY is handled by stdlib dataclass, nothing to do on our end.
             continue
 
-        fmt, field, type_ = _validate_and_parse_field(
+        fmt, field = _validate_and_parse_field(
             cls,
             name=name,
             field_type=field,
             is_native=is_native,
             validate_defaults=validate_defaults,
             mode=mode,
+            init=init,
         )
         struct_format.append(fmt)
-        fields.append((field, type_))
+        fields.append(field)
 
     setattr(  # noqa: B010
         cls,
         "__dataclass_struct__",
-        _DataclassStructInternal(
-            "".join(struct_format),
-            cls,
-            list(cls_annotations.keys()),
-            fields,
-        ),
+        _DataclassStructInternal("".join(struct_format), cls, fields),
     )
     setattr(cls, "pack", _make_pack_method())  # noqa: B010
     setattr(cls, "from_packed", _make_unpack_method(cls))  # noqa: B010
