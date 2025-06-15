@@ -493,3 +493,41 @@ def test_pack_unpack_with_nested_kw_only() -> None:
     packed = c.pack()
     unpacked = Container.from_packed(packed)
     assert unpacked == c
+
+
+def test_pack_unpack_with_no_init_args_initialised_with_defaults() -> None:
+    @dcs.dataclass_struct(init=False)
+    class T:
+        x: int = 1
+        y: int = 2
+
+    t = T()
+    assert t.x == 1
+    assert t.y == 2
+
+    t.x = 3
+    t.y = 4
+    unpacked = T.from_packed(t.pack())
+    assert unpacked.x == 3
+    assert unpacked.y == 4
+
+
+def test_pack_unpack_with_no_init_args_initialised_in_user_init() -> None:
+    @dcs.dataclass_struct(init=False)
+    class T:
+        x: int
+        y: int
+
+        def __init__(self) -> None:
+            self.x = 1
+            self.y = 2
+
+    t = T()
+    assert t.x == 1
+    assert t.y == 2
+
+    t.x = 3
+    t.y = 4
+    unpacked = T.from_packed(t.pack())
+    assert unpacked.x == 3
+    assert unpacked.y == 4
