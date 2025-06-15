@@ -19,7 +19,6 @@ from conftest import (
 )
 
 import dataclasses_struct as dcs
-from dataclasses_struct.dataclass import dataclass_struct
 
 
 @pytest.mark.parametrize(
@@ -40,7 +39,7 @@ from dataclasses_struct.dataclass import dataclass_struct
     ],
 )
 def test_pack_unpack_int(size, byteorder, field_type) -> None:
-    @dataclass_struct(size=size, byteorder=byteorder)
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
     class T:
         x: field_type
 
@@ -55,7 +54,7 @@ def test_pack_unpack_int(size, byteorder, field_type) -> None:
 @parametrize_fields(float_fields, "field_type")
 @pytest.mark.parametrize("value", (1.5, 2.0, 2))
 def test_pack_unpack_floats(size, byteorder, field_type, value) -> None:
-    @dataclass_struct(size=size, byteorder=byteorder)
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
     class T:
         x: field_type
 
@@ -69,7 +68,7 @@ def test_pack_unpack_floats(size, byteorder, field_type, value) -> None:
 @parametrize_all_sizes_and_byteorders()
 @parametrize_fields(char_fields, "field_type")
 def test_pack_unpack_char(size, byteorder, field_type) -> None:
-    @dataclass_struct(size=size, byteorder=byteorder)
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
     class T:
         x: field_type
 
@@ -84,7 +83,7 @@ def test_pack_unpack_char(size, byteorder, field_type) -> None:
 @parametrize_fields(bool_fields, "field_type")
 @pytest.mark.parametrize("value", (True, False))
 def test_pack_unpack_bool(size, byteorder, field_type, value) -> None:
-    @dataclass_struct(size=size, byteorder=byteorder)
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
     class T:
         x: field_type
 
@@ -97,7 +96,7 @@ def test_pack_unpack_bool(size, byteorder, field_type, value) -> None:
 
 @parametrize_all_sizes_and_byteorders()
 def test_pack_unpack_bytes_exact_length(size, byteorder) -> None:
-    @dataclass_struct(size=size, byteorder=byteorder)
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
     class T:
         x: Annotated[bytes, 3]
 
@@ -110,7 +109,7 @@ def test_pack_unpack_bytes_exact_length(size, byteorder) -> None:
 
 @parametrize_all_sizes_and_byteorders()
 def test_packed_bytes_longer_than_length_is_truncated(size, byteorder) -> None:
-    @dataclass_struct(size=size, byteorder=byteorder)
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
     class T:
         x: Annotated[bytes, 3]
 
@@ -125,7 +124,7 @@ def test_packed_bytes_longer_than_length_is_truncated(size, byteorder) -> None:
 def test_packed_bytes_shorter_than_length_is_zero_padded(
     size, byteorder
 ) -> None:
-    @dataclass_struct(size=size, byteorder=byteorder)
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
     class T:
         x: Annotated[bytes, 5]
 
@@ -200,7 +199,7 @@ def test_pack_unpack_double_nested(size, byteorder) -> None:
 def test_pack_unpack_array_of_std_int_types(
     byteorder, list_type, int_type
 ) -> None:
-    @dataclass_struct(size="std", byteorder=byteorder)
+    @dcs.dataclass_struct(size="std", byteorder=byteorder)
     class T:
         x: Annotated[list_type[int_type], 5]
 
@@ -214,7 +213,7 @@ def test_pack_unpack_array_of_std_int_types(
 @parametrize_all_list_types()
 @parametrize_fields(native_only_int_fields, "int_type")
 def test_pack_unpack_array_of_native_int_types(list_type, int_type) -> None:
-    @dataclass_struct()
+    @dcs.dataclass_struct()
     class T:
         x: Annotated[list_type[int_type], 5]
 
@@ -231,7 +230,7 @@ def test_pack_unpack_array_of_native_int_types(list_type, int_type) -> None:
 def test_pack_unpack_array_of_float_types(
     size, byteorder, list_type, float_type
 ) -> None:
-    @dataclass_struct(size=size, byteorder=byteorder)
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
     class T:
         x: Annotated[list_type[float_type], 5]
 
@@ -252,7 +251,7 @@ def test_pack_unpack_array_of_dataclass_struct(
         x: float
         y: float
 
-    @dataclass_struct(size=size, byteorder=byteorder)
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
     class T:
         x: Annotated[list_type[Nested], 2]
 
@@ -265,7 +264,7 @@ def test_pack_unpack_array_of_dataclass_struct(
 
 @parametrize_all_list_types()
 def test_pack_unpack_2d_array_of_primitives(list_type) -> None:
-    @dataclass_struct()
+    @dcs.dataclass_struct()
     class T:
         x: Annotated[list_type[Annotated[list_type[int], 3]], 2]
 
@@ -286,7 +285,7 @@ def test_pack_unpack_2d_array_of_dataclass_struct(
         x: float
         y: float
 
-    @dataclass_struct(size=size, byteorder=byteorder)
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
     class T:
         x: Annotated[list_type[Annotated[list_type[Nested], 3]], 2]
 
@@ -439,7 +438,7 @@ def test_pack_unpack_fixed_size_array_with_padding(
 @parametrize_all_sizes_and_byteorders()
 @parametrize_all_list_types()
 def test_pack_unpack_list_of_byte_arrays(size, byteorder, list_type) -> None:
-    @dataclass_struct(size=size, byteorder=byteorder)
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
     class T:
         x: Annotated[list_type[Annotated[bytes, 5]], 4]
 
@@ -465,7 +464,7 @@ def test_unpack_padding(size, byteorder) -> None:
 
 @skipif_kw_only_not_supported
 def test_pack_unpack_with_kw_only() -> None:
-    @dataclass_struct(kw_only=True)  # type: ignore
+    @dcs.dataclass_struct(kw_only=True)  # type: ignore
     class KwOnly:
         x: int
         y: bool
@@ -479,13 +478,13 @@ def test_pack_unpack_with_kw_only() -> None:
 
 @skipif_kw_only_not_supported
 def test_pack_unpack_with_nested_kw_only() -> None:
-    @dataclass_struct(kw_only=True)  # type: ignore
+    @dcs.dataclass_struct(kw_only=True)  # type: ignore
     class KwOnly:
         x: int
         y: bool
         z: float
 
-    @dataclass_struct()
+    @dcs.dataclass_struct()
     class Container:
         a: KwOnly
         b: KwOnly
