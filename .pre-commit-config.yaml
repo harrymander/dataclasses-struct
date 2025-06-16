@@ -9,3 +9,6 @@ repos:
     hooks:
       - id: uv-lock
         args: ["--check"]
+      - id: uv-export
+        args: ["--quiet", "--only-group", "docs", "-o", "requirements-docs.txt"]
+        files: ^(requirements-docs\.txt|pyproject\.toml|uv\.lock)$
