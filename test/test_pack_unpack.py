@@ -1,3 +1,4 @@
+import dataclasses
 import itertools
 import struct
 from typing import Annotated
@@ -531,3 +532,19 @@ def test_pack_unpack_with_no_init_args_initialised_in_user_init() -> None:
     unpacked = T.from_packed(t.pack())
     assert unpacked.x == 3
     assert unpacked.y == 4
+
+
+def test_pack_unpack_with_specific_field_no_init() -> None:
+    @dcs.dataclass_struct()
+    class T:
+        x: int = dataclasses.field(default=-100)
+        y: int = dataclasses.field(default=200, init=False)
+
+    t = T(x=100)
+    assert t.x == 100
+    assert t.y == 200
+
+    t.y = -200
+    unpacked = T.from_packed(t.pack())
+    assert unpacked.x == 100
+    assert unpacked.y == -200
