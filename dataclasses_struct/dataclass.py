@@ -82,7 +82,7 @@ class _FieldInfo:
     init: bool
 
 
-class _DataclassStructInternal(Generic[T]):
+class DataclassStructInternal(Generic[T]):
     struct: Struct
     cls: type[T]
     _fields: list[_FieldInfo]
@@ -126,16 +126,16 @@ class _DataclassStructInternal(Generic[T]):
             attrs.extend(attr.__dataclass_struct__._flattened_attrs(attr))
         elif isinstance(attr, list):
             for sub_attr in attr:
-                _DataclassStructInternal._flatten_attr(attrs, sub_attr)
+                DataclassStructInternal._flatten_attr(attrs, sub_attr)
         else:
             attrs.append(attr)
 
-    def pack(self, obj: T) -> bytes:
+    def _pack(self, obj: T) -> bytes:
         return self.struct.pack(*self._flattened_attrs(obj))
 
     def _arg_generator(self, args: Iterator) -> Generator:
         for field in self._fields:
-            yield from _DataclassStructInternal._generate_args_recursively(
+            yield from DataclassStructInternal._generate_args_recursively(
                 args, field.field, field.type_
             )
 
@@ -151,7 +151,7 @@ class _DataclassStructInternal(Generic[T]):
             items: list = []
             for _ in range(field.n):
                 items.extend(
-                    _DataclassStructInternal._generate_args_recursively(
+                    DataclassStructInternal._generate_args_recursively(
                         args, field.item_field, field.item_type
                     )
                 )
@@ -177,12 +177,12 @@ class _DataclassStructInternal(Generic[T]):
             setattr(obj, name, arg)
         return obj
 
-    def unpack(self, data: bytes) -> T:
+    def _unpack(self, data: bytes) -> T:
         return self._init_from_args(iter(self.struct.unpack(data)))
 
 
 class DataclassStructProtocol(Protocol):
-    __dataclass_struct__: _DataclassStructInternal
+    __dataclass_struct__: DataclassStructInternal
 
     @classmethod
     def from_packed(cls: type[T], data: bytes) -> T: ...
@@ -213,7 +213,7 @@ def is_dataclass_struct(
     return (
         dataclasses.is_dataclass(obj)
         and hasattr(obj, "__dataclass_struct__")
-        and isinstance(obj.__dataclass_struct__, _DataclassStructInternal)
+        and isinstance(obj.__dataclass_struct__, DataclassStructInternal)
     )
 
 
@@ -456,7 +456,7 @@ def _make_pack_method() -> Callable:
     func = """
 def pack(self) -> bytes:
     '''Pack to bytes using struct.pack.'''
-    return self.__dataclass_struct__.pack(self)
+    return self.__dataclass_struct__._pack(self)
 """
 
     scope: dict[str, Any] = {}
@@ -468,7 +468,7 @@ def _make_unpack_method(cls: type) -> classmethod:
     func = """
 def from_packed(cls, data: bytes) -> cls_type:
     '''Unpack from bytes.'''
-    return cls.__dataclass_struct__.unpack(data)
+    return cls.__dataclass_struct__._unpack(data)
 """
 
     scope: dict[str, Any] = {"cls_type": cls}
@@ -507,7 +507,7 @@ def _make_class(
     setattr(  # noqa: B010
         cls,
         "__dataclass_struct__",
-        _DataclassStructInternal("".join(struct_format), cls, fields),
+        DataclassStructInternal("".join(struct_format), cls, fields),
     )
     setattr(cls, "pack", _make_pack_method())  # noqa: B010
     setattr(cls, "from_packed", _make_unpack_method(cls))  # noqa: B010
