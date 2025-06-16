@@ -326,6 +326,28 @@ class VectorsStd:
     velocity: Vector2d
 ```
 
+Default values for nested class fields cannot be set directly, as Python doesn't
+allow using mutable default values in dataclasses. To get around this, pass
+`frozen=True` to the inner class' `dataclass_struct` decorator. Alternatively,
+pass a zero-argument callable that returns an instance of the class to the
+`default_factory` keyword argument of
+[`dataclasses.field`](https://docs.python.org/3/library/dataclasses.html#dataclasses.field).
+For example:
+
+```python
+from dataclasses import field
+
+@dcs.dataclass_struct()
+class VectorsStd:
+    direction: Vector2d
+    velocity: Vector2d = field(default_factory=lambda: Vector2d(0, 0))
+```
+
+The return type of the `default_factory` will be validated unless
+`validate_defaults=False` is passed to the `dataclass_struct` decorator. Note
+that this means the callable passed to `default_factory` will be called once
+during class creation.
+
 #### Fixed-length arrays
 
 Fixed-length arrays can be represented by annotating a `list` field with
@@ -380,6 +402,22 @@ class TwoDimArray:
 >>> TwoDimArray.from_packed(TwoDimArray([[1, 2], [3, 4], [5, 6]]).pack())
 TwoDimArray(fixed=[[1, 2], [3, 4], [5, 6]])
 ```
+
+As with [nested structs](#nested-structs), a `default_factory` must be used to
+set a default value. For example:
+
+```python
+from dataclasses import field
+from typing import Annotated
+
+@dcs.dataclass_struct()
+class DefaultArray:
+    x: Annotated[list[int], 3] = field(default_factory=lambda: [1, 2, 3])
+```
+
+The returned default value's length and type and values of its items will be
+validated unless `validate_defaults=False` is passed to the `dataclass_struct`
+decorator.
 
 #### Manual padding
 
