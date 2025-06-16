@@ -1,6 +1,5 @@
 import abc
 import ctypes
-from types import GenericAlias
 from typing import Any, ClassVar, Generic, Literal, TypeVar, Union
 
 T = TypeVar("T")
@@ -9,7 +8,7 @@ T = TypeVar("T")
 class Field(abc.ABC, Generic[T]):
     is_native: bool = True
     is_std: bool = True
-    field_type: Union[type[T], tuple[type[T], ...], GenericAlias]
+    field_type: Union[type[T], tuple[type[T], ...]]
 
     @abc.abstractmethod
     def format(self) -> str: ...

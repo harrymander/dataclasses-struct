@@ -2,7 +2,6 @@ import dataclasses
 import sys
 from collections.abc import Generator, Iterator
 from struct import Struct
-from types import GenericAlias
 from typing import (
     Annotated,
     Any,
@@ -393,9 +392,7 @@ def _validate_and_parse_field(
 
     if validate_defaults and hasattr(cls, name):
         val = getattr(cls, name)
-        if not isinstance(field.field_type, GenericAlias) and not isinstance(
-            val, field.field_type
-        ):
+        if not isinstance(val, field.field_type):
             raise TypeError(
                 "invalid type for field: expected "
                 f"{field.field_type} got {type(val)}"
