@@ -285,6 +285,15 @@ class _FixedLengthArrayField(Field[list]):
     def __repr__(self) -> str:
         return f"{super().__repr__()}({self.item_field!r}, {self.n})"
 
+    def validate_default(self, val: list) -> None:
+        n = len(val)
+        if n != self.n:
+            msg = f"fixed-length array must have length of {self.n}, got {n}"
+            raise ValueError(msg)
+
+        for i in val:
+            _validate_field_default(self.item_field, i)
+
 
 def _validate_modes_match(mode: str, nested_mode: str) -> None:
     if mode != nested_mode:
@@ -392,6 +401,17 @@ def _get_default_from_dataclasses_field(field: dataclasses.Field) -> Any:
     return dataclasses.MISSING
 
 
+def _validate_field_default(field: Field[T], val: Any) -> None:
+    if not isinstance(val, field.field_type):
+        msg = (
+            "invalid type for field: expected "
+            f"{field.field_type} got {type(val)}"
+        )
+        raise TypeError(msg)
+
+    field.validate_default(val)
+
+
 def _validate_and_parse_field(
     cls: type,
     *,
@@ -422,13 +442,7 @@ def _validate_and_parse_field(
             val = _get_default_from_dataclasses_field(val)
 
         if val is not dataclasses.MISSING:
-            if not isinstance(val, field.field_type):
-                raise TypeError(
-                    "invalid type for field: expected "
-                    f"{field.field_type} got {type(val)}"
-                )
-
-            field.validate_default(val)
+            _validate_field_default(field, val)
 
     return (
         _format_str_with_padding(field.format(), pad_before, pad_after),
