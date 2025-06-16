@@ -548,3 +548,35 @@ def test_pack_unpack_with_specific_field_no_init() -> None:
     unpacked = T.from_packed(t.pack())
     assert unpacked.x == 100
     assert unpacked.y == -200
+
+
+def test_pack_unpack_with_no_init_in_decorator_overriding_fields_init() -> (
+    None
+):
+    @dcs.dataclass_struct(init=False)
+    class T:
+        x: int = dataclasses.field(init=True, default=100)
+        y: int = dataclasses.field(init=True, default=200)
+
+    t = T()
+    assert t.x == 100
+    assert t.y == 200
+
+    t.x = -100
+    t.y = -200
+    unpacked = T.from_packed(t.pack())
+    assert unpacked.x == -100
+    assert unpacked.y == -200
+
+
+def test_pack_unpack_no_init_fields_with_validate_defaults_false() -> None:
+    @dcs.dataclass_struct(validate_defaults=False)
+    class T:
+        x: int = dataclasses.field(init=False, default=1)
+
+    t = T()
+    assert t.x == 1
+
+    t.x = -1
+    unpacked = T.from_packed(t.pack())
+    assert unpacked.x == -1

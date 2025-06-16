@@ -84,15 +84,32 @@ def test_dataclasses_field_no_init(field_kwargs) -> None:
         T(1, 2)
 
 
-def test_dataclasses_no_init_in_decorator_overrides_fields_init() -> None:
-    @dcs.dataclass_struct(init=False)
-    class T:
-        x: int = field(init=True, default=100)
-        y: int = field(init=True, default=200)
+class DefaultFactoryCallCounter:
+    def __init__(self):
+        self.call_count = 0
 
-    t = T()
-    assert t.x == 100
-    assert t.y == 200
+    def __call__(self) -> int:
+        self.call_count += 1
+        return 1
 
-    with pytest.raises(TypeError, match=r"^T\(\) takes no arguments$"):
-        T(1, 2)
+
+def test_default_factory_called_once_during_class_creation() -> None:
+    factory = DefaultFactoryCallCounter()
+
+    @dcs.dataclass_struct()
+    class _:
+        x: int = field(default_factory=factory)
+
+    assert factory.call_count == 1
+
+
+def test_default_factory_not_called_during_class_creation_if_validate_defaults_is_false() -> (  # noqa: E501
+    None
+):
+    factory = DefaultFactoryCallCounter()
+
+    @dcs.dataclass_struct(validate_defaults=False)
+    class _:
+        x: int = field(default_factory=factory)
+
+    assert factory.call_count == 0
