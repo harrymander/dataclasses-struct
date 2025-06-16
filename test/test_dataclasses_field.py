@@ -82,3 +82,17 @@ def test_dataclasses_field_no_init(field_kwargs) -> None:
         match=r"takes 2 positional arguments but 3 were given$",
     ):
         T(1, 2)
+
+
+def test_dataclasses_no_init_in_decorator_overrides_fields_init() -> None:
+    @dcs.dataclass_struct(init=False)
+    class T:
+        x: int = field(init=True, default=100)
+        y: int = field(init=True, default=200)
+
+    t = T()
+    assert t.x == 100
+    assert t.y == 200
+
+    with pytest.raises(TypeError, match=r"^T\(\) takes no arguments$"):
+        T(1, 2)
