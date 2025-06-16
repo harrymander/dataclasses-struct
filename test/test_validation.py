@@ -10,6 +10,8 @@ from conftest import (
     parametrize_all_sizes_and_byteorders,
     parametrize_fields,
     parametrize_std_byteorders,
+    raises_default_value_invalid_type_error,
+    raises_default_value_out_of_range_error,
     std_only_int_fields,
 )
 
@@ -58,7 +60,7 @@ def test_std_int_default(field_type, default, byteorder) -> None:
 def test_std_int_default_out_of_range_fails(
     field_type, default, byteorder
 ) -> None:
-    with pytest.raises(ValueError, match=r"^value out of range"):
+    with raises_default_value_out_of_range_error():
 
         @dcs.dataclass_struct(size="std", byteorder=byteorder)
         class _:
@@ -117,7 +119,7 @@ def test_native_int_default(field_type, default) -> None:
 
 @pytest.mark.parametrize("field_type,default", native_int_out_of_range_vals)
 def test_native_int_default_out_of_range_fails(field_type, default) -> None:
-    with pytest.raises(ValueError, match=r"^value out of range"):
+    with raises_default_value_out_of_range_error():
 
         @dcs.dataclass_struct(size="native", byteorder="native")
         class _:
@@ -157,7 +159,7 @@ def parametrize_invalid_int_defaults(f):
 def test_std_int_default_wrong_type_fails(
     int_type, byteorder, default
 ) -> None:
-    with pytest.raises(TypeError, match=r"^invalid type for field:"):
+    with raises_default_value_invalid_type_error():
 
         @dcs.dataclass_struct(size="std", byteorder=byteorder)
         class _:
@@ -167,7 +169,7 @@ def test_std_int_default_wrong_type_fails(
 @parametrize_fields(native_only_int_fields, "int_type")
 @parametrize_invalid_int_defaults
 def test_native_int_default_wrong_type_fails(int_type, default) -> None:
-    with pytest.raises(TypeError, match=r"^invalid type for field:"):
+    with raises_default_value_invalid_type_error():
 
         @dcs.dataclass_struct(size="native", byteorder="native")
         class _:
@@ -187,7 +189,7 @@ def test_char_default(byteorder, size, char_field) -> None:
 @parametrize_all_sizes_and_byteorders()
 @parametrize_fields(char_fields, "field_type")
 def test_char_default_wrong_type_fails(byteorder, size, field_type) -> None:
-    with pytest.raises(TypeError, match=r"^invalid type for field:"):
+    with raises_default_value_invalid_type_error():
 
         @dcs.dataclass_struct(byteorder=byteorder, size=size)
         class _:
@@ -246,7 +248,7 @@ def test_float_default(size, byteorder, float_field, default) -> None:
 def test_float_default_wrong_type_fails(
     byteorder, size, float_field, default
 ) -> None:
-    with pytest.raises(TypeError, match=r"^invalid type for field:"):
+    with raises_default_value_invalid_type_error():
 
         @dcs.dataclass_struct(byteorder=byteorder, size=size)
         class _:
@@ -266,7 +268,7 @@ def test_bool_default(byteorder, size, bool_field) -> None:
 @parametrize_all_sizes_and_byteorders()
 @pytest.mark.parametrize("default", ("wrong", "1.5", None, "False"))
 def test_bool_default_wrong_type_fails(byteorder, size, default) -> None:
-    with pytest.raises(TypeError, match=r"^invalid type for field:"):
+    with raises_default_value_invalid_type_error():
 
         @dcs.dataclass_struct(byteorder=byteorder, size=size)
         class _:

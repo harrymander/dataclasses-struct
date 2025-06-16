@@ -1,5 +1,6 @@
 import dataclasses
 import itertools
+from contextlib import contextmanager
 from re import escape
 from typing import Annotated
 
@@ -12,6 +13,9 @@ from conftest import (
     parametrize_all_sizes_and_byteorders,
     parametrize_fields,
     parametrize_std_byteorders,
+    raises_field_type_not_supported,
+    raises_invalid_field_annotation,
+    raises_unsupported_size_mode,
     skipif_kw_only_not_supported,
     std_only_int_fields,
 )
@@ -36,10 +40,7 @@ def test_native_size_field_has_correct_format(field_type, fmt) -> None:
 
 @parametrize_fields(std_only_int_fields, "field_type")
 def test_invalid_native_size_fields_fails(field_type) -> None:
-    with pytest.raises(
-        TypeError,
-        match=r"only supported in standard size mode$",
-    ):
+    with raises_unsupported_size_mode("standard"):
 
         @dcs.dataclass_struct(byteorder="native", size="native")
         class _:
@@ -51,10 +52,7 @@ def test_invalid_native_size_fields_fails(field_type) -> None:
 def test_array_with_invalid_native_size_fields_fails(
     field_type, list_type
 ) -> None:
-    with pytest.raises(
-        TypeError,
-        match=r"only supported in standard size mode$",
-    ):
+    with raises_unsupported_size_mode("standard"):
 
         @dcs.dataclass_struct(byteorder="native", size="native")
         class _:
@@ -76,10 +74,7 @@ def test_valid_std_size_field_has_correct_format(
 @parametrize_fields(native_only_int_fields, "field_type")
 @parametrize_std_byteorders()
 def test_invalid_std_size_fields_fails(byteorder, field_type) -> None:
-    with pytest.raises(
-        TypeError,
-        match=r"only supported in native size mode$",
-    ):
+    with raises_unsupported_size_mode("native"):
 
         @dcs.dataclass_struct(byteorder=byteorder, size="std")
         class _:
@@ -92,10 +87,7 @@ def test_invalid_std_size_fields_fails(byteorder, field_type) -> None:
 def test_array_with_invalid_std_size_fields_fails(
     field_type, list_type, byteorder
 ) -> None:
-    with pytest.raises(
-        TypeError,
-        match=r"only supported in native size mode$",
-    ):
+    with raises_unsupported_size_mode("native"):
 
         @dcs.dataclass_struct(byteorder=byteorder, size="std")
         class _:
@@ -167,7 +159,7 @@ class VanillaClassTest:
     "field_type", [str, list, dict, DataClassTest, VanillaClassTest]
 )
 def test_invalid_field_types_fail(byteorder, size, field_type) -> None:
-    with pytest.raises(TypeError, match=r"^type not supported:"):
+    with raises_field_type_not_supported():
 
         @dcs.dataclass_struct(byteorder=byteorder, size=size)
         class _:
@@ -228,7 +220,7 @@ def test_unannotated_list_fails(size, byteorder, list_type) -> None:
 def test_annotated_list_with_invalid_arg_type_fails(
     size, byteorder, list_type
 ) -> None:
-    with pytest.raises(TypeError, match=r"^type not supported:"):
+    with raises_field_type_not_supported():
 
         @dcs.dataclass_struct(size=size, byteorder=byteorder)
         class _:
@@ -237,7 +229,7 @@ def test_annotated_list_with_invalid_arg_type_fails(
 
 @parametrize_all_sizes_and_byteorders()
 def test_annotated_list_without_arg_type_fails(size, byteorder) -> None:
-    with pytest.raises(TypeError, match=r"^invalid field annotation:"):
+    with raises_invalid_field_annotation():
 
         @dcs.dataclass_struct(size=size, byteorder=byteorder)
         class _:
@@ -246,7 +238,7 @@ def test_annotated_list_without_arg_type_fails(size, byteorder) -> None:
 
 @parametrize_all_sizes_and_byteorders()
 def test_invalid_annotated_fails(byteorder, size) -> None:
-    with pytest.raises(TypeError, match=r"^invalid field annotation:"):
+    with raises_invalid_field_annotation():
 
         @dcs.dataclass_struct(byteorder=byteorder, size=size)
         class _:
@@ -262,21 +254,46 @@ def test_bytes_with_too_many_annotations_fails(byteorder, size) -> None:
             x: Annotated[bytes, 1, 12]
 
 
-@pytest.mark.parametrize(
-    "nested_size_byteorder,container_size_byteorder",
-    itertools.combinations(ALL_VALID_SIZE_BYTEORDER_PAIRS, 2),
-)
+def parametrize_all_size_and_byteorder_combinations() -> pytest.MarkDecorator:
+    """
+    All combinations of size and byteorder, including invalid combinations.
+    """
+    return pytest.mark.parametrize(
+        "nested_size_byteorder,container_size_byteorder",
+        itertools.combinations(ALL_VALID_SIZE_BYTEORDER_PAIRS, 2),
+    )
+
+
+@contextmanager
+def raises_mismatched_nested_class_error(
+    nested_size,
+    nested_byteorder,
+    container_size,
+    container_byteorder,
+):
+    exp_msg = f"""
+    byteorder and size of nested dataclass-struct does not
+    match that of container (expected '{container_size}' size and
+    '{container_byteorder}' byteorder, got '{nested_size}' size and
+    '{nested_byteorder}' byteorder)
+    """
+    exp_msg = " ".join(exp_msg.split())
+    with pytest.raises(TypeError, match=f"^{escape(exp_msg)}$"):
+        yield
+
+
+@parametrize_all_size_and_byteorder_combinations()
 def test_nested_dataclass_with_mismatched_size_and_byteorder_fails(
     nested_size_byteorder, container_size_byteorder
 ) -> None:
     nested_size, nested_byteorder = nested_size_byteorder
     container_size, container_byteorder = container_size_byteorder
-    exp_msg = f"byteorder and size of nested dataclass-struct does not \
-match that of container (expected '{container_size}' size and \
-'{container_byteorder}' byteorder, got '{nested_size}' size and \
-'{nested_byteorder}' byteorder)"
-
-    with pytest.raises(TypeError, match=f"^{escape(exp_msg)}$"):
+    with raises_mismatched_nested_class_error(
+        nested_size,
+        nested_byteorder,
+        container_size,
+        container_byteorder,
+    ):
 
         @dcs.dataclass_struct(size=nested_size, byteorder=nested_byteorder)
         class Nested:
@@ -290,22 +307,19 @@ match that of container (expected '{container_size}' size and \
             y: Nested
 
 
-@pytest.mark.parametrize(
-    "nested_size_byteorder,container_size_byteorder",
-    itertools.combinations(ALL_VALID_SIZE_BYTEORDER_PAIRS, 2),
-)
+@parametrize_all_size_and_byteorder_combinations()
 @parametrize_all_list_types()
 def test_list_of_dataclass_structs_with_mismatched_size_and_byteorder_fails(
     nested_size_byteorder, container_size_byteorder, list_type
 ) -> None:
     nested_size, nested_byteorder = nested_size_byteorder
     container_size, container_byteorder = container_size_byteorder
-    exp_msg = f"byteorder and size of nested dataclass-struct does not \
-match that of container (expected '{container_size}' size and \
-'{container_byteorder}' byteorder, got '{nested_size}' size and \
-'{nested_byteorder}' byteorder)"
-
-    with pytest.raises(TypeError, match=f"^{escape(exp_msg)}$"):
+    with raises_mismatched_nested_class_error(
+        nested_size,
+        nested_byteorder,
+        container_size,
+        container_byteorder,
+    ):
 
         @dcs.dataclass_struct(size=nested_size, byteorder=nested_byteorder)
         class Nested:

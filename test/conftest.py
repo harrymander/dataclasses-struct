@@ -1,5 +1,6 @@
 import sys
 from collections.abc import Iterable
+from contextlib import contextmanager
 from typing import Callable, List  # noqa: UP035
 
 import pytest
@@ -107,3 +108,36 @@ skipif_kw_only_not_supported = pytest.mark.skipif(
     sys.version_info < (3, 10),
     reason="kw_only added in Python 3.10",
 )
+
+
+@contextmanager
+def raises_default_value_out_of_range_error():
+    with pytest.raises(ValueError, match=r"^value out of range for"):
+        yield
+
+
+@contextmanager
+def raises_default_value_invalid_type_error():
+    with pytest.raises(TypeError, match=r"^invalid type for field: expected"):
+        yield
+
+
+@contextmanager
+def raises_unsupported_size_mode(supported_mode: str):
+    with pytest.raises(
+        TypeError,
+        match=rf"^field .+? only supported in {supported_mode} size mode$",
+    ):
+        yield
+
+
+@contextmanager
+def raises_field_type_not_supported():
+    with pytest.raises(TypeError, match=r"^type not supported:"):
+        yield
+
+
+@contextmanager
+def raises_invalid_field_annotation():
+    with pytest.raises(TypeError, match=r"^invalid field annotation:"):
+        yield
