@@ -382,6 +382,31 @@ def _resolve_field(
     return field, type_, pad_before, pad_after
 
 
+def _get_default_from_dataclasses_field(field: dataclasses.Field) -> Any:
+    if field.default is not dataclasses.MISSING:
+        return field.default
+
+    if field.default_factory is not dataclasses.MISSING:
+        return field.default_factory()
+
+    return dataclasses.MISSING
+
+
+def _validate_field_default(field: Field[Any], val: Any) -> None:
+    if isinstance(val, dataclasses.Field):
+        val = _get_default_from_dataclasses_field(val)
+        if val is dataclasses.MISSING:
+            return
+
+    if not isinstance(val, field.field_type):
+        raise TypeError(
+            "invalid type for field: expected "
+            f"{field.field_type} got {type(val)}"
+        )
+
+    field.validate_default(val)
+
+
 def _validate_and_parse_field(
     cls: type,
     *,
@@ -404,13 +429,7 @@ def _validate_and_parse_field(
         raise TypeError(f"field {field} only supported in native size mode")
 
     if validate_defaults and hasattr(cls, name):
-        val = getattr(cls, name)
-        if not isinstance(val, field.field_type):
-            raise TypeError(
-                "invalid type for field: expected "
-                f"{field.field_type} got {type(val)}"
-            )
-        field.validate_default(val)
+        _validate_field_default(field, getattr(cls, name))
 
     return (
         _format_str_with_padding(field.format(), pad_before, pad_after),
