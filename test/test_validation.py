@@ -1,4 +1,5 @@
 import ctypes
+from dataclasses import field
 from typing import Annotated
 
 import pytest
@@ -273,3 +274,19 @@ def test_bool_default_wrong_type_fails(byteorder, size, default) -> None:
         @dcs.dataclass_struct(byteorder=byteorder, size=size)
         class _:
             x: bool = default
+
+
+def test_nested_dataclass_default_wrong_type_fails() -> None:
+    @dcs.dataclass_struct()
+    class A:
+        x: int
+
+    @dcs.dataclass_struct()
+    class B:
+        x: int
+
+    with raises_default_value_invalid_type_error():
+
+        @dcs.dataclass_struct()
+        class _:
+            x: A = field(default_factory=lambda: B(100))  # type: ignore
