@@ -533,7 +533,7 @@ def dataclass_struct(
         raise ValueError(f"invalid byteorder: {byteorder}")
 
     for kwarg in ("slots", "weakref_slot"):
-        if dataclass_kwargs.get(kwarg):
+        if kwarg in dataclass_kwargs:
             msg = f"dataclass '{kwarg}' keyword argument is not supported"
             raise ValueError(msg)
 
