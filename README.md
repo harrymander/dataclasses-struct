@@ -2,7 +2,7 @@
 
 [![PyPI version](https://img.shields.io/pypi/v/dataclasses-struct)](https://pypi.org/project/dataclasses-struct/)
 [![Python versions](https://img.shields.io/pypi/pyversions/dataclasses-struct)](https://pypi.org/project/dataclasses-struct/)
-[![Tests status](https://github.com/harrymander/dataclasses-struct/actions/workflows/ci.yml/badge.svg?event=push)]()
+[![Tests status](https://github.com/harrymander/dataclasses-struct/actions/workflows/ci.yml/badge.svg?event=push)](https://github.com/harrymander/dataclasses-struct/actions/workflows/ci.yml)
 [![Code coverage](https://img.shields.io/codecov/c/gh/harrymander/dataclasses-struct)](https://app.codecov.io/gh/harrymander/dataclasses-struct)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/harrymander/dataclasses-struct/blob/main/LICENSE)
 [![Documentation](https://img.shields.io/badge/Documentation-blue)](https://harrymander.xyz/dataclasses-struct)
