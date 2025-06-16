@@ -392,21 +392,6 @@ def _get_default_from_dataclasses_field(field: dataclasses.Field) -> Any:
     return dataclasses.MISSING
 
 
-def _validate_field_default(field: Field[Any], val: Any) -> None:
-    if isinstance(val, dataclasses.Field):
-        val = _get_default_from_dataclasses_field(val)
-        if val is dataclasses.MISSING:
-            return
-
-    if not isinstance(val, field.field_type):
-        raise TypeError(
-            "invalid type for field: expected "
-            f"{field.field_type} got {type(val)}"
-        )
-
-    field.validate_default(val)
-
-
 def _validate_and_parse_field(
     cls: type,
     *,
@@ -428,12 +413,26 @@ def _validate_and_parse_field(
     elif not field.is_std:
         raise TypeError(f"field {field} only supported in native size mode")
 
+    init_field = init
     if validate_defaults and hasattr(cls, name):
-        _validate_field_default(field, getattr(cls, name))
+        val = getattr(cls, name)
+        if isinstance(val, dataclasses.Field):
+            if not val.init:
+                init_field = False
+            val = _get_default_from_dataclasses_field(val)
+
+        if val is not dataclasses.MISSING:
+            if not isinstance(val, field.field_type):
+                raise TypeError(
+                    "invalid type for field: expected "
+                    f"{field.field_type} got {type(val)}"
+                )
+
+            field.validate_default(val)
 
     return (
         _format_str_with_padding(field.format(), pad_before, pad_after),
-        _FieldInfo(name, field, type_, init),
+        _FieldInfo(name, field, type_, init_field),
     )
 
 

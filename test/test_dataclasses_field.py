@@ -64,3 +64,21 @@ def test_dataclasses_field_default_invalid_value_fails(field_kwargs) -> None:
         @dcs.dataclass_struct()
         class _:
             x: dcs.UnsignedInt = field(**field_kwargs)
+
+
+@parametrize_field_kwargs(200)
+def test_dataclasses_field_no_init(field_kwargs) -> None:
+    @dcs.dataclass_struct()
+    class T:
+        x: int = field()
+        y: int = field(init=False, **field_kwargs)
+
+    t = T(100)
+    assert t.x == 100
+    assert t.y == 200
+
+    with pytest.raises(
+        TypeError,
+        match=r"takes 2 positional arguments but 3 were given$",
+    ):
+        T(1, 2)
