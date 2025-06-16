@@ -434,14 +434,16 @@ def _validate_and_parse_field(
         raise TypeError(f"field {field} only supported in native size mode")
 
     init_field = init
-    if validate_defaults and hasattr(cls, name):
+    if hasattr(cls, name):
         val = getattr(cls, name)
         if isinstance(val, dataclasses.Field):
             if not val.init:
                 init_field = False
-            val = _get_default_from_dataclasses_field(val)
 
-        if val is not dataclasses.MISSING:
+            if validate_defaults:
+                val = _get_default_from_dataclasses_field(val)
+
+        if validate_defaults and val is not dataclasses.MISSING:
             _validate_field_default(field, val)
 
     return (
