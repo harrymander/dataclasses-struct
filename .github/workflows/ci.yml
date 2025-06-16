@@ -1,0 +1,124 @@
+name: CI
+
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+    branches: ["*"]
+
+jobs:
+  pre-commit-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Run pre-commit checks
+        uses: pre-commit/action@v3.0.1
+
+  tests:
+    needs: pre-commit-checks
+    strategy:
+      matrix:
+        pyversion: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        os: ["Ubuntu", "Windows", "macOS"]
+        include:
+          - os: Windows
+            image: windows-latest
+          - os: Ubuntu
+            image: ubuntu-latest
+          - os: macOS
+            image: macos-latest
+    name: ${{ matrix.os }} / ${{ matrix.pyversion }}
+    runs-on: ${{ matrix.image }}
+    defaults:
+      run:
+        shell: bash
+    env:
+      UV_LOCKED: true
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.pyversion }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.pyversion }}
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.7.12"
+          enable-cache: true
+
+      - name: Install Python dependencies
+        run: uv sync
+
+      - name: Python type checking
+        run: uv run mypy
+
+      - name: Configure MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        if: matrix.os == 'Windows'
+
+      - name: Run tests
+        run: uv run pytest --color=yes --cov --cov-report=xml
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4
+        if: matrix.os == 'Ubuntu' && matrix.pyversion == '3.13'
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage.xml
+
+  build-docs:
+    needs: tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.7.12"
+          enable-cache: true
+          cache-dependency-glob: requirements-docs.txt
+      - name: Install Python dependencies
+        run: uv pip install --system -r requirements-docs.txt
+      - name: Configure mkdocs for GitHub Pages
+        run: |
+          sed -i 's,^site_url: .*$,site_url: https://harrymander.xyz/dataclasses-struct/,g' mkdocs.yml
+          diff=$(git diff mkdocs.yml)
+          if [ -z "$diff" ]; then
+            echo "mkdocs.yml was not modified!"
+            exit 1
+          fi
+      - name: Build site
+        run: mkdocs build --strict --site-dir site
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        id: deployment
+        with:
+          path: site/
+
+  publish-docs:
+    if: "${{ github.ref == 'refs/heads/main' }}"
+    needs: build-docs
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      # The current branch must have access to the github-pages environment.
+      # See 'Deployment branches and tags' settings for 'github-pages'
+      # environment in
+      # github.com/harrymander/dataclasses-struct/settings/environments
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
