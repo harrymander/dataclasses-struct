@@ -33,7 +33,7 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/harrymander/dataclasses-struct"
 Repository = "https://github.com/harrymander/dataclasses-struct"
-Documentation = "https://github.com/harrymander/dataclasses-struct/blob/main/README.md#usage"
+Documentation = "https://harrymander.xyz/dataclasses-struct"
 
 [dependency-groups]
 dev = [
