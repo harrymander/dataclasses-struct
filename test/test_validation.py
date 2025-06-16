@@ -1,4 +1,5 @@
 import ctypes
+from contextlib import contextmanager
 from dataclasses import field
 from typing import Annotated
 
@@ -8,6 +9,7 @@ from conftest import (
     char_fields,
     float_fields,
     native_only_int_fields,
+    parametrize_all_list_types,
     parametrize_all_sizes_and_byteorders,
     parametrize_fields,
     parametrize_std_byteorders,
@@ -289,4 +291,98 @@ def test_nested_dataclass_default_wrong_type_fails() -> None:
 
         @dcs.dataclass_struct()
         class _:
-            x: A = field(default_factory=lambda: B(100))  # type: ignore
+            a: A = field(default_factory=lambda: B(100))  # type: ignore
+
+
+@contextmanager
+def raises_fixed_length_array_wrong_length_error(expected: int, actual: int):
+    with pytest.raises(
+        ValueError,
+        match=(
+            r"^fixed-length array must have length of "
+            rf"{expected}, got {actual}$"
+        ),
+    ):
+        yield
+
+
+@pytest.mark.parametrize("default", ([], [1, 2], [1, 2, 3, 4]))
+@parametrize_all_list_types()
+def test_array_default_wrong_length_fails(list_type, default: list[int]):
+    with raises_fixed_length_array_wrong_length_error(3, len(default)):
+
+        @dcs.dataclass_struct()
+        class _:
+            x: Annotated[list_type[int], 3] = field(
+                default_factory=lambda: default
+            )
+
+
+@pytest.mark.parametrize("default", [1, (1, 2, 3)], ids=["scalar", "tuple"])
+@parametrize_all_list_types()
+def test_array_default_wrong_type_fails(list_type, default) -> None:
+    with raises_default_value_invalid_type_error():
+
+        @dcs.dataclass_struct()
+        class _:
+            x: Annotated[list_type[int], 3] = field(
+                default_factory=lambda: default
+            )
+
+
+@parametrize_all_list_types()
+def test_array_default_item_out_of_range_fails(list_type) -> None:
+    with raises_default_value_out_of_range_error():
+
+        @dcs.dataclass_struct()
+        class _:
+            x: Annotated[list_type[dcs.UnsignedInt], 3] = field(
+                default_factory=lambda: [1, -2, 3]
+            )
+
+
+@parametrize_all_list_types()
+def test_2d_array_default_item_out_of_range_fails(list_type) -> None:
+    with raises_default_value_out_of_range_error():
+
+        @dcs.dataclass_struct()
+        class _:
+            x: Annotated[
+                list_type[Annotated[list_type[dcs.UnsignedInt], 2]], 3
+            ] = field(default_factory=lambda: [[1, 2], [-3, 4], [5, 6]])
+
+
+@parametrize_all_list_types()
+def test_array_default_item_wrong_type_fails(list_type) -> None:
+    with raises_default_value_invalid_type_error():
+
+        @dcs.dataclass_struct()
+        class _:
+            x: Annotated[list_type[int], 3] = field(
+                default_factory=lambda: [1, 2.0, 3]
+            )
+
+
+@parametrize_all_list_types()
+def test_2d_array_default_item_wrong_type_fails(list_type) -> None:
+    with raises_default_value_invalid_type_error():
+
+        @dcs.dataclass_struct()
+        class _:
+            x: Annotated[list_type[Annotated[list_type[int], 2]], 3] = field(
+                default_factory=lambda: [[1, 2], [3, 4.0], [5, 6]]
+            )
+
+
+@parametrize_all_list_types()
+@pytest.mark.parametrize("default", ([], [1], [1, 2, 3]))
+def test_2d_array_default_item_wrong_length_fails(
+    list_type, default: list[int]
+) -> None:
+    with raises_fixed_length_array_wrong_length_error(2, len(default)):
+
+        @dcs.dataclass_struct()
+        class _:
+            x: Annotated[list_type[Annotated[list_type[int], 2]], 3] = field(
+                default_factory=lambda: [[1, 2], default, [3, 4]]
+            )
