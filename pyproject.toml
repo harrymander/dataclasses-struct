@@ -1,6 +1,6 @@
 [project]
 name = "dataclasses-struct"
-version = "1.1.0"
+version = "1.2.0"
 description = "Converting dataclasses to and from fixed-length binary data using struct"
 readme = "README.md"
 authors = [
