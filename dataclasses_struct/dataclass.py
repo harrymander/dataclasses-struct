@@ -6,6 +6,7 @@ from typing import (
     Annotated,
     Any,
     Callable,
+    ClassVar,
     Generic,
     Literal,
     Protocol,
@@ -196,7 +197,7 @@ class DataclassStructInternal(Generic[T]):
 
 
 class DataclassStructProtocol(Protocol):
-    __dataclass_struct__: DataclassStructInternal
+    __dataclass_struct__: ClassVar[DataclassStructInternal]
     """
     Internal data used by the library for packing and unpacking structs.
 
