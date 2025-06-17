@@ -3,12 +3,14 @@ import sys
 from collections.abc import Generator, Iterator
 from struct import Struct
 from typing import (
+    TYPE_CHECKING,
     Annotated,
     Any,
     Callable,
     ClassVar,
     Generic,
     Literal,
+    NoReturn,
     Protocol,
     TypedDict,
     TypeVar,
@@ -596,6 +598,153 @@ else:
         pass
 
 
+def _make_dataclass_struct(
+    cls: type,
+    *,
+    size: Literal["native", "std"],
+    byteorder: Literal["native", "big", "little", "network"],
+    validate_defaults: bool,
+    dataclass_kwargs: DataclassKwargs,
+) -> type:
+    is_native = size == "native"
+    if is_native:
+        if byteorder != "native":
+            raise ValueError("'native' size requires 'native' byteorder")
+    elif size != "std":
+        raise ValueError(f"invalid size: {size}")
+    if byteorder not in ("native", "big", "little", "network"):
+        raise ValueError(f"invalid byteorder: {byteorder}")
+
+    for kwarg in ("slots", "weakref_slot"):
+        if kwarg in dataclass_kwargs:
+            msg = f"dataclass '{kwarg}' keyword argument is not supported"
+            raise ValueError(msg)
+
+    return _make_class(
+        cls,
+        mode=_SIZE_BYTEORDER_MODE_CHAR[(size, byteorder)],
+        is_native=is_native,
+        validate_defaults=validate_defaults,
+        dataclass_kwargs=dataclass_kwargs,
+    )
+
+
+@dataclass_transform()
+class DataclassStruct:
+    def __init__(self) -> NoReturn:
+        msg = (
+            "DataclassStruct cannot be instantiated directly: "
+            "use it as a base class to add dataclass struct functionality."
+        )
+        raise RuntimeError(msg)
+
+    @overload
+    def __init_subclass__(
+        cls,
+        *,
+        size: Literal["native"] = "native",
+        byteorder: Literal["native"] = "native",
+        validate_defaults: bool = True,
+        **dataclass_kwargs: Unpack[DataclassKwargs],
+    ): ...
+
+    @overload
+    def __init_subclass__(
+        cls,
+        *,
+        size: Literal["std"],
+        byteorder: Literal["native", "big", "little", "network"] = "native",
+        validate_defaults: bool = True,
+        **dataclass_kwargs: Unpack[DataclassKwargs],
+    ): ...
+
+    def __init_subclass__(
+        cls,
+        *,
+        size: Literal["native", "std"] = "native",
+        byteorder: Literal["native", "big", "little", "network"] = "native",
+        validate_defaults: bool = True,
+        **dataclass_kwargs: Unpack[DataclassKwargs],
+    ) -> None:
+        """
+        The allowed `size` and `byteorder` argument combinations are as as follows.
+
+        | `size`     | `byteorder` | Notes                                                               |
+        | ---------- | ----------- | ------------------------------------------------------------------  |
+        | `"native"` | `"native"`  | The default. Native alignment and padding.                          |
+        | `"std"`    | `"native"`  | Standard integer sizes and system endianness, no alignment/padding. |
+        | `"std"`    | `"little"`  | Standard integer sizes and little endian, no alignment/padding.     |
+        | `"std"`    | `"big"`     | Standard integer sizes and big endian, no alignment/padding.        |
+        | `"std"`    | `"network"` | Equivalent to `byteorder="big"`.                                    |
+
+        Args:
+            size: The size mode.
+            byteorder: The byte order of the generated struct. If `size="native"`,
+                only `"native"` is allowed.
+            validate_defaults: Whether to validate the default values of any
+                fields.
+            dataclass_kwargs: Any additional keyword arguments to pass to the
+                [stdlib
+                `dataclass`](https://docs.python.org/3/library/dataclasses.html#dataclasses.dataclass)
+                decorator. The `slots` and `weakref_slot` keyword arguments are not
+                supported.
+
+        Raises:
+            ValueError: If the `size` and `byteorder` args are invalid or if
+                `validate_defaults=True` and any of the fields' default values are
+                invalid for their type.
+            TypeError: If any of the fields' type annotations are invalid or
+                not supported.
+        """  # noqa: E501
+
+        _make_dataclass_struct(
+            cls,
+            size=size,
+            byteorder=byteorder,
+            validate_defaults=validate_defaults,
+            dataclass_kwargs=dataclass_kwargs,
+        )
+
+    if TYPE_CHECKING:
+        __dataclass_struct__: ClassVar[DataclassStructInternal]
+        """
+        Internal data used by the library for packing and unpacking structs.
+
+        See
+        [`DataclassStructInternal`][dataclasses_struct.DataclassStructInternal].
+        """
+
+        @classmethod
+        def from_packed(cls: type[T], data: bytes) -> T:
+            """Return an instance of the class from its packed representation.
+
+            Args:
+                data: The packed representation of the class as returned by
+                    [`pack`][dataclasses_struct.DataclassStructProtocol.pack].
+
+            Returns:
+                An instance of the class unpacked from `data`.
+
+            Raises:
+                struct.error: If `data` is the wrong length.
+            """
+            ...
+
+        def pack(self) -> bytes:
+            """Return the packed representation in `bytes` of the object.
+
+            Returns:
+                The packed representation. Can be used to instantiate a new
+                    object with
+                    [`from_packed`][dataclasses_struct.DataclassStructProtocol.from_packed].
+
+            Raises:
+                struct.error: If any of the fields are out of range or the
+                    wrong type.
+            """
+            ...
+
+
 @overload
 def dataclass_struct(
     *,
@@ -636,55 +785,13 @@ def dataclass_struct(
         data: dcs.Pointer
         size: dcs.UnsignedSize
     ```
-
-    The allowed `size` and `byteorder` argument combinations are as as follows.
-
-    | `size`     | `byteorder` | Notes                                                               |
-    | ---------- | ----------- | ------------------------------------------------------------------  |
-    | `"native"` | `"native"`  | The default. Native alignment and padding.                          |
-    | `"std"`    | `"native"`  | Standard integer sizes and system endianness, no alignment/padding. |
-    | `"std"`    | `"little"`  | Standard integer sizes and little endian, no alignment/padding.     |
-    | `"std"`    | `"big"`     | Standard integer sizes and big endian, no alignment/padding.        |
-    | `"std"`    | `"network"` | Equivalent to `byteorder="big"`.                                    |
-
-    Args:
-        size: The size mode.
-        byteorder: The byte order of the generated struct. If `size="native"`,
-            only `"native"` is allowed.
-        validate_defaults: Whether to validate the default values of any
-            fields.
-        dataclass_kwargs: Any additional keyword arguments to pass to the
-            [stdlib
-            `dataclass`](https://docs.python.org/3/library/dataclasses.html#dataclasses.dataclass)
-            decorator. The `slots` and `weakref_slot` keyword arguments are not
-            supported.
-
-    Raises:
-        ValueError: If the `size` and `byteorder` args are invalid or if
-            `validate_defaults=True` and any of the fields' default values are
-            invalid for their type.
-        TypeError: If any of the fields' type annotations are invalid or
-            not supported.
-    """  # noqa: E501
-    is_native = size == "native"
-    if is_native:
-        if byteorder != "native":
-            raise ValueError("'native' size requires 'native' byteorder")
-    elif size != "std":
-        raise ValueError(f"invalid size: {size}")
-    if byteorder not in ("native", "big", "little", "network"):
-        raise ValueError(f"invalid byteorder: {byteorder}")
-
-    for kwarg in ("slots", "weakref_slot"):
-        if kwarg in dataclass_kwargs:
-            msg = f"dataclass '{kwarg}' keyword argument is not supported"
-            raise ValueError(msg)
+    """
 
     def decorator(cls: type) -> type:
-        return _make_class(
+        return _make_dataclass_struct(
             cls,
-            mode=_SIZE_BYTEORDER_MODE_CHAR[(size, byteorder)],
-            is_native=is_native,
+            size=size,
+            byteorder=byteorder,
             validate_defaults=validate_defaults,
             dataclass_kwargs=dataclass_kwargs,
         )

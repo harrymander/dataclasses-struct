@@ -157,4 +157,7 @@ def test_unsupported_dataclass_kwarg_fails(kwarg: str, value):
         ValueError,
         match=rf"^dataclass '{escaped}' keyword argument is not supported$",
     ):
-        dcs.dataclass_struct(**{kwarg: value})
+
+        @dcs.dataclass_struct(**{kwarg: value})
+        class _:
+            pass

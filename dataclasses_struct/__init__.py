@@ -3,6 +3,7 @@ from importlib import metadata
 __version__ = metadata.version(__package__)
 
 from .dataclass import (
+    DataclassStruct,
     DataclassStructInternal,
     DataclassStructProtocol,
     dataclass_struct,
@@ -68,6 +69,7 @@ __all__ = (
     "BoolField",
     "Char",
     "CharField",
+    "DataclassStruct",
     "DataclassStructInternal",
     "DataclassStructProtocol",
     "FloatingPointField",

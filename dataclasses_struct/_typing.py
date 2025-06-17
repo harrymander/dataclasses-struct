@@ -6,12 +6,13 @@ else:
     from typing_extensions import TypeGuard
 
 if sys.version_info >= (3, 11):
-    from typing import Unpack, dataclass_transform
+    from typing import Self, Unpack, dataclass_transform
 else:
-    from typing_extensions import Unpack, dataclass_transform
+    from typing_extensions import Self, Unpack, dataclass_transform
 
 
 __all__ = [
+    "Self",
     "TypeGuard",
     "Unpack",
     "dataclass_transform",
