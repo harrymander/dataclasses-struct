@@ -27,6 +27,8 @@ required; add to your `mypy.ini`:
 plugins = dataclasses_struct.ext.mypy_plugin
 ```
 
+(See [the guide](guide.md#type-checking) for more details on type checking.)
+
 ## Quick start
 
 By default, dataclass-structs use native sizes, alignment, and byte ordering
