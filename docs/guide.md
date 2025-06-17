@@ -440,3 +440,15 @@ class Test:
         @classmethod
         def from_packed(cls, data: bytes) -> "Test": ...
 ```
+
+The [`DataclassStructProtocol`][dataclasses_struct.DataclassStructProtocol]
+class can then be used as a type hint where packing/unpacking is required. E.g.
+
+```python
+def pack_dataclass_struct_to_file(path: str, struct: dcs.DataclassStructProtocol):
+    data = struct.pack()
+    with open(path, "wb") as f:
+        f.write(data)
+
+pack_dataclass_struct_to_file(Test(x=12))
+```
