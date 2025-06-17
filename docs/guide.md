@@ -421,10 +421,10 @@ t.pack()
 ```
 
 A fix for this is planned in the future. As a workaround in the meantime, you
-can add stubs for the generated functions to the class:
+can add stubs for the generated functions and attribute to the class:
 
 ```python
-from typing import TYPE_CHECKING
+from typing import ClassVar, TYPE_CHECKING
 import dataclasses_struct as dcs
 
 @dcs.dataclass_struct()
@@ -432,6 +432,8 @@ class Test:
     x: int
 
     if TYPE_CHECKING:
+
+        __dataclass_struct__: ClassVar[dcs.DataclassStructInternal]
 
         def pack(self) -> bytes: ...
 
