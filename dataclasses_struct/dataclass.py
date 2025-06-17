@@ -539,13 +539,49 @@ def from_packed(cls, data: bytes) -> cls_type:
     return classmethod(scope["from_packed"])
 
 
-def _make_class(
+class _DataclassKwargsPre310(TypedDict, total=False):
+    init: bool
+    repr: bool
+    eq: bool
+    order: bool
+    unsafe_hash: bool
+    frozen: bool
+
+
+if sys.version_info >= (3, 10):
+
+    class DataclassKwargs(_DataclassKwargsPre310, total=False):
+        match_args: bool
+        kw_only: bool
+else:
+
+    class DataclassKwargs(_DataclassKwargsPre310, total=False):
+        pass
+
+
+def _transform_dataclass_struct(
     cls: type,
-    mode: str,
-    is_native: bool,
+    *,
+    size: Literal["native", "std"],
+    byteorder: Literal["native", "big", "little", "network"],
     validate_defaults: bool,
-    dataclass_kwargs,
-) -> type[DataclassStructProtocol]:
+    dataclass_kwargs: DataclassKwargs,
+) -> None:
+    is_native = size == "native"
+    if is_native:
+        if byteorder != "native":
+            raise ValueError("'native' size requires 'native' byteorder")
+    elif size != "std":
+        raise ValueError(f"invalid size: {size}")
+    if byteorder not in ("native", "big", "little", "network"):
+        raise ValueError(f"invalid byteorder: {byteorder}")
+
+    for kwarg in ("slots", "weakref_slot"):
+        if kwarg in dataclass_kwargs:
+            msg = f"dataclass '{kwarg}' keyword argument is not supported"
+            raise ValueError(msg)
+
+    mode = _SIZE_BYTEORDER_MODE_CHAR[(size, byteorder)]
     cls_annotations = get_type_hints(cls, include_extras=True)
     struct_format = [mode]
     fields: list[_FieldInfo] = []
@@ -575,58 +611,7 @@ def _make_class(
     setattr(cls, "pack", _make_pack_method())  # noqa: B010
     setattr(cls, "from_packed", _make_unpack_method(cls))  # noqa: B010
 
-    return dataclasses.dataclass(cls, **dataclass_kwargs)
-
-
-class _DataclassKwargsPre310(TypedDict, total=False):
-    init: bool
-    repr: bool
-    eq: bool
-    order: bool
-    unsafe_hash: bool
-    frozen: bool
-
-
-if sys.version_info >= (3, 10):
-
-    class DataclassKwargs(_DataclassKwargsPre310, total=False):
-        match_args: bool
-        kw_only: bool
-else:
-
-    class DataclassKwargs(_DataclassKwargsPre310, total=False):
-        pass
-
-
-def _make_dataclass_struct(
-    cls: type,
-    *,
-    size: Literal["native", "std"],
-    byteorder: Literal["native", "big", "little", "network"],
-    validate_defaults: bool,
-    dataclass_kwargs: DataclassKwargs,
-) -> type:
-    is_native = size == "native"
-    if is_native:
-        if byteorder != "native":
-            raise ValueError("'native' size requires 'native' byteorder")
-    elif size != "std":
-        raise ValueError(f"invalid size: {size}")
-    if byteorder not in ("native", "big", "little", "network"):
-        raise ValueError(f"invalid byteorder: {byteorder}")
-
-    for kwarg in ("slots", "weakref_slot"):
-        if kwarg in dataclass_kwargs:
-            msg = f"dataclass '{kwarg}' keyword argument is not supported"
-            raise ValueError(msg)
-
-    return _make_class(
-        cls,
-        mode=_SIZE_BYTEORDER_MODE_CHAR[(size, byteorder)],
-        is_native=is_native,
-        validate_defaults=validate_defaults,
-        dataclass_kwargs=dataclass_kwargs,
-    )
+    cls = dataclasses.dataclass(cls, **dataclass_kwargs)  # type: ignore
 
 
 @dataclass_transform()
@@ -697,7 +682,7 @@ class DataclassStruct:
                 not supported.
         """  # noqa: E501
 
-        _make_dataclass_struct(
+        _transform_dataclass_struct(
             cls,
             size=size,
             byteorder=byteorder,
@@ -788,12 +773,13 @@ def dataclass_struct(
     """
 
     def decorator(cls: type) -> type:
-        return _make_dataclass_struct(
+        _transform_dataclass_struct(
             cls,
             size=size,
             byteorder=byteorder,
             validate_defaults=validate_defaults,
             dataclass_kwargs=dataclass_kwargs,
         )
+        return cls
 
     return decorator
