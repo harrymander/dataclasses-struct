@@ -42,6 +42,8 @@ decorator](https://docs.python.org/3/library/dataclasses.html#dataclasses.datacl
 all standard keyword arguments are supported except for `slots` and
 `weakref_slot`.
 
+## Default value validation
+
 Default attribute values will be validated against their expected type and
 allowable value range. For example,
 
