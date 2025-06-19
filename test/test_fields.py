@@ -1,5 +1,6 @@
 import dataclasses
 import itertools
+import re
 from contextlib import contextmanager
 from re import escape
 from typing import Annotated
@@ -253,13 +254,77 @@ def test_type_annotated_with_unsupported_field_type_fails() -> None:
             x: Annotated[float, dcs.NativeIntField("i", "int")]
 
 
+@contextmanager
+def raises_too_many_annotations_error(extra: object):
+    extra = re.escape(str(extra))
+    with pytest.raises(TypeError, match=rf"^too many annotations: {extra}$"):
+        yield
+
+
 @parametrize_all_sizes_and_byteorders()
 def test_bytes_with_too_many_annotations_fails(byteorder, size) -> None:
-    with pytest.raises(TypeError, match=r"^too many annotations: 12$"):
+    with raises_too_many_annotations_error(12):
 
         @dcs.dataclass_struct(byteorder=byteorder, size=size)
         class _:
             x: Annotated[bytes, 1, 12]
+
+
+def test_length_prefixed_bytes_format() -> None:
+    @dcs.dataclass_struct()
+    class T:
+        x: Annotated[bytes, dcs.LengthPrefixed(256)]
+
+    assert T.__dataclass_struct__.format[1:] == "256p"
+
+
+@parametrize_all_sizes_and_byteorders()
+def test_length_prefixed_bytes_has_same_size_as_length(
+    byteorder, size
+) -> None:
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: Annotated[bytes, dcs.LengthPrefixed(256)]
+
+    assert dcs.get_struct_size(T) == 256
+
+
+@pytest.mark.parametrize("size", (1, 257, "100", 100.0))
+def test_length_prefixed_bytes_invalid_size_fails(size: int):
+    with pytest.raises(
+        ValueError,
+        match=r"^size must be an int between 2 and 256$",
+    ):
+
+        @dcs.dataclass_struct()
+        class _:
+            x: Annotated[bytes, dcs.LengthPrefixed(size)]
+
+
+def test_length_prefixed_bytes_fails_when_annotating_non_bytes_type() -> None:
+    with raises_invalid_field_annotation():
+
+        @dcs.dataclass_struct()
+        class _:
+            x: Annotated[int, dcs.LengthPrefixed(100)]
+
+
+def test_bytes_annotated_with_integer_and_length_prefixed_bytes_fails() -> (
+    None
+):
+    with raises_too_many_annotations_error(100):
+
+        @dcs.dataclass_struct()
+        class _:
+            x: Annotated[int, dcs.LengthPrefixed(100), 100]
+
+
+def test_bytes_annotated_with_multiple_length_prefixed_bytess_fails() -> None:
+    with raises_too_many_annotations_error("LengthPrefixed(100)"):
+
+        @dcs.dataclass_struct()
+        class _:
+            x: Annotated[int, dcs.LengthPrefixed(100), dcs.LengthPrefixed(100)]
 
 
 def parametrize_all_size_and_byteorder_combinations() -> pytest.MarkDecorator:

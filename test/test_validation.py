@@ -234,6 +234,27 @@ def test_bytes_array_default_too_long_fails(byteorder, size) -> None:
             x: Annotated[bytes, 8] = b"123456789"
 
 
+@pytest.mark.parametrize("default", (b"", b"123", b"1234"))
+def test_length_prefixed_bytes_default(default: bytes) -> None:
+    @dcs.dataclass_struct()
+    class T:
+        x: Annotated[bytes, dcs.LengthPrefixed(5)] = default
+
+    t = T()
+    assert t.x == default
+
+
+def test_length_prefixed_bytes_default_too_long_fails() -> None:
+    with pytest.raises(
+        ValueError,
+        match=r"^bytes cannot be longer than 4 bytes$",
+    ):
+
+        @dcs.dataclass_struct()
+        class _:
+            x: Annotated[bytes, dcs.LengthPrefixed(5)] = b"12345"
+
+
 @parametrize_all_sizes_and_byteorders()
 @parametrize_fields(float_fields, "float_field")
 @pytest.mark.parametrize("default", (10, 10.12))
