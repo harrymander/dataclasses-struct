@@ -40,6 +40,8 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+  - pymdownx.details
   - pymdownx.magiclink
+  - admonition
 watch:
   - dataclasses_struct
