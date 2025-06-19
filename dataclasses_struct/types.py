@@ -99,6 +99,51 @@ F64 = Annotated[float, field.FloatingPointField("d")]
 Supported in both size modes."""
 
 
+class LengthPrefixed(field.Field[bytes]):
+    """
+    Length-prefixed byte array, also known as a 'Pascal string'.
+
+    Packed to a fixed-length array of bytes, where the first byte is the length
+    of the data. Data shorter than the maximum size is padded with zero bytes.
+
+    Must be used to annotate a `bytes` field with `typing.Annotated`:
+
+    ```python
+    import dataclasses_struct as dcs
+
+    @dcs.dataclass_struct()
+    class Example:
+        fixed_length: Annotated[bytes, dcs.LengthPrefixed(10)]
+    ```
+
+    Args:
+        size: The maximum size of the string including the length byte. Must be
+            between 2 and 256 inclusive. The maximum array length that can be
+            stored without truncation is `size - 1`.
+
+    Raises:
+        ValueError: If `size` is outside the valid range.
+    """
+
+    field_type = bytes
+
+    def __init__(self, size: int):
+        if not (isinstance(size, int) and 2 <= size <= 256):
+            raise ValueError("size must be an int between 2 and 256")
+        self.size = size
+
+    def format(self) -> str:
+        return f"{self.size}p"
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({self.size})"
+
+    def validate_default(self, val: bytes) -> None:
+        if len(val) > self.size - 1:
+            msg = f"bytes cannot be longer than {self.size - 1} bytes"
+            raise ValueError(msg)
+
+
 class _Padding:
     before: bool
 

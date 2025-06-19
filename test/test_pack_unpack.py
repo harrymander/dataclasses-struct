@@ -137,6 +137,74 @@ def test_packed_bytes_shorter_than_length_is_zero_padded(
 
 
 @parametrize_all_sizes_and_byteorders()
+def test_packed_length_prefixed_bytes_shorter_than_size_is_zero_padded(
+    size, byteorder
+) -> None:
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: Annotated[bytes, dcs.LengthPrefixed(5)]
+
+    packed = T(b"123").pack()
+    assert packed == b"\x03123\x00"
+
+
+@parametrize_all_sizes_and_byteorders()
+def test_packed_length_prefixed_bytes_greater_than_size_is_truncated(
+    size, byteorder
+) -> None:
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: Annotated[bytes, dcs.LengthPrefixed(5)]
+
+    packed = T(b"1234").pack()
+    assert packed == b"\x041234"
+
+
+@parametrize_all_sizes_and_byteorders()
+def test_pack_unpack_empty_length_prefixed_bytes(size, byteorder) -> None:
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: Annotated[bytes, dcs.LengthPrefixed(5)]
+
+    packed = T(b"").pack()
+    assert T.from_packed(packed) == T(b"")
+
+
+@parametrize_all_sizes_and_byteorders()
+def test_pack_unpack_length_prefixed_bytes_shorter_than_size(
+    size, byteorder
+) -> None:
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: Annotated[bytes, dcs.LengthPrefixed(5)]
+
+    packed = T(b"123").pack()
+    assert T.from_packed(packed) == T(b"123")
+
+
+@parametrize_all_sizes_and_byteorders()
+def test_pack_unpack_length_prefixed_bytes_exact_size(size, byteorder) -> None:
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: Annotated[bytes, dcs.LengthPrefixed(5)]
+
+    packed = T(b"1234").pack()
+    assert T.from_packed(packed) == T(b"1234")
+
+
+@parametrize_all_sizes_and_byteorders()
+def test_pack_unpack_length_prefixed_bytes_longer_than_size(
+    size, byteorder
+) -> None:
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: Annotated[bytes, dcs.LengthPrefixed(5)]
+
+    packed = T(b"12345").pack()
+    assert T.from_packed(packed) == T(b"1234")
+
+
+@parametrize_all_sizes_and_byteorders()
 def test_pack_unpack_nested(size, byteorder) -> None:
     @dcs.dataclass_struct(size=size, byteorder=byteorder)
     class Nested:
