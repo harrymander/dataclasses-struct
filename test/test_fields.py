@@ -237,12 +237,20 @@ def test_annotated_list_without_arg_type_fails(size, byteorder) -> None:
 
 
 @parametrize_all_sizes_and_byteorders()
-def test_invalid_annotated_fails(byteorder, size) -> None:
+def test_type_annotated_with_invalid_type_fails(byteorder, size) -> None:
     with raises_invalid_field_annotation():
 
         @dcs.dataclass_struct(byteorder=byteorder, size=size)
         class _:
             x: Annotated[int, dcs.I64]
+
+
+def test_type_annotated_with_unsupported_field_type_fails() -> None:
+    with raises_invalid_field_annotation():
+
+        @dcs.dataclass_struct()
+        class _:
+            x: Annotated[float, dcs.NativeIntField("i", "int")]
 
 
 @parametrize_all_sizes_and_byteorders()

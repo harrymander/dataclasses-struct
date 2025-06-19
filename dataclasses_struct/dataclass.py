@@ -436,7 +436,9 @@ def _resolve_field(
             if opt_field is None:
                 raise TypeError(f"type not supported: {annotation}")
             field = opt_field
-    elif isinstance(annotation_arg, Field):
+    elif isinstance(annotation_arg, Field) and issubclass(
+        type_, annotation_arg.field_type
+    ):
         field = annotation_arg
     elif get_origin(type_) is list:
         item_annotations = get_args(type_)
