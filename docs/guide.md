@@ -269,6 +269,8 @@ class Chars:
 
 ### Bytes arrays
 
+#### Fixed-length
+
 Fixed-length byte arrays can be represented in both size modes by annotating a
 field with `typing.Annotated` and a positive length. The field's unpacked Python
 representation will be a `bytes` object zero-padded or truncated to the
@@ -286,6 +288,69 @@ class FixedLength:
 >>> FixedLength.from_packed(FixedLength(b'Hello, world!').pack())
 FixedLength(fixed=b'Hello, wor')
 ```
+
+!!! tip "Tip: null-terminated strings"
+
+    Fixed-length `bytes` arrays are truncated to the exact length specified in
+    the `Annotated` argument. If you require `bytes` arrays to always be
+    null-terminated (e.g. for passing to a C API), add a [`PadAfter`
+    annotation](#manual-padding) to the field:
+
+    ```python
+    @dcs.dataclass_struct()
+    class FixedLengthNullTerminated:
+        # Equivalent to `unsigned char[11]` in C
+        fixed: Annotated[bytes, 10, dcs.PadAfter(1)]
+    ```
+
+    ```python
+    >>> FixedLengthNullTerminated(b"0123456789A").pack()
+    b'0123456789\x00'
+    ```
+
+#### Length-prefixed
+
+One issue with fixed-length `bytes` arrays is that data shorter than the length
+will be zero-padded when unpacking to the Python type:
+
+```python
+>>> packed = FixedLength(b'Hello').pack()
+>>> packed
+b'Hello\x00\x00\x00\x00\x00'
+>>> FixedLength.from_packed(packed)
+FixedLength(fixed=b'Hello\x00\x00\x00\x00\x00')
+```
+
+An alternative is to use *length-prefixed arrays*, also known as [*Pascal
+strings*](https://en.wikipedia.org/wiki/Pascal_string). These store the length
+of the array in the first byte, meaning that the available length without
+truncation is 255. To use length-prefixed arrays, annotate a `bytes` with
+[`LengthPrefixed`][dataclasses_struct.LengthPrefixed]:
+
+```python
+from typing import Annotated
+
+@dcs.dataclass_struct()
+class PascalStrings:
+    s: Annotated[bytes, dcs.LengthPrefixed(10)]  # (1)!
+```
+
+1. The length passed to `LengthPrefixed` must be between 2 and 256 inclusive.
+
+```python
+>>> packed = PascalStrings(b"12345").pack()
+>>> packed
+b'\x05Hello\x00\x00\x00\x00'
+>>> PascalStrings.from_packed(packed)
+PascalStrings(s=b'Hello')
+```
+
+!!! note
+
+    The size passed to [`LengthPrefixed`][dataclasses_struct.LengthPrefixed] is
+    the size of the packed representation of the field *including the size
+    byte*, so the maximum length the array can be without truncation is one less
+    than the size.
 
 ### Fixed-length arrays
 
