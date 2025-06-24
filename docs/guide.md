@@ -504,6 +504,7 @@ can add stubs for the generated functions and attribute to the class:
 
 ```python
 from typing import ClassVar, TYPE_CHECKING
+from collections.abc import Buffer  # import from typing_extensions on Python <3.12
 import dataclasses_struct as dcs
 
 @dcs.dataclass_struct()
@@ -517,7 +518,7 @@ class Test:
         def pack(self) -> bytes: ...
 
         @classmethod
-        def from_packed(cls, data: bytes) -> "Test": ...
+        def from_packed(cls, data: Buffer) -> "Test": ...
 ```
 
 The [`DataclassStructProtocol`][dataclasses_struct.DataclassStructProtocol]
