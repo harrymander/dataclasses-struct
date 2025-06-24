@@ -11,6 +11,7 @@ DATACLASS_STRUCT_DECORATOR = "dataclasses_struct.dataclass.dataclass_struct"
 
 
 def transform_dataclass_struct(ctx: ClassDefContext) -> bool:
+    buffer_type = ctx.api.named_type("dataclasses_struct._typing.Buffer")
     bytes_type = ctx.api.named_type("builtins.bytes")
     tvd = TypeVarType(
         "T",
@@ -25,7 +26,14 @@ def transform_dataclass_struct(ctx: ClassDefContext) -> bool:
         ctx.api,
         ctx.cls,
         "from_packed",
-        [Argument(Var("data", bytes_type), bytes_type, None, ArgKind.ARG_POS)],
+        [
+            Argument(
+                Var("data", buffer_type),
+                buffer_type,
+                None,
+                ArgKind.ARG_POS,
+            )
+        ],
         tvd,
         self_type=TypeType(tvd),
         tvar_def=tvd,
