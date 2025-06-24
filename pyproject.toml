@@ -27,7 +27,7 @@ classifiers = [
 ]
 requires-python = ">=3.9.0"
 dependencies = [
-    "typing-extensions>=4.12.2 ; python_full_version < '3.11'",
+    "typing-extensions>=4.12.2 ; python_full_version < '3.12'",
 ]
 
 [project.urls]

@@ -35,9 +35,11 @@ are added to the class:
 [`pack`][dataclasses_struct.DataclassStructProtocol.pack], a method for packing
 an instance of the class to `bytes`, and
 [`from_packed`][dataclasses_struct.DataclassStructProtocol.from_packed], a class
-method that returns a new instance of the class from its packed `bytes`
-representation. The additional `dataclass_kwargs` keyword arguments will be
-passed through to the [stdlib `dataclass`
+method that returns a new instance of the class from its packed representation
+in an object that implements the [buffer
+protococol](https://docs.python.org/3/c-api/buffer.html) (e.g. `bytes`). The
+additional `dataclass_kwargs` keyword arguments will be passed through to the
+[stdlib `dataclass`
 decorator](https://docs.python.org/3/library/dataclasses.html#dataclasses.dataclass):
 all standard keyword arguments are supported except for `slots` and
 `weakref_slot`.
