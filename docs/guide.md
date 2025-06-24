@@ -30,19 +30,29 @@ controls the size and alignment of fields:
 
 Decorated classes are transformed to a standard Python
 [dataclass](https://docs.python.org/3/library/dataclasses.html) with boilerplate
-`__init__`, `__repr__`, `__eq__` etc. auto-generated. Additionally, two methods
-are added to the class:
-[`pack`][dataclasses_struct.DataclassStructProtocol.pack], a method for packing
-an instance of the class to `bytes`, and
-[`from_packed`][dataclasses_struct.DataclassStructProtocol.from_packed], a class
-method that returns a new instance of the class from its packed representation
-in an object that implements the [buffer
-protococol](https://docs.python.org/3/c-api/buffer.html) (e.g. `bytes`). The
-additional `dataclass_kwargs` keyword arguments will be passed through to the
-[stdlib `dataclass`
-decorator](https://docs.python.org/3/library/dataclasses.html#dataclasses.dataclass):
+`__init__`, `__repr__`, `__eq__` etc. auto-generated. The additional
+`dataclass_kwargs` keyword arguments will be passed through to the [stdlib
+`dataclass` decorator](https://docs.python.org/3/library/dataclasses.html#dataclasses.dataclass):
 all standard keyword arguments are supported except for `slots` and
 `weakref_slot`.
+
+
+In addition to the standard `dataclass` methods, two methods
+are added to the class:
+
+* [`pack`][dataclasses_struct.DataclassStructProtocol.pack], which packs an
+  instance of the class to `bytes`.
+* [`from_packed`][dataclasses_struct.DataclassStructProtocol.from_packed], which
+  is a class method that returns a new instance of the class from its packed
+  representation in an object that implements the [buffer
+  protococol](https://docs.python.org/3/c-api/buffer.html) (`bytes`,
+  `bytearray`, [memory-mapped file
+  objects](https://docs.python.org/3/library/mmap.html) etc.).
+
+A class attribute named
+[`__dataclass_struct__`][dataclasses_struct.DataclassStructProtocol.__dataclass_struct__]
+is also added (see [Inspecting
+dataclass-structs](#inspecting-dataclass-structs)).
 
 ## Default value validation
 
