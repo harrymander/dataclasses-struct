@@ -10,8 +10,14 @@ if sys.version_info >= (3, 11):
 else:
     from typing_extensions import Unpack, dataclass_transform
 
+if sys.version_info >= (3, 12):
+    from collections.abc import Buffer
+else:
+    from typing_extensions import Buffer
+
 
 __all__ = [
+    "Buffer",
     "TypeGuard",
     "Unpack",
     "dataclass_transform",

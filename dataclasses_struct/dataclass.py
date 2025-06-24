@@ -19,7 +19,7 @@ from typing import (
     overload,
 )
 
-from ._typing import TypeGuard, Unpack, dataclass_transform
+from ._typing import Buffer, TypeGuard, Unpack, dataclass_transform
 from .field import Field, builtin_fields
 from .types import PadAfter, PadBefore
 
@@ -192,7 +192,7 @@ class DataclassStructInternal(Generic[T]):
             setattr(obj, name, arg)
         return obj
 
-    def _unpack(self, data: bytes) -> T:
+    def _unpack(self, data: Buffer) -> T:
         return self._init_from_args(iter(self.struct.unpack(data)))
 
 
@@ -206,7 +206,7 @@ class DataclassStructProtocol(Protocol):
     """
 
     @classmethod
-    def from_packed(cls: type[T], data: bytes) -> T:
+    def from_packed(cls: type[T], data: Buffer) -> T:
         """Return an instance of the class from its packed representation.
 
         Args:
@@ -529,12 +529,12 @@ def pack(self) -> bytes:
 
 def _make_unpack_method(cls: type) -> classmethod:
     func = """
-def from_packed(cls, data: bytes) -> cls_type:
+def from_packed(cls, data: Buffer) -> cls_type:
     '''Unpack from bytes.'''
     return cls.__dataclass_struct__._unpack(data)
 """
 
-    scope: dict[str, Any] = {"cls_type": cls}
+    scope: dict[str, Any] = {"cls_type": cls, "Buffer": Buffer}
     exec(func, {}, scope)
     return classmethod(scope["from_packed"])
 
