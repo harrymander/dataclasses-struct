@@ -50,3 +50,37 @@
 
     t = Test.from_packed(Test(1).pack())
     reveal_type(t)  # N: Revealed type is "main.Test"
+
+- case: test_from_packed_supports_bytearray_argument
+  mypy_config: 'plugins = dataclasses_struct.ext.mypy_plugin'
+  main: |
+    import dataclasses_struct as dcs
+
+    @dcs.dataclass_struct()
+    class Test:
+        x: int
+
+    t = Test.from_packed(bytearray(Test(1).pack()))
+    reveal_type(t)  # N: Revealed type is "main.Test"
+
+- case: test_from_packed_supports_mmap_argument
+  mypy_config: 'plugins = dataclasses_struct.ext.mypy_plugin'
+  main: |
+    import mmap
+    import tempfile
+    from pathlib import Path
+
+    import dataclasses_struct as dcs
+
+    @dcs.dataclass_struct()
+    class Test:
+        x: int
+
+    packed = Test(1).pack()
+    with tempfile.TemporaryDirectory() as tempdir:
+        path = Path(tempdir) / "data"
+        path.write_bytes(packed)
+        with path.open("rb+") as f, mmap.mmap(f.fileno(), 0) as mapped:
+          t = Test.from_packed(mapped)
+
+    reveal_type(t)  # N: Revealed type is "main.Test"
