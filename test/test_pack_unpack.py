@@ -1,6 +1,8 @@
 import dataclasses
 import itertools
+import mmap
 import struct
+from pathlib import Path
 from typing import Annotated
 
 import pytest
@@ -648,3 +650,37 @@ def test_pack_unpack_no_init_fields_with_validate_defaults_false() -> None:
     t.x = -1
     unpacked = T.from_packed(t.pack())
     assert unpacked.x == -1
+
+
+def test_pack_unpack_bytearray() -> None:
+    @dcs.dataclass_struct()
+    class T:
+        x: dcs.Int = 100
+        y: dcs.F32 = -1.5
+        z: Annotated[bytes, 12] = b"hello, world"
+
+    t = T()
+    packed_array = bytearray(t.pack())
+    assert T.from_packed(packed_array) == t
+
+
+def test_pack_unpack_mmap(tmp_path: Path) -> None:
+    @dcs.dataclass_struct()
+    class T:
+        x: dcs.Int = 100
+        y: dcs.F32 = -1.5
+        z: Annotated[bytes, 12] = b"hello, world"
+
+    path = tmp_path / "data"
+
+    t = T()
+    packed = t.pack()
+    path.write_bytes(packed)
+
+    with path.open("rb+") as f, mmap.mmap(f.fileno(), 0) as mapped:
+        unpacked = T.from_packed(mapped)
+
+    assert unpacked == t
+
+    # Check that the file isn't changed
+    assert path.read_bytes() == packed
