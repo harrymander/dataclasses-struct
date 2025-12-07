@@ -49,6 +49,9 @@ docs = [
     "ruff>=0.9.4",
 ]
 
+[tool.uv.dependency-groups]
+docs = {requires-python = ">=3.12"}
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
