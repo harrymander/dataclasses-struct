@@ -40,17 +40,17 @@ all standard keyword arguments are supported except for `slots` and
 In addition to the standard `dataclass` methods, two methods
 are added to the class:
 
-* [`pack`][dataclasses_struct.DataclassStructProtocol.pack], which packs an
-  instance of the class to `bytes`.
-* [`from_packed`][dataclasses_struct.DataclassStructProtocol.from_packed], which
-  is a class method that returns a new instance of the class from its packed
-  representation in an object that implements the [buffer
+* [`pack`][dataclasses_struct.dataclass.DataclassStructProtocol.pack], which
+  packs an instance of the class to `bytes`.
+* [`from_packed`][dataclasses_struct.dataclass.DataclassStructProtocol.from_packed],
+  which is a class method that returns a new instance of the class from its
+  packed representation in an object that implements the [buffer
   protococol](https://docs.python.org/3/c-api/buffer.html) (`bytes`,
   `bytearray`, [memory-mapped file
   objects](https://docs.python.org/3/library/mmap.html) etc.).
 
 A class attribute named
-[`__dataclass_struct__`][dataclasses_struct.DataclassStructProtocol.__dataclass_struct__]
+[`__dataclass_struct__`][dataclasses_struct.dataclass.DataclassStructProtocol.__dataclass_struct__]
 is also added (see [Inspecting
 dataclass-structs](#inspecting-dataclass-structs)).
 
@@ -94,7 +94,7 @@ instance of one.
 ```
 
 An additional class attribute,
-[`__dataclass_struct__`][dataclasses_struct.DataclassStructProtocol.__dataclass_struct__],
+[`__dataclass_struct__`][dataclasses_struct.dataclass.DataclassStructProtocol.__dataclass_struct__],
 is added to the decorated class that contains the packed size, [`struct` format
 string](https://docs.python.org/3/library/struct.html#format-strings), and
 `struct` mode.
@@ -521,7 +521,8 @@ class Test:
         def from_packed(cls, data: Buffer) -> "Test": ...
 ```
 
-The [`DataclassStructProtocol`][dataclasses_struct.DataclassStructProtocol]
+The
+[`DataclassStructProtocol`][dataclasses_struct.dataclass.DataclassStructProtocol]
 class can then be used as a type hint where packing/unpacking is required. E.g.
 
 ```python

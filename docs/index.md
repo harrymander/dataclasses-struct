@@ -79,8 +79,8 @@ class Object:
    length will be truncated and values shorted will be zero-padded.
 
 Instances of decorated classes have a
-[`pack`][dataclasses_struct.DataclassStructProtocol.pack] method that returns
-the packed representation of the object in `bytes`:
+[`pack`][dataclasses_struct.dataclass.DataclassStructProtocol.pack] method that
+returns the packed representation of the object in `bytes`:
 
 ```python
 >>> obj = Object(position=Vector2d(1.5, -5.6), name=b"object1")
@@ -92,8 +92,8 @@ b'\x00\x00\x00\x00\x00\x00\xf8?ffffff\x16\xc0\x00\x00\x00\x00\x00\x00\x00\x00\x0
 ```
 
 Decorated classes have an
-[`from_packed`][dataclasses_struct.DataclassStructProtocol.from_packed] class
-method that takes the packed representation and returns an instance of the
+[`from_packed`][dataclasses_struct.dataclass.DataclassStructProtocol.from_packed]
+class method that takes the packed representation and returns an instance of the
 class:
 
 ```python

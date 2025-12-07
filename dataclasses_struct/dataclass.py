@@ -211,7 +211,7 @@ class DataclassStructProtocol(Protocol):
 
         Args:
             data: The packed representation of the class as returned by
-                [`pack`][dataclasses_struct.DataclassStructProtocol.pack].
+                [`pack`][dataclasses_struct.dataclass.DataclassStructProtocol.pack].
 
         Returns:
             An instance of the class unpacked from `data`.
@@ -227,7 +227,7 @@ class DataclassStructProtocol(Protocol):
         Returns:
             The packed representation. Can be used to instantiate a new object
                 with
-                [`from_packed`][dataclasses_struct.DataclassStructProtocol.from_packed].
+                [`from_packed`][dataclasses_struct.dataclass.DataclassStructProtocol.from_packed].
 
         Raises:
             struct.error: If any of the fields are out of range or the wrong
