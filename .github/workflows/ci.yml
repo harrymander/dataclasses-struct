@@ -82,7 +82,7 @@ jobs:
         if: matrix.os == 'Windows'
 
       - name: Run tests
-        run: uv run pytest --color=yes --cov --cov-report=xml
+        run: COLUMNS=120 uv run pytest --color=yes --cov --cov-report=xml
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4
