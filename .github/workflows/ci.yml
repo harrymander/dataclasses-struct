@@ -75,7 +75,7 @@ jobs:
         run: uv sync
 
       - name: Python type checking
-        run: uv run mypy
+        run: uv run mypy .
 
       - name: Configure MSVC
         uses: ilammy/msvc-dev-cmd@v1
