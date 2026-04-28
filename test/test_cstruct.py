@@ -1,4 +1,3 @@
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -19,11 +18,8 @@ if sys.platform.startswith("win"):
 
     def _compile_cstruct(outdir: Path, native: bool) -> Path:
         exe_path = outdir / "struct-tester.exe"
-        cc = os.getenv("CC")
-        if not cc:
-            raise RuntimeError("CC env var not set")
         run(
-            cc,
+            "cl.exe",
             "test\\struct.c",
             f"/Fo:{outdir}",
             "/WX",
