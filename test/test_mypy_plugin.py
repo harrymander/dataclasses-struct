@@ -1,4 +1,5 @@
 import os
+import sys
 import textwrap
 
 import mypy.api
@@ -52,15 +53,25 @@ def assert_mypy_passes(source: str) -> None:
     """
     Assert that mypy passes on the given source code.
 
+    typing.assert_type is automatically imported.
+
     `source` is dedented before passing to mypy.
     """
     __tracebackhide__ = True
-    _assert_mypy_passes(textwrap.dedent(source))
+    source = textwrap.dedent(source)
+
+    assert_type_module = (
+        "typing_extensions" if sys.version_info < (3, 11) else "typing"
+    )
+    source = "\n".join(
+        (f"from {assert_type_module} import assert_type", source)
+    )
+
+    _assert_mypy_passes(source)
 
 
 def test_is_dataclass() -> None:
     assert_mypy_passes("""\
-    from typing import assert_type
     import dataclasses_struct as dcs
 
     @dcs.dataclass_struct()
@@ -75,7 +86,6 @@ def test_is_dataclass() -> None:
 
 def test_pack_returns_bytes() -> None:
     assert_mypy_passes("""\
-    from typing import assert_type
     import dataclasses_struct as dcs
 
     @dcs.dataclass_struct()
@@ -89,7 +99,6 @@ def test_pack_returns_bytes() -> None:
 
 def test_dataclass_struct_attribute() -> None:
     assert_mypy_passes("""\
-    from typing import assert_type
     import dataclasses_struct as dcs
 
     @dcs.dataclass_struct()
@@ -104,7 +113,6 @@ def test_dataclass_struct_attribute() -> None:
 
 def test_from_packed_returns_instance() -> None:
     assert_mypy_passes("""\
-    from typing import assert_type
     import dataclasses_struct as dcs
 
     @dcs.dataclass_struct()
@@ -118,7 +126,6 @@ def test_from_packed_returns_instance() -> None:
 
 def test_from_packed_supports_bytearray_argument() -> None:
     assert_mypy_passes("""\
-    from typing import assert_type
     import dataclasses_struct as dcs
 
     @dcs.dataclass_struct()
@@ -135,7 +142,6 @@ def test_from_packed_supports_mmap_argument() -> None:
     import mmap
     import tempfile
     from pathlib import Path
-    from typing import assert_type
 
     import dataclasses_struct as dcs
 
