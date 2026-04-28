@@ -97,6 +97,8 @@ jobs:
   build-docs:
     needs: tests
     runs-on: ubuntu-latest
+    env:
+      SITE_DIR: site/
     steps:
       - name: Checkout repo
         uses: actions/checkout@v6
@@ -118,12 +120,12 @@ jobs:
           sed -i 's,^site_url: .*$,site_url: https://harrymander.xyz/dataclasses-struct/,' mkdocs.yml
           ! git diff --color=always --exit-code -- mkdocs.yml
       - name: Build site
-        run: mkdocs build --strict --site-dir site
+        run: mkdocs build --strict --site-dir "$SITE_DIR"
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
         id: deployment
         with:
-          path: site/
+          path: ${{ env.SITE_DIR }}
 
   publish-docs:
     if: "${{ github.ref == 'refs/heads/main' }}"
