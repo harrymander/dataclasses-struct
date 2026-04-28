@@ -78,14 +78,14 @@ jobs:
         run: uv run mypy .
 
       - name: Run tests
-        shell: ${{ case(matrix.os == 'Windows', 'cmd', 'bash') }}
+        shell: ${{ matrix.os == 'Windows' && 'cmd' || 'bash') }}
         env:
           COLUMNS: 120
-          SETUP_COMMAND: ${{ case(
-              matrix.os == 'Windows',
-              'call "%ProgramFiles%/Microsoft Visual Studio/2022/Enterprise/VC/Auxiliary/Build/vcvarsall.bat" x64',
+          SETUP_COMMAND: |
+            ${{ matrix.os == 'Windows' &&
+              'call "%ProgramFiles%/Microsoft Visual Studio/2022/Enterprise/VC/Auxiliary/Build/vcvarsall.bat" x64' ||
               'true'
-            ) }}
+            }}
         run: ${{ env.SETUP_COMMAND }} && uv run pytest --color=yes --cov --cov-report=xml
 
       - name: Upload coverage reports to Codecov
