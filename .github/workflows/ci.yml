@@ -78,6 +78,7 @@ jobs:
         run: uv run mypy .
 
       - name: Find path to MSVC
+        if: matrix.os == 'Windows'
         shell: cmd
         run: |
           call "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64
