@@ -115,7 +115,7 @@ jobs:
         run: uv pip install -r requirements-docs.txt
       - name: Configure mkdocs for GitHub Pages
         run: |
-          sed -i 's,^site_url: .*$,site_url: https://harrymander.xyz/dataclasses-struct/,g' mkdocs.yml
+          sed -i 's,^site_url: .*$,site_url: https://harrymander.xyz/dataclasses-struct/,' mkdocs.yml
           ! git diff --color=always --exit-code -- mkdocs.yml
       - name: Build site
         run: mkdocs build --strict --site-dir site
