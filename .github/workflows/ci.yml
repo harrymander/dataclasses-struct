@@ -116,7 +116,7 @@ jobs:
       - name: Configure mkdocs for GitHub Pages
         run: |
           sed -i 's,^site_url: .*$,site_url: https://harrymander.xyz/dataclasses-struct/,g' mkdocs.yml
-          ! git diff --exit-code -- mkdocs.yml
+          ! git diff --color=always --exit-code -- mkdocs.yml
       - name: Build site
         run: mkdocs build --strict --site-dir site
       - name: Upload artifact
