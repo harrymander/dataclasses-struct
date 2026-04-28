@@ -81,7 +81,8 @@ jobs:
         if: matrix.os == 'Windows'
         shell: cmd
         run: |
-          "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64
+          call "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64
+          set >> "%GITHUB_ENV%"
 
       - name: Run tests
         run: COLUMNS=120 uv run pytest --color=yes --cov --cov-report=xml
