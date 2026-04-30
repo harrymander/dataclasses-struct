@@ -119,6 +119,9 @@ _TYPE_CHECKERS: dict[str, TypeCheckRunner] = {
 @pytest.fixture(params=_TYPE_CHECKERS.keys())
 def type_checker(request: pytest.FixtureRequest) -> TypeCheckAsserter:
     type_checker_name = request.param
+    if type_checker_name == "ty":
+        pytest.xfail(f"{type_checker_name} not supported")
+
     assert isinstance(type_checker_name, str)
     runner = _TYPE_CHECKERS[type_checker_name]
 
