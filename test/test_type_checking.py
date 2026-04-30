@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 import sys
 import textwrap
@@ -36,41 +37,60 @@ def _format_output(
     return "\n".join(msg)
 
 
-def _run_mypy(source: str) -> tuple[str, str, int]:
-    # Disable the cache dir. See:
-    # https://mypy.readthedocs.io/en/stable/command_line.html#cmdoption-mypy-cache-dir
-    return mypy.api.run(
-        [f"--cache-dir={os.devnull}", "--no-incremental", "--command", source]
-    )
+class TypeCheckRunner:
+    def run(self, source: str) -> tuple[str, str, int]:
+        """Run type checker on source, return (stdout, stderr, exit code)."""
+        raise NotImplementedError("run must be defined in subclass")
+
+    def pre_check(self) -> None:
+        """Additional checks to run before type checking (e.g. checking if
+        executable exists)."""
+        pass
 
 
-def _run_ty(source: str) -> tuple[str, str, int]:
-    # ty defaults to minimum Python version in pyproject.toml requires-python.
-    # Explicitly set Python version to the version of the current interpreter
-    # to ensure that ty doesn't fail when importing typing.assert_type on
-    # >=3.11
-    ty_python_version = ".".join(map(str, sys.version_info[:2]))
-    with TemporaryDirectory() as tempdir:
-        path = Path(tempdir) / "source.py"
-        path.write_text(source)
-        r = subprocess.run(
+class _MypyRunner(TypeCheckRunner):
+    def run(self, source: str) -> tuple[str, str, int]:
+        # Disable the cache dir. See:
+        # https://mypy.readthedocs.io/en/stable/command_line.html#cmdoption-mypy-cache-dir
+        return mypy.api.run(
             [
-                "ty",
-                "check",
-                "--output-format=concise",
-                f"--python-version={ty_python_version}",
-                "--",
-                path,
-            ],
-            capture_output=True,
-            text=True,
+                f"--cache-dir={os.devnull}",
+                "--no-incremental",
+                "--command",
+                source,
+            ]
         )
 
-    return r.stdout, r.stderr, r.returncode
 
+class _TyRunner(TypeCheckRunner):
+    TY = "ty"
 
-TypeCheckRunner = Callable[[str], tuple[str, str, int]]
-"""Runs type on source, returns (stdout, stdin, exit code)"""
+    def pre_check(self) -> None:
+        assert shutil.which(self.TY), f"{self.TY} not found"
+
+    def run(self, source: str) -> tuple[str, str, int]:
+        # ty defaults to minimum Python version in pyproject.toml
+        # requires-python. Explicitly set Python version to the version of the
+        # current interpreter to ensure that ty doesn't fail when importing
+        # typing.assert_type on >=3.11
+        ty_python_version = ".".join(map(str, sys.version_info[:2]))
+        with TemporaryDirectory() as tempdir:
+            path = Path(tempdir) / "source.py"
+            path.write_text(source)
+            r = subprocess.run(
+                [
+                    self.TY,
+                    "check",
+                    "--output-format=concise",
+                    f"--python-version={ty_python_version}",
+                    "--",
+                    path,
+                ],
+                capture_output=True,
+                text=True,
+            )
+
+        return r.stdout, r.stderr, r.returncode
 
 
 def _assert_type_check_passes(
@@ -95,7 +115,7 @@ def _assert_type_check_passes(
         (f"from {assert_type_module} import assert_type", source)
     )
 
-    stdout, stderr, ret = runner(source)
+    stdout, stderr, ret = runner.run(source)
     if ret == 0:
         if stderr:
             msg = f"type checker passed, but got data on stderr:\n{stderr}"
@@ -111,19 +131,20 @@ TypeCheckAsserter = Callable[[str], None]
 
 
 _TYPE_CHECKERS: dict[str, TypeCheckRunner] = {
-    "mypy": _run_mypy,
-    "ty": _run_ty,
+    "mypy": _MypyRunner(),
+    "ty": _TyRunner(),
 }
 
 
 @pytest.fixture(params=_TYPE_CHECKERS.keys())
 def type_checker(request: pytest.FixtureRequest) -> TypeCheckAsserter:
     type_checker_name = request.param
-    if type_checker_name == "ty":
-        pytest.xfail(f"{type_checker_name} not supported")
-
     assert isinstance(type_checker_name, str)
     runner = _TYPE_CHECKERS[type_checker_name]
+    runner.pre_check()
+
+    if type_checker_name == "ty":
+        pytest.xfail(f"{type_checker_name} not supported")
 
     def _checker(source: str) -> None:
         _assert_type_check_passes(source, runner, type_checker_name)
