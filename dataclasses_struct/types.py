@@ -144,6 +144,92 @@ class LengthPrefixed(field.Field[bytes]):
             raise ValueError(msg)
 
 
+class NullTerminated(field.Field[bytes]):
+    """
+    Null-terminated byte array, commonly known as a 'C string'.
+
+    Packed to a fixed-length array of bytes of length `size` that is guaranteed
+    to be null-terminated. Note that `size` includes the null byte, so arrays
+    longer than `size - 1` are truncated.
+
+    When unpacking, the trailing null byte and any subsequent bytes are
+    discarded.
+
+    Must be used to annotate a `bytes` field with `typing.Annotated`. For
+    example,
+
+    ```python
+    import dataclasses_struct as dcs
+
+    @dcs.dataclass_struct()
+    class Example:
+        cstr: Annotated[bytes, dcs.NullTerminated(5)]
+    ```
+
+    ```python
+    >>> example = Example(b"123")
+    >>> packed = example.pack()
+    >>> packed
+    b'123\x00\x00'
+    >>> unpacked = Example.from_packed(packed)
+    >>> unpacked
+    Example(cstr=b'123')
+    ```
+
+    Note that there is additional overhead when unpacking as the bytes array is
+    searched for the null terminator. If this is a concern (e.g. for very large
+    arrays), it may be better to just use a regular fixed-length bytes array
+    with a single trailing pad byte to ensure the array is always
+    null-terminated. E.g. the following
+
+    ```python
+    @dcs.dataclass_struct()
+    class Test:
+        array: Annotated[bytes, LENGTH, dcs.PadAfter(1)]
+    ```
+
+    is equivalent to the following array declaration in C:
+
+    ```c
+    struct Test {
+        unsigned char array[LENGTH + 1];
+    };
+    ```
+
+    Args:
+        size: The total size of the byte array, including the trailing null
+            byte.
+
+    Raises:
+        ValueError: If `size` is not a positive, non-zero integer.
+    """
+
+    field_type = bytes
+
+    def __init__(self, size: int):
+        if not isinstance(size, int) or size <= 0:
+            raise ValueError(
+                "null-terminated string length must be positive non-zero int"
+            )
+
+        self.size = size
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({self.size})"
+
+    def format(self) -> str:
+        return f"{self.size - 1}sx"
+
+    def validate_default(self, val: bytes) -> None:
+        n = len(val)
+        if n >= self.size:
+            msg = (
+                "null-terminated string cannot be longer than"
+                f" {self.size - 1} bytes (size includes the null terminator)"
+            )
+            raise ValueError(msg)
+
+
 class _Padding:
     before: bool
 
