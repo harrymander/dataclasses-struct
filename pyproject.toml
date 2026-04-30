@@ -6,6 +6,8 @@ readme = "README.md"
 authors = [
     { name = "Harry Mander", email = "harrymander96@gmail.com" }
 ]
+license = "MIT"
+license-files = ["LICENSE"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Programming Language :: Python",
