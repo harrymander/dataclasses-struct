@@ -64,6 +64,9 @@ testpaths = ["test"]
 markers = [
     "cc: marks a test as requiring a C compiler"
 ]
+strict_config = true
+strict_markers = true
+strict_xfail = true
 
 [tool.coverage.run]
 source = ["dataclasses_struct/"]
