@@ -279,7 +279,7 @@ class Chars:
     builtin: bytes = b'\x04'
 ```
 
-### Bytes arrays
+### Bytes arrays/strings
 
 #### Fixed-length
 
@@ -299,21 +299,68 @@ class FixedLength:
 ```python
 >>> FixedLength.from_packed(FixedLength(b'Hello, world!').pack())
 FixedLength(fixed=b'Hello, wor')
+>>> FixedLength.from_packed(FixedLength(b"Hello").pack())
+FixedLength(fixed=b'Hello\x00\x00\x00\x00\x00')
 ```
 
-!!! tip "Tip: null-terminated strings"
+#### Null-terminated strings (C strings)
 
-    Fixed-length `bytes` arrays are truncated to the exact length specified in
-    the `Annotated` argument. If you require `bytes` arrays to always be
-    null-terminated (e.g. for passing to a C API), add a [`PadAfter`
-    annotation](#manual-padding) to the field:
+As shown above, one issue with fixed-length `bytes` arrays is that data shorter
+than the length will be zero-padded when unpacking to the Python type. One way
+to work around this is to use *null-terminated strings* as commonly used in C.
+To use, annotate `bytes` fields with
+[`NullTerminated`][dataclasses_struct.NullTerminated], passing the length
+of the array *including the null terminator*:
+
+```python
+from typing import Annotated
+
+@dcs.dataclass_struct()
+class Example:
+    cstr: Annotated[bytes, dcs.NullTerminated(5)]
+```
+
+```python
+>>> example = Example(b"123")
+>>> packed = example.pack()
+>>> packed
+b'123\x00\x00'
+>>> unpacked = Example.from_packed(packed)
+>>> unpacked
+Example(cstr=b'123')
+```
+
+!!! warning "Null-terminated string unpacking overhead"
+
+    There is additional overhead when unpacking as the bytes array is searched
+    for the null terminator. If this is a concern (e.g. for very large arrays)
+    but you still want to guarantee that your array is null-terminated (e.g. for
+    passing to C APIs), it may be better to just use a regular fixed-length
+    bytes array with a single trailing pad byte to ensure the array is always
+    null-terminated. E.g. the following
 
     ```python
+    import dataclasses_struct as dcs
+
     @dcs.dataclass_struct()
     class FixedLengthNullTerminated:
-        # Equivalent to `unsigned char[11]` in C
-        fixed: Annotated[bytes, 10, dcs.PadAfter(1)]
+        array: Annotated[bytes, 10, dcs.PadAfter(1)]
     ```
+
+    is equivalent to the following array declaration in C:
+
+    ```c
+    struct FixedLengthNullTerminated {
+        unsigned char array[11];
+    };
+    ```
+
+    Note that unlike `NullTerminated`, this approach does not strip trailing
+    null bytes when unpacking; `from_packed` will return the full 10 bytes
+    including any zero-padding.
+
+    Overlong bytes arrays will still be truncated and null-terminated in the
+    packed representation:
 
     ```python
     >>> FixedLengthNullTerminated(b"0123456789A").pack()
@@ -322,22 +369,11 @@ FixedLength(fixed=b'Hello, wor')
 
 #### Length-prefixed
 
-One issue with fixed-length `bytes` arrays is that data shorter than the length
-will be zero-padded when unpacking to the Python type:
-
-```python
->>> packed = FixedLength(b'Hello').pack()
->>> packed
-b'Hello\x00\x00\x00\x00\x00'
->>> FixedLength.from_packed(packed)
-FixedLength(fixed=b'Hello\x00\x00\x00\x00\x00')
-```
-
-An alternative is to use *length-prefixed arrays*, also known as [*Pascal
-strings*](https://en.wikipedia.org/wiki/Pascal_string). These store the length
-of the array in the first byte, meaning that the available length without
-truncation is 255. To use length-prefixed arrays, annotate a `bytes` with
-[`LengthPrefixed`][dataclasses_struct.LengthPrefixed]:
+An alternative to null-terminated strings is to use *length-prefixed arrays*,
+also known as [*Pascal strings*](https://en.wikipedia.org/wiki/Pascal_string).
+These store the length of the array in the first byte, meaning that the
+available length without truncation is 255. To use length-prefixed arrays,
+annotate a `bytes` with [`LengthPrefixed`][dataclasses_struct.LengthPrefixed]:
 
 ```python
 from typing import Annotated
