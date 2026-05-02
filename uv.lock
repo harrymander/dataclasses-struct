@@ -426,7 +426,7 @@ toml = [
 
 [[package]]
 name = "dataclasses-struct"
-version = "1.4.1"
+version = "1.5.0"
 source = { editable = "." }
 dependencies = [
     { name = "typing-extensions", marker = "python_full_version < '3.12'" },
