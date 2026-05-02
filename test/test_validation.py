@@ -1,4 +1,5 @@
 import ctypes
+import re
 from contextlib import contextmanager
 from dataclasses import field
 from typing import Annotated
@@ -232,6 +233,52 @@ def test_bytes_array_default_too_long_fails(byteorder, size) -> None:
         @dcs.dataclass_struct(byteorder=byteorder, size=size)
         class _:
             x: Annotated[bytes, 8] = b"123456789"
+
+
+@parametrize_all_sizes_and_byteorders()
+def test_null_terminated_default_too_long_fails(byteorder, size) -> None:
+    msg = (
+        "null-terminated string cannot be longer than 8 bytes"
+        " (size includes the null terminator)"
+    )
+    with pytest.raises(ValueError, match=rf"^{re.escape(msg)}$"):
+
+        @dcs.dataclass_struct(byteorder=byteorder, size=size)
+        class _:
+            x: Annotated[bytes, dcs.NullTerminated(9)] = b"123456789"
+
+
+@parametrize_all_sizes_and_byteorders()
+def test_null_terminated_default_at_max_length_succeeds(
+    byteorder, size
+) -> None:
+    @dcs.dataclass_struct(byteorder=byteorder, size=size)
+    class T:
+        x: Annotated[bytes, dcs.NullTerminated(5)] = b"1234"
+
+    assert T().x == b"1234"
+
+
+@parametrize_all_sizes_and_byteorders()
+def test_null_terminated_default_too_long_with_validate_defaults_false_succeeds(  # noqa: E501
+    byteorder, size
+) -> None:
+    @dcs.dataclass_struct(
+        byteorder=byteorder, size=size, validate_defaults=False
+    )
+    class T:
+        x: Annotated[bytes, dcs.NullTerminated(5)] = b"12345"
+
+    assert T().x == b"12345"
+
+
+@parametrize_all_sizes_and_byteorders()
+def test_null_terminated_default_wrong_type_fails(byteorder, size) -> None:
+    with raises_default_value_invalid_type_error():
+
+        @dcs.dataclass_struct(byteorder=byteorder, size=size)
+        class _:
+            x: Annotated[bytes, dcs.NullTerminated(5)] = "not bytes"  # type: ignore
 
 
 @pytest.mark.parametrize("default", (b"", b"123", b"1234"))

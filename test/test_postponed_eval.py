@@ -21,3 +21,4 @@ def test_postponed() -> None:
         k: dcs.F32
         l: dcs.F64  # noqa: E741
         m: Annotated[bytes, 10]
+        n: Annotated[bytes, dcs.NullTerminated(5)]

@@ -21,7 +21,7 @@ from typing import (
 
 from ._typing import Buffer, TypeGuard, Unpack, dataclass_transform
 from .field import Field, builtin_fields
-from .types import PadAfter, PadBefore
+from .types import NullTerminated, PadAfter, PadBefore
 
 if sys.version_info >= (3, 10):
     from dataclasses import KW_ONLY as _KW_ONLY_MARKER
@@ -171,6 +171,10 @@ class DataclassStructInternal(Generic[T]):
                     )
                 )
             yield items
+        elif isinstance(field, NullTerminated):
+            data: bytes = next(args)
+            pos = data.find(b"\x00")
+            yield data if pos < 0 else data[:pos]
         else:
             yield field_type(next(args))
 

@@ -176,6 +176,24 @@ def test_valid_bytes_length_has_correct_format(size, byteorder) -> None:
     assert Test.__dataclass_struct__.format[1:] == "3s"
 
 
+@parametrize_all_sizes_and_byteorders()
+def test_valid_c_string_length_has_correct_format(size, byteorder) -> None:
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
+    class Test:
+        field: Annotated[bytes, dcs.NullTerminated(3)]
+
+    assert Test.__dataclass_struct__.format[1:] == "2sx"
+
+
+@parametrize_all_sizes_and_byteorders()
+def test_null_terminated_size_1_has_correct_format(size, byteorder) -> None:
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
+    class Test:
+        field: Annotated[bytes, dcs.NullTerminated(1)]
+
+    assert Test.__dataclass_struct__.format[1:] == "0sx"
+
+
 @pytest.mark.parametrize("length", (-1, 0, 1.0, "1"))
 @parametrize_all_sizes_and_byteorders()
 def test_invalid_bytes_length_fails(size, byteorder, length: int) -> None:
@@ -187,6 +205,30 @@ def test_invalid_bytes_length_fails(size, byteorder, length: int) -> None:
         @dcs.dataclass_struct(size=size, byteorder=byteorder)
         class _:
             x: Annotated[bytes, length]
+
+
+@pytest.mark.parametrize("length", (-1, 0, 1.0, "1"))
+@parametrize_all_sizes_and_byteorders()
+def test_invalid_c_string_length_fails(size, byteorder, length: int) -> None:
+    with pytest.raises(
+        ValueError,
+        match=r"^null-terminated string length must be positive non-zero int$",
+    ):
+
+        @dcs.dataclass_struct(size=size, byteorder=byteorder)
+        class _:
+            x: Annotated[bytes, dcs.NullTerminated(length)]
+
+
+@parametrize_all_sizes_and_byteorders()
+def test_null_terminated_annotating_non_bytes_type_fails(
+    byteorder, size
+) -> None:
+    with raises_invalid_field_annotation():
+
+        @dcs.dataclass_struct(byteorder=byteorder, size=size)
+        class _:
+            x: Annotated[int, dcs.NullTerminated(5)]
 
 
 @pytest.mark.parametrize("length", (-1, 0, 1.0, "1"))
@@ -268,6 +310,24 @@ def test_bytes_with_too_many_annotations_fails(byteorder, size) -> None:
         @dcs.dataclass_struct(byteorder=byteorder, size=size)
         class _:
             x: Annotated[bytes, 1, 12]
+
+
+@parametrize_all_sizes_and_byteorders()
+def test_bytes_with_mixed_annotations_fails(byteorder, size) -> None:
+    with raises_too_many_annotations_error("NullTerminated(12)"):
+
+        @dcs.dataclass_struct(byteorder=byteorder, size=size)
+        class _:
+            x: Annotated[bytes, 1, dcs.NullTerminated(12)]
+
+
+@parametrize_all_sizes_and_byteorders()
+def test_bytes_with_two_c_string_annotations_fails(byteorder, size) -> None:
+    with raises_too_many_annotations_error("NullTerminated(3)"):
+
+        @dcs.dataclass_struct(byteorder=byteorder, size=size)
+        class _:
+            x: Annotated[bytes, dcs.NullTerminated(5), dcs.NullTerminated(3)]
 
 
 def test_length_prefixed_bytes_format() -> None:
@@ -435,6 +495,7 @@ def test_str_type_annotations() -> None:
         k: "dcs.F32"
         l: "dcs.F64"  # noqa: E741
         m: "Annotated[bytes, 10]"
+        n: "Annotated[bytes, dcs.NullTerminated(5)]"
 
 
 @skipif_kw_only_not_supported

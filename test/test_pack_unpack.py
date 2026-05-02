@@ -139,6 +139,81 @@ def test_packed_bytes_shorter_than_length_is_zero_padded(
 
 
 @parametrize_all_sizes_and_byteorders()
+@pytest.mark.parametrize("val", [b"", b"123", b"1234", b"12345"])
+def test_null_terminated_is_null_terminated(size, byteorder, val) -> None:
+    n = 4
+
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: Annotated[bytes, dcs.NullTerminated(n + 1)]
+
+    t = T(val)
+    packed = t.pack()
+    assert len(packed) == n + 1
+
+    truncated_val = val[:n]
+    n_null = n + 1 - len(truncated_val)
+    assert n_null > 0
+    expected_packed = truncated_val + b"\0" * n_null
+    assert packed == expected_packed
+
+
+@parametrize_all_sizes_and_byteorders()
+@pytest.mark.parametrize("val", [b"", b"123", b"1234", b"12345"])
+def test_null_terminated_unpacks_to_original_length_or_truncated(
+    size, byteorder, val
+) -> None:
+    n = 4
+
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: Annotated[bytes, dcs.NullTerminated(n + 1)]
+
+    t = T(val)
+    packed = t.pack()
+    unpacked = T.from_packed(packed)
+    assert unpacked.x == val[:n]
+
+
+@parametrize_all_sizes_and_byteorders()
+def test_null_terminated_unpack_truncates_at_embedded_null(
+    size, byteorder
+) -> None:
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: Annotated[bytes, dcs.NullTerminated(6)]
+
+    assert T.from_packed(b"ab\x00cd\x00").x == b"ab"
+
+
+@pytest.mark.parametrize("value", [b"", b"1"])
+@parametrize_all_sizes_and_byteorders()
+def test_null_terminated_size_1_pack_unpack(
+    size, byteorder, value: bytes
+) -> None:
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: Annotated[bytes, dcs.NullTerminated(1)]
+
+    assert T(value).pack() == b"\x00"
+    assert T.from_packed(b"\x00") == T(b"")
+
+
+@parametrize_all_sizes_and_byteorders()
+def test_null_terminated_with_padding(size, byteorder) -> None:
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: Annotated[
+            bytes, dcs.PadBefore(2), dcs.NullTerminated(5), dcs.PadAfter(3)
+        ]
+
+    t = T(b"abc")
+    packed = t.pack()
+    assert packed == b"\x00\x00abc\x00\x00\x00\x00\x00"
+    assert T.from_packed(packed) == t
+
+
+@parametrize_all_sizes_and_byteorders()
 def test_packed_length_prefixed_bytes_shorter_than_size_is_zero_padded(
     size, byteorder
 ) -> None:
