@@ -3,7 +3,7 @@ import itertools
 import re
 from contextlib import contextmanager
 from re import escape
-from typing import Annotated
+from typing import Annotated, Any, ClassVar
 
 import pytest
 from conftest import (
@@ -512,3 +512,56 @@ def test_kw_only_marker() -> None:
 
     with pytest.raises(TypeError):
         T(1, 2, 1.2, False)  # type: ignore
+
+
+@parametrize_all_sizes_and_byteorders()
+def test_class_var_ignored(size, byteorder) -> None:
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: bytes
+        y: ClassVar[str] = "Hello, world!"
+        z: bytes
+
+    t = T(b"a", b"c")
+    assert t.x == b"a"
+    assert t.y == "Hello, world!"
+    assert t.z == b"c"
+
+
+@parametrize_all_sizes_and_byteorders()
+def test_class_var_without_arg_ignored(size, byteorder) -> None:
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        x: bytes
+        y: ClassVar = "Hello, world!"
+        z: bytes
+
+    t = T(b"a", b"c")
+    assert t.x == b"a"
+    assert t.y == "Hello, world!"
+    assert t.z == b"c"
+
+
+def test_dcs_type_in_class_var_raises_warning() -> None:
+    msg = (
+        "field 'x' is a ClassVar, but is annotated with a dataclass_struct "
+        "field type; ClassVars are not included in the packed representation."
+    )
+    with pytest.warns(UserWarning, match=rf"^{re.escape(msg)}$"):
+
+        @dcs.dataclass_struct(size="std")
+        class _:
+            x: ClassVar[dcs.U16] = 100
+
+
+@pytest.mark.parametrize("padding_type", (dcs.PadAfter, dcs.PadBefore))
+def test_padding_in_class_var_raises_warning(padding_type: Any) -> None:
+    msg = (
+        "field 'y' is a ClassVar, but is annotated with a dataclass_struct "
+        "field type; ClassVars are not included in the packed representation."
+    )
+    with pytest.warns(UserWarning, match=rf"^{re.escape(msg)}$"):
+
+        @dcs.dataclass_struct(size="native")
+        class _:
+            y: ClassVar[Annotated[int, padding_type(10)]] = 100

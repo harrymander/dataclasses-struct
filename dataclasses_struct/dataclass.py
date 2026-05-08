@@ -1,5 +1,6 @@
 import dataclasses
 import sys
+import warnings
 from collections.abc import Generator, Iterator
 from struct import Struct
 from typing import (
@@ -21,7 +22,7 @@ from typing import (
 
 from ._typing import Buffer, TypeGuard, Unpack, dataclass_transform
 from .field import Field, builtin_fields
-from .types import NullTerminated, PadAfter, PadBefore
+from .types import NullTerminated, PadAfter, PadBefore, _Padding
 
 if sys.version_info >= (3, 10):
     from dataclasses import KW_ONLY as _KW_ONLY_MARKER
@@ -543,6 +544,24 @@ def from_packed(cls, data: Buffer) -> cls_type:
     return classmethod(scope["from_packed"])
 
 
+def _check_class_var(name: str, field: Any) -> None:
+    classvar_args = get_args(field)
+    assert len(classvar_args) == 1
+    classvar_arg = classvar_args[0]
+    if get_origin(classvar_arg) is not Annotated:
+        return
+
+    for arg in get_args(classvar_arg):
+        if isinstance(arg, (Field, _Padding)):
+            msg = (
+                f"field '{name}' is a ClassVar, but is annotated with a "
+                "dataclass_struct field type; ClassVars are not included in "
+                "the packed representation."
+            )
+            warnings.warn(msg, UserWarning, stacklevel=4)
+            return
+
+
 def _make_class(
     cls: type,
     mode: str,
@@ -557,6 +576,12 @@ def _make_class(
     for name, field in cls_annotations.items():
         if field is _KW_ONLY_MARKER:
             # KW_ONLY is handled by stdlib dataclass, nothing to do on our end.
+            continue
+
+        if field is ClassVar:
+            continue
+        if get_origin(field) == ClassVar:
+            _check_class_var(name, field)
             continue
 
         fmt, field = _validate_and_parse_field(

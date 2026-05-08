@@ -3,7 +3,7 @@ import itertools
 import mmap
 import struct
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, ClassVar
 
 import pytest
 from conftest import (
@@ -759,3 +759,23 @@ def test_pack_unpack_mmap(tmp_path: Path) -> None:
 
     # Check that the file isn't changed
     assert path.read_bytes() == packed
+
+
+@parametrize_all_sizes_and_byteorders()
+def test_class_var_not_in_packed_data(size, byteorder) -> None:
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        y: ClassVar[str] = "Hello, world!"
+
+    t = T()
+    assert t.pack() == b""
+
+
+@parametrize_all_sizes_and_byteorders()
+def test_class_var_not_in_unpacked_data(size, byteorder) -> None:
+    @dcs.dataclass_struct(size=size, byteorder=byteorder)
+    class T:
+        y: ClassVar[str] = "Hello, world!"
+
+    unpacked = T.from_packed(b"")
+    assert unpacked.y == "Hello, world!"
