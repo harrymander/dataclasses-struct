@@ -502,6 +502,40 @@ b'\x00\x00\x00\x00d\x00\x00\x00\xc8\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00,
 WithPadding(pad_before=100, pad_after=200, pad_before_and_after=300)
 ```
 
+## Class variables
+
+Fields annotated with `typing.ClassVar` behave exactly as in a stdlib
+`dataclass`. In particular, they are excluded from the packed representation:
+
+```python
+from typing import ClassVar
+
+@dcs.dataclass_struct(size="std")
+class WithClassVar:
+    x: dcs.U8
+    label: ClassVar[str] = "example"
+    y: dcs.U8
+```
+
+```python
+>>> WithClassVar.label
+'example'
+>>> t = WithClassVar(1, 2)
+>>> t.label
+'example'
+>>> t.pack()
+b'\x01\x02'
+>>> unpacked = WithClassVar.from_packed(b'\x01\x02')
+>>> unpacked
+WithClassVar(x=1, y=2)
+>>> unpacked.label
+'example'
+```
+
+`ClassVar` fields annotated with `dataclasses_struct` fields (e.g. `dcs.U16`)
+will emit a `UserWarning` and be treated as regular `ClassVar` fields that are
+not included in the packed representation.
+
 ## Type checking
 
 ### Mypy
