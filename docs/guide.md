@@ -333,11 +333,11 @@ Example(cstr=b'123')
 !!! warning "Null-terminated string unpacking overhead"
 
     There is additional overhead when unpacking as the bytes array is searched
-    for the null terminator. If this is a concern (e.g. for very large arrays)
-    but you still want to guarantee that your array is null-terminated (e.g. for
-    passing to C APIs), it may be better to just use a regular fixed-length
-    bytes array with a single trailing pad byte to ensure the array is always
-    null-terminated. E.g. the following
+    in *O(n)* time for the null terminator. If this is a concern (e.g. for very
+    large arrays) but you still want to guarantee that your array is
+    null-terminated (e.g. for passing to C APIs), it may be better to just use a
+    regular fixed-length bytes array with a single trailing pad byte to ensure
+    the array is always null-terminated. E.g. the following
 
     ```python
     import dataclasses_struct as dcs
