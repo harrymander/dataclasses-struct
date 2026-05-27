@@ -357,7 +357,13 @@ Example(cstr=b'123')
 
     Note that unlike `NullTerminated`, this approach does not strip trailing
     null bytes when unpacking; `from_packed` will return the full 10 bytes
-    including any zero-padding.
+    including any zero-padding. E.g.
+
+    ```python
+    >>> packed = FixedLengthNullTerminated(b"12345").pack()
+    >>> FixedLengthNullTerminated.from_packed(packed)
+    FixedLengthNullTerminated(array=b'12345\x00\x00\x00\x00\x00')
+    ```
 
     Overlong bytes arrays will still be truncated and null-terminated in the
     packed representation:
