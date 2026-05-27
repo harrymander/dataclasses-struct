@@ -95,7 +95,7 @@ jobs:
           files: coverage.xml
 
   build-docs:
-    needs: tests
+    needs: pre-commit-checks
     runs-on: ubuntu-latest
     env:
       SITE_DIR: site/
@@ -129,7 +129,7 @@ jobs:
 
   publish-docs:
     if: "${{ github.ref == 'refs/heads/main' }}"
-    needs: build-docs
+    needs: [tests, build-docs]
     runs-on: ubuntu-latest
     permissions:
       pages: write
