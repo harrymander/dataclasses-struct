@@ -91,7 +91,7 @@ Object(position=Vector2d(x=1.5, y=-5.6), velocity=Vector2d(x=0, y=0), name=b'obj
 b'\x00\x00\x00\x00\x00\x00\xf8?ffffff\x16\xc0\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00object1\x00'
 ```
 
-Decorated classes have an
+Decorated classes have a
 [`from_packed`][dataclasses_struct.dataclass.DataclassStructProtocol.from_packed]
 class method that takes the packed representation and returns an instance of the
 class:
