@@ -115,12 +115,12 @@ jobs:
           activate-environment: true
       - name: Install Python dependencies
         run: uv pip install -r requirements-docs.txt
-      - name: Configure mkdocs for GitHub Pages
+      - name: Configure Zensical for GitHub Pages
         run: |
-          sed -i 's,^site_url: .*$,site_url: https://harrymander.xyz/dataclasses-struct/,' mkdocs.yml
-          ! git diff --color=always --exit-code -- mkdocs.yml
+          sed -i 's,^site_url = ".*$,site_url = "https://harrymander.xyz/dataclasses-struct/",' zensical.toml
+          ! git diff --color=always --exit-code -- zensical.toml
       - name: Build site
-        run: mkdocs build --strict --site-dir "$SITE_DIR"
+        run: zensical build --strict
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
         id: deployment
