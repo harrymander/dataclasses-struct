@@ -1,0 +1,42 @@
+[project]
+site_name = "dataclasses-struct"
+site_url = "https://dataclasses-struct.readthedocs.io"
+repo_url = "https://github.com/harrymander/dataclasses-struct"
+nav = ["index.md", "guide.md", "api-reference.md", "types-reference.md"]
+plugins = ["search", "mkdocstrings", "autorefs"]
+markdown_extensions = [
+    "attr_list",
+    "md_in_html",
+    { "pymdownx.highlight" = { anchor_linenums = true, line_spans = "__span", pygments_lang_class = true } },
+    "pymdownx.inlinehilite",
+    "pymdownx.snippets",
+    "pymdownx.superfences",
+    "pymdownx.details",
+    "pymdownx.magiclink",
+    "admonition",
+]
+
+[project.theme]
+variant = "classic"
+features = ["content.code.annotate"]
+icon = { "repo" = "fontawesome/brands/github" }
+
+# Palette toggle for automatic mode
+[[project.theme.palette]]
+media = "(prefers-color-scheme)"
+toggle.icon = "lucide/sun-moon"
+toggle.name = "Switch to light mode"
+
+# Palette toggle for light mode
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
+scheme = "default"
+toggle.icon = "lucide/sun"
+toggle.name = "Switch to dark mode"
+
+# Palette toggle for dark mode
+[[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
+scheme = "slate"
+toggle.icon = "lucide/moon"
+toggle.name = "Switch to system preference"
