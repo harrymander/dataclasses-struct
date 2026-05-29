@@ -16,6 +16,9 @@ markdown_extensions = [
     "admonition",
 ]
 
+[project.validation]
+unresolved_references = false
+
 [project.theme]
 variant = "classic"
 features = ["content.code.annotate"]
