@@ -31,7 +31,6 @@ classifiers = [
 requires-python = ">=3.9.0"
 dependencies = [
     "typing-extensions>=4.12.2 ; python_full_version < '3.12'",
-    "zensical>=0.0.2",
 ]
 
 [project.urls]
@@ -49,6 +48,7 @@ dev = [
 docs = [
     "mkdocstrings[python]>=0.29.1",
     "ruff>=0.9.4",
+    "zensical>=0.0.43",
 ]
 
 [tool.uv.dependency-groups]
