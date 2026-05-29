@@ -484,7 +484,6 @@ dev = [
 docs = [
     { name = "mkdocs-material", marker = "python_full_version >= '3.12'" },
     { name = "mkdocstrings", extra = ["python"], marker = "python_full_version >= '3.12'" },
-    { name = "ruff", marker = "python_full_version >= '3.12'" },
 ]
 
 [package.metadata]
@@ -500,7 +499,6 @@ dev = [
 docs = [
     { name = "mkdocs-material", marker = "python_full_version >= '3.12'", specifier = ">=9.6.14" },
     { name = "mkdocstrings", extras = ["python"], marker = "python_full_version >= '3.12'", specifier = ">=0.29.1" },
-    { name = "ruff", marker = "python_full_version >= '3.12'", specifier = ">=0.9.4" },
 ]
 
 [[package]]
