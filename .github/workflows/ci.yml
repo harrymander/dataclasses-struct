@@ -82,6 +82,10 @@ jobs:
         shell: cmd
         run: |
           call "%ProgramFiles%\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64
+          if %ERRORLEVEL% NEQ 0 (
+            echo Failed to configure MSVC.
+            exit /b 1
+          )
           set >> "%GITHUB_ENV%"
 
       - name: Run tests
