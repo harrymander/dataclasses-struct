@@ -65,7 +65,7 @@ def parametrize_fields(
         fields_iter = fields
     else:
         argnames = field_argname
-        fields_iter = (field[0] for field in fields)
+        fields_iter = [field[0] for field in fields]
 
     def mark(f):
         return pytest.mark.parametrize(argnames, fields_iter)(f)

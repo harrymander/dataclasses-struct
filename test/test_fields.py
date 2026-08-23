@@ -393,7 +393,7 @@ def parametrize_all_size_and_byteorder_combinations() -> pytest.MarkDecorator:
     """
     return pytest.mark.parametrize(
         "nested_size_byteorder,container_size_byteorder",
-        itertools.combinations(ALL_VALID_SIZE_BYTEORDER_PAIRS, 2),
+        list(itertools.combinations(ALL_VALID_SIZE_BYTEORDER_PAIRS, 2)),
     )
 
 
