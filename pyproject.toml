@@ -73,6 +73,7 @@ omit = ["dataclasses_struct/ext/**/*.py", "dataclasses_struct/_typing.py"]
 
 [tool.ruff]
 line-length = 79
+extend-exclude = ["*.md"]
 
 [tool.ruff.lint]
 select = [
