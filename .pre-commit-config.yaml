@@ -4,6 +4,10 @@ repos:
     hooks:
       - id: ruff-check
       - id: ruff-format
+        # Upstream hook doesn't currently run on markdown files (see
+        # https://github.com/astral-sh/ruff-pre-commit/pull/159), so manually
+        # specify.
+        types_or: [python, pyi, jupyter, markdown]
   - repo: https://github.com/astral-sh/uv-pre-commit
     rev: 0.12.5
     hooks:

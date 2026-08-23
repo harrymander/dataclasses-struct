@@ -13,8 +13,7 @@ def dataclass_struct(
     byteorder: Literal["native", "big", "little", "network"] = "native",
     validate_defaults: bool = True,
     **dataclass_kwargs,
-):
-    ...
+): ...
 ```
 
 The `size` argument can be either `"native"` (the default) or `"std"` and
@@ -61,6 +60,7 @@ allowable value range. For example,
 
 ```python
 import dataclasses_struct as dcs
+
 
 @dcs.dataclass_struct()
 class Test:
@@ -232,10 +232,12 @@ class Vector2d:
     x: float
     y: float
 
+
 @dcs.dataclass_struct()
 class Vectors:
     direction: Vector2d
     velocity: Vector2d
+
 
 # Will raise TypeError:
 @dcs.dataclass_struct(size="std")
@@ -254,6 +256,7 @@ For example:
 
 ```python
 from dataclasses import field
+
 
 @dcs.dataclass_struct()
 class VectorsStd:
@@ -275,8 +278,8 @@ unpacked Python representation will be a `bytes` of length 1.
 ```python
 @dcs.dataclass_struct()
 class Chars:
-    char: dcs.Char = b'x'
-    builtin: bytes = b'\x04'
+    char: dcs.Char = b"x"
+    builtin: bytes = b"\x04"
 ```
 
 ### Bytes arrays/strings
@@ -290,6 +293,7 @@ specified length.
 
 ```python
 from typing import Annotated
+
 
 @dcs.dataclass_struct()
 class FixedLength:
@@ -314,6 +318,7 @@ of the array *including the null terminator*:
 
 ```python
 from typing import Annotated
+
 
 @dcs.dataclass_struct()
 class Example:
@@ -341,6 +346,7 @@ Example(cstr=b'123')
 
     ```python
     import dataclasses_struct as dcs
+
 
     @dcs.dataclass_struct()
     class FixedLengthNullTerminated:
@@ -384,6 +390,7 @@ annotate a `bytes` with [`LengthPrefixed`][dataclasses_struct.LengthPrefixed]:
 ```python
 from typing import Annotated
 
+
 @dcs.dataclass_struct()
 class PascalStrings:
     s: Annotated[bytes, dcs.LengthPrefixed(10)]  # (1)!
@@ -414,6 +421,7 @@ Fixed-length arrays can be represented by annotating a `list` field with
 ```python
 from typing import Annotated
 
+
 @dcs.dataclass_struct()
 class FixedLength:
     fixed: Annotated[list[int], 5]
@@ -430,10 +438,12 @@ decorated with `dataclass_struct`.
 ```python
 from typing import Annotated
 
+
 @dcs.dataclass_struct()
 class Vector2d:
     x: float
     y: float
+
 
 @dcs.dataclass_struct()
 class FixedLength:
@@ -451,6 +461,7 @@ Fixed-length arrays can also be multi-dimensional by nesting Annotated
 ```python
 from typing import Annotated
 
+
 @dcs.dataclass_struct()
 class TwoDimArray:
     fixed: Annotated[list[Annotated[list[int], 2]], 3]
@@ -467,6 +478,7 @@ set a default value. For example:
 ```python
 from dataclasses import field
 from typing import Annotated
+
 
 @dcs.dataclass_struct()
 class DefaultArray:
@@ -515,6 +527,7 @@ Fields annotated with `typing.ClassVar` behave exactly as in a stdlib
 
 ```python
 from typing import ClassVar
+
 
 @dcs.dataclass_struct(size="std")
 class WithClassVar:
@@ -566,9 +579,11 @@ on the `pack` and `from_packed` methods:
 ```python
 import dataclasses_struct as dcs
 
+
 @dcs.dataclass_struct()
 class Test:
     x: int
+
 
 t = Test(10)
 t.pack()
@@ -579,16 +594,17 @@ A fix for this is planned in the future. As a workaround in the meantime, you
 can add stubs for the generated functions and attribute to the class:
 
 ```python
+# import from typing_extensions on Python <3.12:
 from typing import ClassVar, TYPE_CHECKING
-from collections.abc import Buffer  # import from typing_extensions on Python <3.12
+from collections.abc import Buffer
 import dataclasses_struct as dcs
+
 
 @dcs.dataclass_struct()
 class Test:
     x: int
 
     if TYPE_CHECKING:
-
         __dataclass_struct__: ClassVar[dcs.DataclassStructInternal]
 
         def pack(self) -> bytes: ...
@@ -602,10 +618,14 @@ The
 class can then be used as a type hint where packing/unpacking is required. E.g.
 
 ```python
-def pack_dataclass_struct_to_file(path: str, struct: dcs.DataclassStructProtocol):
+def pack_dataclass_struct_to_file(
+    path: str,
+    struct: dcs.DataclassStructProtocol,
+):
     data = struct.pack()
     with open(path, "wb") as f:
         f.write(data)
+
 
 pack_dataclass_struct_to_file(Test(x=12))
 ```

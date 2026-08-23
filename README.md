@@ -21,12 +21,14 @@ from typing import Annotated
 
 import dataclasses_struct as dcs
 
+
 @dcs.dataclass_struct()
 class Test:
     x: int
     y: float
     z: dcs.UnsignedShort
     s: Annotated[bytes, 10]  # fixed-length byte array of length 10
+
 
 @dcs.dataclass_struct()
 class Container:

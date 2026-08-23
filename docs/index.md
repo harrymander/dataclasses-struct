@@ -40,18 +40,20 @@ from typing import Annotated
 
 import dataclasses_struct as dcs  # (1)!
 
+
 @dcs.dataclass_struct(size="native", byteorder="native")  # (2)!
 class Vector2d:
     x: dcs.F64  # (3)!
-    y: float  #(4)!
+    y: float  # (4)!
 
-@dcs.dataclass_struct(kw_only=True)  #(5)!
+
+@dcs.dataclass_struct(kw_only=True)  # (5)!
 class Object:
-    position: Vector2d  #(6)!
+    position: Vector2d  # (6)!
     velocity: Vector2d = dataclasses.field(  # (7)!
         default_factory=lambda: Vector2d(0, 0)
     )
-    name: Annotated[bytes, 8]  #(8)!
+    name: Annotated[bytes, 8]  # (8)!
 ```
 
 1. This convention of importing `dataclasses_struct` under the alias `dcs` is
@@ -107,13 +109,13 @@ names:
 ```python
 @dcs.dataclass_struct()
 class NativeIntegers:
-   c_int: dcs.Int
-   c_int_alias: int  # (1)!
-   c_unsigned_short: dcs.UnsignedShort
-   void_pointer: dcs.Pointer  # (2)!
-   size_t: dcs.UnsignedSize
+    c_int: dcs.Int
+    c_int_alias: int  # (1)!
+    c_unsigned_short: dcs.UnsignedShort
+    void_pointer: dcs.Pointer  # (2)!
+    size_t: dcs.UnsignedSize
 
-   # etc.
+    # etc.
 ```
 
 1. Alias to `dcs.Int`.
@@ -126,11 +128,11 @@ C:
 ```python
 @dcs.dataclass_struct(size="std")
 class StdIntegers:
-   int8_t: dcs.I8
-   int32_t: dcs.I32
-   uint64_t: dcs.U64
+    int8_t: dcs.I8
+    int32_t: dcs.I32
+    uint64_t: dcs.U64
 
-   # etc.
+    # etc.
 ```
 
 See [the guide](guide.md#supported-type-annotations) for the full list of
