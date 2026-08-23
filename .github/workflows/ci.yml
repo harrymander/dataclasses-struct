@@ -44,7 +44,7 @@ jobs:
         os: ["Ubuntu", "Windows", "macOS"]
         include:
           - os: Windows
-            image: windows-latest
+            image: windows-2025-vs2026
           - os: Ubuntu
             image: ubuntu-latest
           - os: macOS
@@ -81,7 +81,7 @@ jobs:
         if: matrix.os == 'Windows'
         shell: cmd
         run: |
-          call "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64
+          call "%ProgramFiles%\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64
           set >> "%GITHUB_ENV%"
 
       - name: Run tests
