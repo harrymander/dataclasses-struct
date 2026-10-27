@@ -46,7 +46,7 @@ jobs:
           - os: Windows
             image: windows-2025-vs2026
           - os: Ubuntu
-            image: ubuntu-latest
+            image: ubuntu-24.04
           - os: macOS
             image: macos-latest
     name: ${{ matrix.os }} / ${{ matrix.pyversion }}
